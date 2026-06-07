@@ -1,3 +1,3 @@
 export function Component() {
-  return <div>Dashboard Overview — Sprint 5</div>
+  return <div>Dashboard Overview</div>
 }

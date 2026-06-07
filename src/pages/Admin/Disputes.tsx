@@ -1,3 +1,3 @@
 export function Component() {
-  return <div>Admin Disputes — Sprint 6</div>
+  return <div>Admin Disputes</div>
 }

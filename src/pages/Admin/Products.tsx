@@ -1,3 +1,3 @@
 export function Component() {
-  return <div>Admin Products — Sprint 6</div>
+  return <div>Admin Products</div>
 }

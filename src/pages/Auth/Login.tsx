@@ -1,3 +1,3 @@
 export function Component() {
-  return <div>Login — Sprint 2</div>
+  return <div>Login</div>
 }

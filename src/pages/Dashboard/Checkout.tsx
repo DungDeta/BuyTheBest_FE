@@ -1,3 +1,3 @@
 export function Component() {
-  return <div>Checkout — Sprint 4</div>
+  return <div>Checkout</div>
 }
