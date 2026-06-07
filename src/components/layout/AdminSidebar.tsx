@@ -1,0 +1,38 @@
+import { Link, useLocation } from 'react-router-dom'
+import { Menu } from 'antd'
+import type { MenuProps } from 'antd'
+import {
+  DashboardOutlined,
+  AppstoreOutlined,
+  UserOutlined,
+  TagsOutlined,
+  PictureOutlined,
+  WarningOutlined,
+} from '@ant-design/icons'
+
+export default function AdminSidebar() {
+  const location = useLocation()
+
+  const items: MenuProps['items'] = [
+    { key: '/admin', icon: <DashboardOutlined />, label: <Link to="/admin">Dashboard</Link> },
+    { key: '/admin/products', icon: <AppstoreOutlined />, label: <Link to="/admin/products">Sản phẩm</Link> },
+    { key: '/admin/users', icon: <UserOutlined />, label: <Link to="/admin/users">Người dùng</Link> },
+    { key: '/admin/categories', icon: <TagsOutlined />, label: <Link to="/admin/categories">Danh mục</Link> },
+    { key: '/admin/banners', icon: <PictureOutlined />, label: <Link to="/admin/banners">Banner</Link> },
+    { key: '/admin/disputes', icon: <WarningOutlined />, label: <Link to="/admin/disputes">Tranh chấp</Link> },
+  ]
+
+  return (
+    <aside className="admin-sidebar">
+      <div className="admin-brand">
+        <Link to="/admin">BTB Admin</Link>
+      </div>
+      <Menu
+        mode="inline"
+        selectedKeys={[location.pathname]}
+        items={items}
+        style={{ border: 'none' }}
+      />
+    </aside>
+  )
+}
