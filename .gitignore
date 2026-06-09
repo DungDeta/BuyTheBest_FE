@@ -35,5 +35,5 @@ coverage/
 # Docs (local reference only)
 docs/
 
-# Local AI/tool state
-.claude/
+# Scripts (local only)
+scripts/

@@ -1,3 +1,5 @@
+import { Navigate } from 'react-router-dom'
+
 export function Component() {
-  return <div>Forgot Password</div>
+  return <Navigate to="/login" replace />
 }

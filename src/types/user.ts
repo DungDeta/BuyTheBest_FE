@@ -1,12 +1,13 @@
 export interface User {
-  id: number
+  id: string
   email: string
   display_name: string
-  avatar_url: string | null
-  phone: string | null
-  address: string | null
+  avatar_url?: string | null
+  phone?: string | null
+  address?: string | null
   is_seller: boolean
   is_admin: boolean
+  email_verified: boolean
   status: 'active' | 'pending' | 'banned'
   created_at: string
 }
@@ -23,14 +24,24 @@ export interface RegisterRequest {
 }
 
 export interface LoginResponse {
+  token: TokenResponse
   user: User
-  access_token: string
-  refresh_token: string
-  expires_in: number
 }
 
 export interface TokenResponse {
   access_token: string
   refresh_token: string
-  expires_in: number
+  token_type: 'Bearer'
+  access_expires_in: number
+  refresh_expires_in: number
+}
+
+export interface ForgotPasswordRequest {
+  email: string
+}
+
+export interface ResetPasswordRequest {
+  token: string
+  new_password: string
+  confirm_password: string
 }

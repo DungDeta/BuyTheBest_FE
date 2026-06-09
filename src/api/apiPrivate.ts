@@ -58,10 +58,10 @@ apiPrivate.interceptors.response.use(
         `${import.meta.env.VITE_API_BASE_URL}/auth/refresh`,
         { refresh_token: refreshToken },
       )
-      const { access_token, refresh_token, expires_in } = res.data.data
-      useAuthStore.getState().setTokens({ access_token, refresh_token, expires_in })
-      onTokenRefreshed(access_token)
-      originalRequest.headers.Authorization = `Bearer ${access_token}`
+      const token = res.data.data
+      useAuthStore.getState().setTokens(token)
+      onTokenRefreshed(token.access_token)
+      originalRequest.headers.Authorization = `Bearer ${token.access_token}`
       return apiPrivate(originalRequest)
     } catch {
       useAuthStore.getState().logout()

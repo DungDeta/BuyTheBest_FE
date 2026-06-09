@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import type { User } from '@/types'
+import type { LoginResponse, TokenResponse, User } from '@/types'
 
 interface AuthState {
   user: User | null
@@ -11,8 +11,8 @@ interface AuthState {
   isAuthenticated: () => boolean
   isSeller: () => boolean
   isAdmin: () => boolean
-  login: (payload: { user: User; access_token: string; refresh_token: string; expires_in: number }) => void
-  setTokens: (payload: { access_token: string; refresh_token: string; expires_in: number }) => void
+  login: (payload: LoginResponse) => void
+  setTokens: (payload: TokenResponse) => void
   updateUser: (partial: Partial<User>) => void
   logout: () => void
 }
@@ -34,20 +34,20 @@ export const useAuthStore = create<AuthState>()(
       isSeller: () => get().user?.is_seller ?? false,
       isAdmin: () => get().user?.is_admin ?? false,
 
-      login: ({ user, access_token, refresh_token, expires_in }) => {
+      login: ({ user, token }) => {
         set({
           user,
-          accessToken: access_token,
-          refreshToken: refresh_token,
-          expiresAt: Date.now() + expires_in * 1000,
+          accessToken: token.access_token,
+          refreshToken: token.refresh_token,
+          expiresAt: Date.now() + token.access_expires_in * 1000,
         })
       },
 
-      setTokens: ({ access_token, refresh_token, expires_in }) => {
+      setTokens: ({ access_token, refresh_token, access_expires_in }) => {
         set({
           accessToken: access_token,
           refreshToken: refresh_token,
-          expiresAt: Date.now() + expires_in * 1000,
+          expiresAt: Date.now() + access_expires_in * 1000,
         })
       },
 
