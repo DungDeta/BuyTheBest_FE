@@ -1,3 +1,132 @@
+import { useEffect, useState } from 'react'
+import { useNavigate, useSearchParams } from 'react-router-dom'
+import { Button, Form, Input, Spin, message } from 'antd'
+import { CheckCircleOutlined, CloseCircleOutlined } from '@ant-design/icons'
+import { publicGet, publicPost } from '@/api/api'
+import type { ErrorResponse } from '@/types/api'
+import './auth.css'
+
+type VerifyState = 'loading' | 'success' | 'error'
+
 export function Component() {
-  return <div>Verify Email</div>
+  const [searchParams] = useSearchParams()
+  const navigate = useNavigate()
+  const token = searchParams.get('token') ?? ''
+
+  const [state, setState] = useState<VerifyState>('loading')
+  const [errorMsg, setErrorMsg] = useState('')
+  const [showResend, setShowResend] = useState(false)
+  const [resendLoading, setResendLoading] = useState(false)
+
+  useEffect(() => {
+    if (!token) {
+      setState('error')
+      setErrorMsg('Token không hợp lệ hoặc đã hết hạn.')
+      return
+    }
+
+    publicGet('/auth/verify-email', { token })
+      .then(() => setState('success'))
+      .catch((err: unknown) => {
+        const e = err as ErrorResponse
+        setState('error')
+        setErrorMsg(e.error ?? 'Xác thực thất bại.')
+      })
+  }, [token])
+
+  const handleResend = async (values: { email: string }) => {
+    setResendLoading(true)
+    try {
+      await publicPost('/auth/resend-verification', { email: values.email })
+      message.success('Đã gửi lại email xác thực. Vui lòng kiểm tra hộp thư.')
+      setShowResend(false)
+    } catch (err) {
+      const e = err as ErrorResponse
+      message.error(e.error ?? 'Có lỗi xảy ra, thử lại sau.')
+    } finally {
+      setResendLoading(false)
+    }
+  }
+
+  return (
+    <div className="auth-centered-page">
+      <div className="auth-centered-card">
+        <div className="auth-centered-logo">
+          Buy<span>The</span>Best
+        </div>
+
+        {state === 'loading' && (
+          <div style={{ textAlign: 'center', padding: '32px 0' }}>
+            <Spin size="large" />
+            <p style={{ marginTop: 16, fontSize: 13, color: 'var(--color-muted)' }}>
+              Đang xác thực email...
+            </p>
+          </div>
+        )}
+
+        {state === 'success' && (
+          <div style={{ textAlign: 'center' }}>
+            <CheckCircleOutlined
+              style={{ fontSize: 48, color: '#22c55e', marginBottom: 16 }}
+            />
+            <h2 style={{ fontSize: 18, fontWeight: 700, marginBottom: 8 }}>
+              Xác thực thành công!
+            </h2>
+            <p style={{ fontSize: 13, color: 'var(--color-muted)', marginBottom: 24 }}>
+              Email đã được xác thực thành công. Bạn có thể đăng nhập ngay.
+            </p>
+            <Button
+              className="auth-submit-btn"
+              onClick={() => navigate('/login')}
+            >
+              Đăng nhập →
+            </Button>
+          </div>
+        )}
+
+        {state === 'error' && (
+          <div style={{ textAlign: 'center' }}>
+            <CloseCircleOutlined
+              style={{ fontSize: 48, color: '#ef4444', marginBottom: 16 }}
+            />
+            <h2 style={{ fontSize: 18, fontWeight: 700, marginBottom: 8 }}>
+              Xác thực thất bại
+            </h2>
+            <p style={{ fontSize: 13, color: 'var(--color-muted)', marginBottom: 24 }}>
+              {errorMsg}
+            </p>
+
+            {!showResend ? (
+              <Button
+                className="auth-submit-btn"
+                onClick={() => setShowResend(true)}
+              >
+                Gửi lại email xác thực
+              </Button>
+            ) : (
+              <Form layout="vertical" onFinish={handleResend} requiredMark={false}>
+                <Form.Item
+                  name="email"
+                  label="Email của bạn"
+                  rules={[
+                    { required: true, message: 'Vui lòng nhập email' },
+                    { type: 'email', message: 'Email không hợp lệ' },
+                  ]}
+                >
+                  <Input placeholder="you@example.com" />
+                </Form.Item>
+                <Button
+                  htmlType="submit"
+                  loading={resendLoading}
+                  className="auth-submit-btn"
+                >
+                  Gửi lại →
+                </Button>
+              </Form>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  )
 }

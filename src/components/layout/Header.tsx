@@ -5,8 +5,13 @@ import { Badge, Button, Dropdown } from 'antd'
 import type { MenuProps } from 'antd'
 
 export default function Header() {
-  const { user, isAuthenticated, logout } = useAuthStore()
+  const user = useAuthStore((s) => s.user)
+  const accessToken = useAuthStore((s) => s.accessToken)
+  const expiresAt = useAuthStore((s) => s.expiresAt)
+  const logout = useAuthStore((s) => s.logout)
   const navigate = useNavigate()
+
+  const isLoggedIn = !!accessToken && !!user && !!expiresAt && Date.now() < expiresAt
 
   const handleLogout = () => {
     logout()
@@ -32,7 +37,7 @@ export default function Header() {
       </div>
 
       <div className="header-right">
-        {isAuthenticated() && user ? (
+        {isLoggedIn ? (
           <>
             <Link to="/notifications">
               <Badge count={0} size="small">

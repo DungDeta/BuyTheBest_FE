@@ -1,15 +1,36 @@
 :root {
-  --color-primary: #1a3a5c;
-  --color-accent: #2563eb;
-  --color-bg: #f8f9fa;
+  --color-primary: #0654ba;
+  --color-accent: #0654ba;
+  --color-bg: #f7f7f7;
   --color-surface: #ffffff;
-  --color-border: #e2e8f0;
-  --color-border-strong: #1a1a1a;
-  --color-text: #1a1a1a;
-  --color-muted: #64748b;
-  --font-body: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-  --font-mono: 'JetBrains Mono', monospace;
-  --radius: 4px;
+  --color-border: #d4d4d4;
+  --color-border-strong: #141414;
+  --color-text: #141414;
+  --color-muted: #5a5a5a;
+  --font-body: 'JetBrains Mono', ui-monospace, 'Cascadia Code', 'SF Mono', Menlo, monospace;
+  --font-mono: 'JetBrains Mono', ui-monospace, 'Cascadia Code', 'SF Mono', Menlo, monospace;
+  --radius: 3px;
+
+  /* Prototype-compatible aliases (match docs/Prototype-BTB/assets/styles.css) */
+  --accent: #0654ba;
+  --accent-hover: #044a9e;
+  --accent-light: #eef4ff;
+  --bg: #f7f7f7;
+  --surface: #ffffff;
+  --paper-2: #f0eee8;
+  --fg: #141414;
+  --ink-soft: #3a3a3a;
+  --muted: #5a5a5a;
+  --border: #d4d4d4;
+  --border-strong: #141414;
+  --font-display: 'JetBrains Mono', ui-monospace, 'Cascadia Code', 'SF Mono', Menlo, monospace;
+  --success: #118c4f;
+  --success-light: #e6f4ec;
+  --warn: #cc6d00;
+  --warn-light: #fdf2e3;
+  --danger: #c7302b;
+  --danger-light: #fbe9e8;
+  --info: #0654ba;
 }
 
 * {
