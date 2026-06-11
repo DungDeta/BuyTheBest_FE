@@ -1,5 +1,5 @@
-import { Navigate } from 'react-router-dom'
+import { AuthPage } from './Login'
 
 export function Component() {
-  return <Navigate to="/login" replace />
+  return <AuthPage initialTab="register" />
 }

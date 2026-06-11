@@ -1,0 +1,521 @@
+/* =====================================================
+   Auction List / Browse page — page-specific styles
+   All design tokens come from global.css
+   ===================================================== */
+
+/* ---------- BROWSE SHELL ---------- */
+.browse-shell {
+  max-width: 1360px;
+  margin: 24px auto;
+  padding: 0 24px;
+  display: grid;
+  grid-template-columns: minmax(280px, 300px) minmax(0, 1fr);
+  gap: 24px;
+}
+
+.browse-shell > section {
+  min-width: 0;
+}
+
+/* ---------- FILTER PANEL ---------- */
+.filter-panel {
+  background: var(--surface);
+  border: 2px solid var(--border-strong);
+  border-radius: var(--radius);
+  padding: 0;
+  align-self: start;
+  position: sticky;
+  top: 12px;
+}
+
+.filter-section {
+  padding: 16px 18px;
+  border-bottom: 1px solid var(--border);
+}
+
+.filter-section:last-child {
+  border-bottom: none;
+}
+
+.filter-section h6 {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--ink-soft);
+  margin-bottom: 10px;
+}
+
+.filter-section h6 .reset {
+  float: right;
+  font-weight: 400;
+  color: var(--accent);
+  cursor: pointer;
+  text-decoration: underline;
+  background: none;
+  border: none;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  padding: 0;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+
+.checkbox-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.checkbox-list label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  cursor: pointer;
+  font-family: var(--font-mono);
+  min-width: 0;
+}
+
+.checkbox-list label input[type='checkbox'] {
+  accent-color: var(--accent);
+  cursor: pointer;
+  flex: 0 0 auto;
+}
+
+.checkbox-list label .mode-badge {
+  flex: 0 0 auto;
+}
+
+.checkbox-list label .count {
+  margin-left: auto;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--muted);
+  flex: 0 0 auto;
+}
+
+/* ---------- PRICE RANGE ---------- */
+.price-range {
+  display: flex;
+  gap: 8px;
+}
+
+.price-range input {
+  flex: 1 1 0;
+  min-width: 0;
+  width: 100%;
+  padding: 6px 8px;
+  border: 1.5px solid var(--border-strong);
+  border-radius: 2px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  outline: none;
+  background: var(--surface);
+  color: var(--fg);
+}
+
+.price-range input:focus {
+  border-color: var(--accent);
+}
+
+.dual-range {
+  height: 4px;
+  background:
+    linear-gradient(
+      to right,
+      var(--border) 0%,
+      var(--border) var(--range-start, 0%),
+      var(--accent) var(--range-start, 0%),
+      var(--accent) var(--range-end, 100%),
+      var(--border) var(--range-end, 100%),
+      var(--border) 100%
+    );
+  border-radius: 2px;
+  margin: 18px 0 12px;
+  position: relative;
+}
+
+.dual-range input[type='range'] {
+  appearance: none;
+  position: absolute;
+  inset: -7px 0 0;
+  width: 100%;
+  height: 18px;
+  margin: 0;
+  background: transparent;
+  pointer-events: none;
+}
+
+.dual-range input[type='range']::-webkit-slider-thumb {
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border: 2px solid var(--fg);
+  border-radius: 50%;
+  background: var(--surface);
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+.dual-range input[type='range']::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border: 2px solid var(--fg);
+  border-radius: 50%;
+  background: var(--surface);
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+.dual-range input[type='range']:focus-visible::-webkit-slider-thumb {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.dual-range input[type='range']:focus-visible::-moz-range-thumb {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.price-track-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 10px;
+  color: var(--muted);
+  font-family: var(--font-mono);
+}
+
+/* ---------- FILTER CLEAR ALL ---------- */
+.filter-clear-all {
+  padding: 12px 18px;
+  display: flex;
+  gap: 8px;
+}
+
+.filter-clear-all button {
+  flex: 1;
+  padding: 7px 10px;
+  border: 1.5px solid var(--border-strong);
+  border-radius: var(--radius);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  background: var(--surface);
+  color: var(--fg);
+  transition: background 0.15s, color 0.15s;
+}
+
+.filter-clear-all button:hover {
+  background: var(--fg);
+  color: var(--surface);
+}
+
+/* ---------- BROWSE TOOLBAR ---------- */
+.browse-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding-bottom: 14px;
+  border-bottom: 2px solid var(--border-strong);
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.browse-toolbar .left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+}
+
+.browse-toolbar h1 {
+  font-family: var(--font-display);
+  font-size: 26px;
+  letter-spacing: -0.5px;
+}
+
+.browse-toolbar h1 em {
+  font-style: normal;
+  color: var(--accent);
+  font-weight: 500;
+}
+
+.browse-toolbar .count {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.browse-toolbar select {
+  padding: 8px 12px;
+  border: 2px solid var(--border-strong);
+  border-radius: var(--radius);
+  font-size: 12px;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  background: var(--surface);
+  color: var(--fg);
+  cursor: pointer;
+  outline: none;
+}
+
+.browse-toolbar select:focus {
+  border-color: var(--accent);
+}
+
+.view-toggle {
+  display: inline-flex;
+  border: 2px solid var(--border-strong);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+
+.view-toggle button {
+  background: var(--surface);
+  border: none;
+  padding: 6px 12px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  color: var(--fg);
+  transition: background 0.15s, color 0.15s;
+}
+
+.view-toggle button.active {
+  background: var(--fg);
+  color: var(--surface);
+}
+
+/* ---------- ACTIVE FILTER CHIPS ---------- */
+.active-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 14px;
+  min-height: 0;
+}
+
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  background: var(--accent-light);
+  color: var(--accent);
+  border: 1px solid var(--accent);
+  border-radius: 14px;
+  font-size: 11px;
+  font-family: var(--font-mono);
+  font-weight: 700;
+}
+
+.chip .x {
+  cursor: pointer;
+  font-weight: 700;
+  background: none;
+  border: none;
+  color: inherit;
+  font-family: inherit;
+  font-size: inherit;
+  padding: 0;
+  line-height: 1;
+}
+
+.chip .x:hover {
+  opacity: 0.7;
+}
+
+/* ---------- LISTINGS GRID ---------- */
+.listings-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 14px;
+}
+
+/* ---------- LIST VIEW ---------- */
+.listing-list-row {
+  display: grid;
+  grid-template-columns: 100px 1fr 120px 100px 130px 100px;
+  gap: 14px;
+  align-items: center;
+  padding: 12px;
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  margin-bottom: 8px;
+  background: var(--surface);
+  text-decoration: none;
+  color: inherit;
+  transition: border-color 0.15s;
+}
+
+.listing-list-row:hover {
+  border-color: var(--border-strong);
+}
+
+.listing-list-row .thumb {
+  aspect-ratio: 1 / 1;
+  background: var(--paper-2);
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px;
+  text-align: center;
+}
+
+.listing-list-row .name {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 15px;
+  letter-spacing: -0.3px;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.listing-list-row .meta {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 4px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.listing-list-row .num {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.listing-list-row .list-enter-btn {
+  padding: 6px 10px;
+  border: 1.5px solid var(--accent);
+  border-radius: var(--radius);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--accent);
+  background: var(--surface);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+  text-decoration: none;
+  display: inline-block;
+  white-space: nowrap;
+}
+
+.listing-list-row .list-enter-btn:hover {
+  background: var(--accent);
+  color: #fff;
+}
+
+/* ---------- PAGINATION ---------- */
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin: 30px 0;
+  font-family: var(--font-mono);
+}
+
+.pagination button {
+  width: 36px;
+  height: 36px;
+  border: 1.5px solid var(--border-strong);
+  background: var(--surface);
+  border-radius: var(--radius);
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: var(--font-mono);
+  color: var(--fg);
+  transition: background 0.15s, color 0.15s;
+}
+
+.pagination button:hover:not(:disabled):not(.active) {
+  background: var(--border);
+}
+
+.pagination button.active {
+  background: var(--fg);
+  color: var(--surface);
+  border-color: var(--fg);
+}
+
+.pagination button:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+/* ---------- EMPTY STATE ---------- */
+.browse-empty {
+  text-align: center;
+  padding: 60px 20px;
+  border: 2px dashed var(--border);
+  border-radius: var(--radius);
+}
+
+.browse-empty h3 {
+  font-family: var(--font-display);
+  font-size: 22px;
+  margin-bottom: 8px;
+}
+
+.browse-empty p {
+  color: var(--muted);
+  font-size: 13px;
+  font-family: var(--font-mono);
+}
+
+/* ---------- LOADING ---------- */
+.browse-loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 60px 0;
+}
+
+/* ---------- RESPONSIVE ---------- */
+@media (max-width: 1023px) {
+  .browse-shell {
+    grid-template-columns: 1fr;
+  }
+
+  .filter-panel {
+    position: static;
+  }
+
+  .listing-list-row {
+    grid-template-columns: 80px 1fr;
+  }
+
+  .listing-list-row > *:nth-child(n + 3) {
+    grid-column: 2;
+  }
+}
+
+@media (max-width: 640px) {
+  .browse-shell {
+    padding: 0 12px;
+    margin: 12px auto;
+  }
+
+  .browse-toolbar {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .browse-toolbar .left {
+    flex-wrap: wrap;
+  }
+}

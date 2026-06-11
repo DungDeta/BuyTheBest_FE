@@ -1,0 +1,388 @@
+/* =====================================================
+   Seller Profile — public page
+   Design tokens from global.css
+   ===================================================== */
+
+/* ── Loading / error states ─────────────────────────── */
+
+.sp-loading,
+.sp-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 320px;
+  gap: 16px;
+}
+
+.sp-error-msg {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--danger);
+}
+
+.sp-back-link {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--accent);
+  text-decoration: underline;
+}
+
+.sp-back-link:hover {
+  color: var(--accent-hover);
+}
+
+/* ── Breadcrumb ─────────────────────────────────────── */
+
+.sp-breadcrumb {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--muted);
+  padding: 10px 24px;
+  max-width: 1100px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.sp-breadcrumb a {
+  color: var(--muted);
+  text-decoration: none;
+  transition: color 0.12s;
+}
+
+.sp-breadcrumb a:hover {
+  color: var(--accent);
+  text-decoration: underline;
+}
+
+.sp-bc-sep {
+  color: var(--border);
+  margin: 0 2px;
+}
+
+.sp-bc-label {
+  color: var(--muted);
+}
+
+.sp-bc-current {
+  color: var(--accent);
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 260px;
+}
+
+/* ── Page shell ─────────────────────────────────────── */
+
+.sp-shell {
+  max-width: 1100px;
+  margin: 0 auto 40px;
+  padding: 0 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+/* ── Seller info card ───────────────────────────────── */
+
+.sp-info-card {
+  background: var(--surface);
+  border: 2px solid var(--border-strong);
+  border-radius: var(--radius);
+  padding: 24px 28px;
+  margin-bottom: 20px;
+}
+
+.sp-info-top {
+  display: flex;
+  align-items: flex-start;
+  gap: 18px;
+  margin-bottom: 20px;
+}
+
+.sp-avatar {
+  width: 64px;
+  height: 64px;
+  background: var(--border-strong);
+  color: var(--surface);
+  border-radius: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-mono);
+  font-size: 18px;
+  font-weight: 700;
+  flex-shrink: 0;
+  letter-spacing: -0.5px;
+}
+
+.sp-info-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.sp-shop-name {
+  font-family: var(--font-display);
+  font-size: clamp(22px, 3vw, 32px);
+  font-weight: 700;
+  letter-spacing: -0.8px;
+  line-height: 1.1;
+  margin-bottom: 8px;
+}
+
+.sp-description {
+  font-size: 13px;
+  color: var(--ink-soft);
+  line-height: 1.65;
+  max-width: 600px;
+}
+
+/* ── Stats row ──────────────────────────────────────── */
+
+.sp-stats-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+
+.sp-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 0 24px;
+}
+
+.sp-stat:first-child {
+  padding-left: 0;
+}
+
+.sp-stat-divider {
+  width: 1px;
+  height: 36px;
+  background: var(--border);
+  flex-shrink: 0;
+}
+
+.sp-stat-val {
+  font-family: var(--font-mono);
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: -0.4px;
+  line-height: 1.2;
+  color: var(--fg);
+}
+
+.sp-stat-label {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.sp-stars {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--accent);
+  font-size: 16px;
+  letter-spacing: 1px;
+}
+
+.sp-rating-num {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--fg);
+  letter-spacing: -0.3px;
+}
+
+.sp-join-date {
+  font-size: 14px;
+}
+
+/* ── Tabs ───────────────────────────────────────────── */
+
+.sp-tabs {
+  display: flex;
+  gap: 0;
+  border-bottom: 2px solid var(--border-strong);
+  margin-bottom: 20px;
+}
+
+.sp-tab {
+  background: none;
+  border: none;
+  border-bottom: 3px solid transparent;
+  margin-bottom: -2px;
+  padding: 10px 20px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--muted);
+  cursor: pointer;
+  transition: color 0.12s, border-color 0.12s;
+}
+
+.sp-tab:hover {
+  color: var(--fg);
+}
+
+.sp-tab-active {
+  color: var(--fg);
+  border-bottom-color: var(--fg);
+}
+
+/* ── Tab content states ─────────────────────────────── */
+
+.sp-tab-loading {
+  display: flex;
+  justify-content: center;
+  padding: 40px 0;
+}
+
+.sp-tab-empty {
+  text-align: center;
+  padding: 40px 0;
+  color: var(--muted);
+  font-size: 13px;
+  font-family: var(--font-mono);
+}
+
+/* ── Listings grid (reuses home.css .listing cards) ── */
+/* .listings and .listing are defined in home.css.
+   They are available on every public route via
+   the shared PublicLayout. */
+
+/* ── Reviews list ───────────────────────────────────── */
+
+.sp-reviews-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.sp-review-item {
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-top: none;
+  padding: 16px 18px;
+}
+
+.sp-review-item:first-child {
+  border-top: 1.5px solid var(--border);
+  border-radius: var(--radius) var(--radius) 0 0;
+}
+
+.sp-review-item:last-child {
+  border-radius: 0 0 var(--radius) var(--radius);
+}
+
+.sp-review-item:only-child {
+  border-radius: var(--radius);
+  border-top: 1.5px solid var(--border);
+}
+
+.sp-review-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 6px;
+  flex-wrap: wrap;
+}
+
+.sp-review-stars {
+  font-size: 15px;
+  color: var(--accent);
+  letter-spacing: 1px;
+  flex-shrink: 0;
+}
+
+.sp-review-reviewer {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--fg);
+}
+
+.sp-review-date {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  color: var(--muted);
+  margin-left: auto;
+}
+
+.sp-review-comment {
+  font-size: 13px;
+  color: var(--ink-soft);
+  line-height: 1.65;
+  padding-left: 2px;
+}
+
+/* ── Responsive ─────────────────────────────────────── */
+
+@media (max-width: 768px) {
+  .sp-shell {
+    padding: 0 16px;
+  }
+
+  .sp-info-card {
+    padding: 18px 16px;
+  }
+
+  .sp-stats-row {
+    gap: 12px 0;
+  }
+
+  .sp-stat {
+    padding: 0 14px;
+  }
+
+  .sp-stat-divider {
+    height: 28px;
+  }
+
+  .sp-shop-name {
+    font-size: 22px;
+  }
+}
+
+@media (max-width: 480px) {
+  .sp-stats-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px 0;
+  }
+
+  .sp-stat-divider {
+    display: none;
+  }
+
+  .sp-stat {
+    padding: 0;
+  }
+
+  .sp-info-top {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .sp-tab {
+    padding: 10px 14px;
+    font-size: 11px;
+  }
+
+  .sp-review-date {
+    margin-left: 0;
+    width: 100%;
+  }
+}
