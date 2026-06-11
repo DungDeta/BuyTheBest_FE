@@ -1,28 +1,36 @@
+.auth-page {
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg);
+}
+
 .auth-shell {
-  min-height: calc(100vh - 50px);
+  min-height: min(620px, calc(100svh - 130px));
   display: grid;
   grid-template-columns: 1fr 1fr;
-  max-width: 1100px;
-  margin: 0 auto;
+  max-width: 1040px;
+  margin: 32px auto 42px;
+  width: 100%;
 }
 
 /* Left branding panel */
 .auth-side {
-  padding: 60px 48px;
+  padding: 48px;
   background: var(--surface);
   border-right: 2px solid var(--border-strong);
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
+  justify-content: flex-start;
 }
 
 .auth-side-logo {
   font-family: var(--font-display, var(--font-body));
-  font-size: 32px;
+  font-size: 30px;
   font-weight: 700;
-  letter-spacing: -1px;
+  letter-spacing: -0.5px;
   display: inline-block;
-  margin-bottom: 32px;
+  margin-bottom: 30px;
   color: var(--fg);
   text-decoration: none;
 }
@@ -34,10 +42,10 @@
 
 .auth-side h1 {
   font-family: var(--font-display, var(--font-body));
-  font-size: clamp(36px, 4vw, 48px);
+  font-size: clamp(36px, 3.3vw, 48px);
   line-height: 1.05;
-  letter-spacing: -0.8px;
-  margin-bottom: 18px;
+  letter-spacing: -0.4px;
+  margin-bottom: 16px;
   color: var(--fg);
 }
 
@@ -51,7 +59,7 @@
   font-size: 14px;
   line-height: 1.6;
   max-width: 380px;
-  margin-bottom: 24px;
+  margin-bottom: 0;
 }
 
 .auth-feature {
@@ -63,7 +71,7 @@
 }
 
 .auth-feature::before {
-  content: '// ';
+  content: '';
   color: var(--accent);
 }
 
@@ -76,22 +84,61 @@
 
 /* Right form panel */
 .auth-form-wrap {
-  padding: 60px 48px;
+  padding: 48px;
   background: var(--bg);
   display: flex;
   flex-direction: column;
+}
+
+.auth-shell--modal {
+  min-height: 0;
+  max-width: none;
+  margin: 0;
+}
+
+.auth-shell--modal .auth-side {
+  padding: 38px 40px;
+}
+
+.auth-shell--modal .auth-form-wrap {
+  padding: 38px 40px 42px;
+}
+
+.auth-modal .ant-modal-content {
+  padding: 0;
+  overflow: hidden;
+  border: 2px solid var(--border-strong);
+  border-radius: 4px;
+  background: var(--bg);
+  box-shadow: none;
+}
+
+.auth-modal .ant-modal-body {
+  padding: 0;
+}
+
+.auth-modal .ant-modal-close {
+  top: 10px;
+  right: 10px;
+  color: var(--fg);
+}
+
+.auth-modal .ant-modal-close-x {
+  width: 32px;
+  height: 32px;
+  line-height: 32px;
 }
 
 /* Tabs */
 .auth-tabs {
   display: flex;
   border-bottom: 2px solid var(--border-strong);
-  margin-bottom: 28px;
+  margin-bottom: 20px;
 }
 
 .auth-tab {
   flex: 1;
-  padding: 12px 0;
+  padding: 10px 0;
   font-size: 14px;
   font-weight: 700;
   text-transform: uppercase;
@@ -116,12 +163,12 @@
 .oauth-row {
   display: flex;
   gap: 10px;
-  margin-bottom: 20px;
+  margin-bottom: 14px;
 }
 
 .oauth-btn {
   flex: 1;
-  padding: 11px;
+  padding: 10px;
   background: var(--surface);
   border: 2px solid var(--border-strong);
   border-radius: 4px;
@@ -152,7 +199,7 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  margin: 18px 0;
+  margin: 14px 0;
   font-family: var(--font-mono);
   font-size: 11px;
   color: var(--muted);
@@ -170,7 +217,7 @@
 
 /* Form elements */
 .auth-form-group {
-  margin-bottom: 16px;
+  margin-bottom: 12px;
 }
 
 .auth-form-group label {
@@ -196,7 +243,7 @@
 
 .auth-form-input {
   width: 100%;
-  padding: 10px 12px;
+  padding: 9px 11px;
   font-size: 14px;
   border: 2px solid var(--border-strong);
   border-radius: 4px;
@@ -243,7 +290,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-bottom: 16px;
+  margin-bottom: 12px;
   font-size: 13px;
   color: var(--fg);
   cursor: pointer;
@@ -267,7 +314,7 @@
 /* Submit button */
 .auth-submit-btn {
   width: 100%;
-  padding: 14px;
+  padding: 12px;
   background: var(--fg);
   color: var(--surface);
   border: none;
@@ -312,8 +359,9 @@
 
 /* Footer */
 .auth-footer {
+  margin-top: auto;
   border-top: 2px solid var(--border-strong);
-  padding: 14px 24px;
+  padding: 10px 24px;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -360,6 +408,7 @@
 @media (max-width: 768px) {
   .auth-shell {
     grid-template-columns: 1fr;
+    min-height: 0;
   }
   .auth-side {
     border-right: none;
@@ -368,6 +417,15 @@
   }
   .auth-form-wrap {
     padding: 32px 24px;
+  }
+  .auth-modal {
+    max-width: calc(100vw - 24px);
+  }
+  .auth-shell--modal .auth-side {
+    display: none;
+  }
+  .auth-shell--modal .auth-form-wrap {
+    padding: 32px 24px 34px;
   }
 }
 
