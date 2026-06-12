@@ -1,0 +1,193 @@
+import { useState } from 'react'
+import { Link } from 'react-router-dom'
+import dayjs from 'dayjs'
+import type { Auction } from '@/types/auction'
+
+interface ProductHeroProps {
+  auction: Auction
+}
+
+function modeBadgeClass(mode: Auction['mode']): string {
+  switch (mode) {
+    case 'english':    return 'mode-badge E'
+    case 'dutch':      return 'mode-badge D'
+    case 'sealed_bid': return 'mode-badge S'
+    case 'reverse':    return 'mode-badge R'
+  }
+}
+
+function modeBadgeLabel(mode: Auction['mode']): string {
+  switch (mode) {
+    case 'english':    return 'E · English'
+    case 'dutch':      return 'D · Dutch'
+    case 'sealed_bid': return 'S · Sealed'
+    case 'reverse':    return 'R · Reverse'
+  }
+}
+
+function conditionLabel(condition: string): string {
+  switch (condition) {
+    case 'new':      return 'Mới'
+    case 'like_new': return 'Như mới'
+    case 'good':     return 'Tốt'
+    case 'fair':     return 'Bình thường'
+    default:         return condition
+  }
+}
+
+function sellerInitials(name: string): string {
+  return name.slice(0, 2).toUpperCase()
+}
+
+export function ProductHero({ auction }: ProductHeroProps) {
+  const { product, seller, mode, bid_count, id, starts_at } = auction
+
+  const images = product?.images ?? []
+  const sortedImages = [...images].sort((a, b) => a.sort_order - b.sort_order)
+  const primaryImage = sortedImages.find((img) => img.is_primary) ?? sortedImages[0] ?? null
+
+  const [activeIndex, setActiveIndex] = useState(0)
+  const displayImage = sortedImages[activeIndex] ?? primaryImage
+
+  const title = product?.title ?? `Auction #${id.slice(0, 8)}`
+  const publicLabel = `#${id.slice(-6).toUpperCase()}`
+  const isHot = bid_count > 10
+
+  return (
+    <div className="product-hero">
+      <div className="product-grid">
+
+        <div className="gallery">
+          <div className="gallery__main" aria-label={`Hình ảnh: ${title}`}>
+            <div className="gallery__badges">
+              <span className={modeBadgeClass(mode)}>{modeBadgeLabel(mode)}</span>
+              {isHot && <span className="hot-badge">HOT</span>}
+            </div>
+
+            {displayImage ? (
+              <img
+                src={displayImage.url}
+                alt={title}
+                className="gallery__main-img"
+              />
+            ) : (
+              <div className="gallery__placeholder">
+                <span className="gallery__placeholder-title">{title}</span>
+                <span className="gallery__placeholder-sub">
+                  {conditionLabel(product?.condition ?? '')}
+                </span>
+              </div>
+            )}
+          </div>
+
+          {sortedImages.length > 1 && (
+            <div className="gallery__thumbs" role="list" aria-label="Ảnh thu nhỏ">
+              {sortedImages.slice(0, 6).map((img, i) => (
+                <button
+                  key={img.id}
+                  type="button"
+                  role="listitem"
+                  className={`gallery__thumb${activeIndex === i ? ' gallery__thumb--active' : ''}`}
+                  onClick={() => setActiveIndex(i)}
+                  aria-label={`Xem ảnh ${i + 1}`}
+                  aria-pressed={activeIndex === i}
+                >
+                  <img src={img.thumbnail_url} alt="" aria-hidden="true" />
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div className="product-info">
+          <div className="product-info__ref">
+            {publicLabel} · Đăng {dayjs(starts_at).format('DD/MM/YYYY HH:mm')}
+          </div>
+
+          <h1 className="product-info__title">{title}</h1>
+
+          <div className="product-info__meta">
+            {product?.condition && (
+              <span className="condition-badge">
+                {conditionLabel(product.condition)}
+              </span>
+            )}
+            {(auction.view_count ?? 0) > 0 && (
+              <>
+                <span className="meta-dot" aria-hidden="true">·</span>
+                <span className="meta-stat" aria-label="Lượt xem">
+                  {auction.view_count} lượt xem
+                </span>
+              </>
+            )}
+            {(auction.watcher_count ?? 0) > 0 && (
+              <>
+                <span className="meta-dot" aria-hidden="true">·</span>
+                <span className="meta-stat" aria-label="Người theo dõi">
+                  {auction.watcher_count} theo dõi
+                </span>
+              </>
+            )}
+          </div>
+
+          <div className="product-specs">
+            <div className="product-spec">
+              <span className="product-spec__label">Tình trạng</span>
+              <span className="product-spec__value">
+                {conditionLabel(product?.condition ?? '—')}
+              </span>
+            </div>
+            <div className="product-spec">
+              <span className="product-spec__label">Phương thức</span>
+              <span className="product-spec__value">{modeBadgeLabel(mode)}</span>
+            </div>
+            <div className="product-spec">
+              <span className="product-spec__label">Giá khởi điểm</span>
+              <span className="product-spec__value">
+                {auction.starting_price.toLocaleString('vi-VN')} ₫
+              </span>
+            </div>
+            {auction.buy_now_price != null && (
+              <div className="product-spec">
+                <span className="product-spec__label">Mua ngay</span>
+                <span className="product-spec__value">
+                  {auction.buy_now_price.toLocaleString('vi-VN')} ₫
+                </span>
+              </div>
+            )}
+          </div>
+
+          {seller && (
+            <div className="seller-card">
+              {seller.avatar_url ? (
+                <img
+                  src={seller.avatar_url}
+                  alt={seller.display_name}
+                  className="seller-card__avatar"
+                />
+              ) : (
+                <div className="seller-card__avatar seller-card__avatar--initials" aria-hidden="true">
+                  {sellerInitials(seller.display_name)}
+                </div>
+              )}
+              <div className="seller-card__info">
+                <div className="seller-card__name">{seller.display_name}</div>
+                <div className="seller-card__meta">
+                  ★ {(seller.avg_rating ?? 0).toFixed(1)} · {seller.total_sales ?? 0} giao dịch
+                </div>
+              </div>
+              <Link
+                to={`/sellers/${seller.id}`}
+                className="seller-card__link"
+                aria-label={`Xem shop của ${seller.display_name}`}
+              >
+                Xem shop →
+              </Link>
+            </div>
+          )}
+        </div>
+
+      </div>
+    </div>
+  )
+}

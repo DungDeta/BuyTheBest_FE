@@ -1,233 +1,82 @@
-import { useEffect, useRef, useState } from 'react'
-import { Link, useNavigate, useParams } from 'react-router-dom'
-import { Spin } from 'antd'
-import { publicGet } from '@/api/api'
+import { useCallback, useEffect, useRef, useState } from 'react'
+import { Link, useParams } from 'react-router-dom'
+import { App, Spin } from 'antd'
+import { publicGet, privateDelete, privatePost } from '@/api/api'
 import { useAuthStore } from '@/store/useAuthStore'
-import './auction-detail.css'
+import { useAuctionWebSocket } from '@/hooks/useAuctionWebSocket'
+import { ProductHero } from '@/components/auction/ProductHero'
+import { CountdownBox } from '@/components/auction/CountdownBox'
+import { BidPanel } from '@/components/auction/BidPanel'
+import { RoomTabs } from '@/components/auction/RoomTabs'
+import type {
+  Auction,
+  AuctionEndedPayload,
+  AuctionExtendedPayload,
+  BidActionResponse,
+  BidHistoryItem,
+  BidPlacedPayload,
+  DutchPriceTickPayload,
+  RoomPresenceResponse,
+  SealedRevealedPayload,
+} from '@/types/auction'
+import './auction-room.css'
 
-interface AuctionDetail {
-  id: string
-  public_id?: string
-  mode: 'english' | 'dutch' | 'sealed_bid' | 'reverse'
-  status: string
-  starting_price: number
-  current_price: number
-  min_increment?: number
-  bid_count: number
-  starts_at: string
-  ends_at: string
-  product_id: number
-  seller_id: number
-  category_id: number
-  product?: {
-    title: string
-    slug: string
-    description: string
-    condition: string
-    category_id: number
-    category_name?: string
-  }
-  seller?: {
-    id: string
-    display_name: string
-  }
-}
-
-interface BidItem {
-  id: string
-  amount: number
-  bidder_label: string
-  created_at: string
-}
-
-function formatPrice(amount: number): string {
-  return amount.toLocaleString('vi-VN') + ' ₫'
-}
-
-function formatDateTime(iso: string): string {
-  return new Date(iso).toLocaleString('vi-VN', {
-    day: '2-digit',
-    month: '2-digit',
-    year: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  })
-}
-
-function formatTime(iso: string): string {
-  return new Date(iso).toLocaleTimeString('vi-VN', {
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-  })
-}
-
-function calcCountdown(endsAt: string): string {
-  const diff = Math.floor((new Date(endsAt).getTime() - Date.now()) / 1000)
-  if (diff <= 0) return 'Đã kết thúc'
-  if (diff >= 86400) {
-    const d = Math.floor(diff / 86400)
-    const h = Math.floor((diff % 86400) / 3600)
-    const m = Math.floor((diff % 3600) / 60)
-    const s = diff % 60
-    return `${d}d ${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
-  }
-  const h = Math.floor(diff / 3600)
-  const m = Math.floor((diff % 3600) / 60)
-  const s = diff % 60
-  return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`
-}
-
-function countdownBoxClass(endsAt: string): string {
-  const diff = new Date(endsAt).getTime() - Date.now()
-  if (diff <= 0)               return 'ad-countdown-box ended'
-  if (diff < 60 * 1000)       return 'ad-countdown-box urgent'
-  if (diff < 10 * 60 * 1000)  return 'ad-countdown-box warning'
-  return 'ad-countdown-box'
-}
-
-function modeBadgeClass(mode: AuctionDetail['mode']): string {
-  switch (mode) {
-    case 'english':    return 'mode-badge E'
-    case 'dutch':      return 'mode-badge D'
-    case 'sealed_bid': return 'mode-badge S'
-    case 'reverse':    return 'mode-badge R'
-  }
-}
-
-function modeBadgeLabel(mode: AuctionDetail['mode']): string {
-  switch (mode) {
-    case 'english':    return 'E · English'
-    case 'dutch':      return 'D · Dutch'
-    case 'sealed_bid': return 'S · Sealed'
-    case 'reverse':    return 'R · Reverse'
-  }
-}
-
-function conditionLabel(condition: string): string {
-  switch (condition) {
-    case 'new':      return 'Mới'
-    case 'like_new': return 'Như mới'
-    case 'good':     return 'Tốt'
-    case 'fair':     return 'Bình thường'
-    default:         return condition
-  }
-}
-
-interface CountdownTimerProps {
-  endsAt: string
-}
-
-function CountdownTimer({ endsAt }: CountdownTimerProps) {
-  const [display, setDisplay]   = useState(() => calcCountdown(endsAt))
-  const [boxClass, setBoxClass] = useState(() => countdownBoxClass(endsAt))
-  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
-
-  useEffect(() => {
-    timerRef.current = setInterval(() => {
-      setDisplay(calcCountdown(endsAt))
-      setBoxClass(countdownBoxClass(endsAt))
-    }, 1000)
-    return () => {
-      if (timerRef.current !== null) clearInterval(timerRef.current)
-    }
-  }, [endsAt])
-
-  return (
-    <div className={boxClass}>
-      <div className="ad-countdown-label">Còn lại · kết thúc lúc</div>
-      <div className="ad-countdown-timer">{display}</div>
-      <div className="ad-countdown-ends">{formatDateTime(endsAt)}</div>
-    </div>
-  )
-}
-
-interface BidHistoryTableProps {
-  auctionId: string
-}
-
-function BidHistoryTable({ auctionId }: BidHistoryTableProps) {
-  const [bids, setBids]       = useState<BidItem[]>([])
-  const [loading, setLoading] = useState(true)
-  const [hasError, setHasError] = useState(false)
-
-  useEffect(() => {
-    let cancelled = false
-
-    async function fetchBids() {
-      setLoading(true)
-      setHasError(false)
-      try {
-        const res = await publicGet<{ items: BidItem[] }>(`/auctions/${auctionId}/bids`)
-        if (!cancelled) {
-          setBids(res.data?.items ?? [])
-        }
-      } catch {
-        if (!cancelled) setHasError(true)
-      } finally {
-        if (!cancelled) setLoading(false)
-      }
-    }
-
-    fetchBids()
-    return () => { cancelled = true }
-  }, [auctionId])
-
-  if (loading) {
-    return <div className="ad-bids-loading"><Spin size="small" /></div>
-  }
-
-  if (hasError || bids.length === 0) {
-    return (
-      <div className="ad-bids-empty">
-        {hasError ? 'Không thể tải lịch sử bid.' : 'Chưa có lịch sử bid nào.'}
-      </div>
-    )
-  }
-
-  return (
-    <table className="ad-bid-table" aria-label="Lịch sử bid">
-      <thead>
-        <tr>
-          <th>Thời gian</th>
-          <th>Người bid</th>
-          <th>Số tiền</th>
-        </tr>
-      </thead>
-      <tbody>
-        {bids.map((bid) => (
-          <tr key={bid.id}>
-            <td className="ad-bid-time">{formatTime(bid.created_at)}</td>
-            <td className="ad-bid-who">{bid.bidder_label}</td>
-            <td className="ad-bid-amount">{formatPrice(bid.amount)}</td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
-  )
-}
-
-export default function AuctionDetail() {
-  const { id }          = useParams<{ id: string }>()
-  const navigate        = useNavigate()
+export function Component() {
+  const { id } = useParams<{ id: string }>()
+  const { message } = App.useApp()
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
+  const currentUserId = useAuthStore((s) => s.user?.id ?? null)
 
-  const [auction, setAuction] = useState<AuctionDetail | null>(null)
+  const [auction, setAuction] = useState<Auction | null>(null)
   const [loading, setLoading] = useState(true)
-  const [error, setError]     = useState<string | null>(null)
+  const [notFound, setNotFound] = useState(false)
+  const [bidFeed, setBidFeed] = useState<BidHistoryItem[]>([])
+  const [serverNow, setServerNow] = useState<string | null>(null)
+  const [currentBidderLabel, setCurrentBidderLabel] = useState<string | null>(null)
+  const [currentParticipantId, setCurrentParticipantId] = useState<number | null>(null)
+  const [roomParticipantCount, setRoomParticipantCount] = useState(0)
+  const pendingSelfBidAmountRef = useRef<number | null>(null)
+
+  const wsAuctionId = auction?.status === 'active' ? (auction.id ?? null) : null
+  const { isConnected, participantCount, subscribe, unsubscribe } = useAuctionWebSocket(wsAuctionId)
+
+  const markSelfBid = useCallback((amount: number, data?: BidActionResponse) => {
+    pendingSelfBidAmountRef.current = amount
+    if (data?.bidder_label) {
+      setCurrentBidderLabel(data.bidder_label)
+    }
+    if (typeof data?.participant_id === 'number') {
+      setCurrentParticipantId(data.participant_id)
+    }
+    if (data?.server_time) {
+      setServerNow(data.server_time)
+    }
+  }, [])
 
   useEffect(() => {
     if (!id) return
     let cancelled = false
+    setBidFeed([])
+    setCurrentBidderLabel(null)
+    setCurrentParticipantId(null)
+    setRoomParticipantCount(0)
+    pendingSelfBidAmountRef.current = null
 
     async function fetchAuction() {
       setLoading(true)
-      setError(null)
+      setNotFound(false)
       try {
-        const res = await publicGet<AuctionDetail>(`/auctions/${id}`)
-        if (!cancelled) setAuction(res.data)
+        const res = await publicGet<Auction>(`/auctions/${id}`)
+        if (!cancelled) {
+          setServerNow(res.data?.server_time ?? res.timestamp ?? null)
+          if (res.data) {
+            setAuction(res.data)
+          } else {
+            setNotFound(true)
+          }
+        }
       } catch {
-        if (!cancelled) setError('Không thể tải thông tin phiên đấu giá.')
+        if (!cancelled) setNotFound(true)
       } finally {
         if (!cancelled) setLoading(false)
       }
@@ -237,246 +86,291 @@ export default function AuctionDetail() {
     return () => { cancelled = true }
   }, [id])
 
+  useEffect(() => {
+    if (!auction || auction.status !== 'active' || !isAuthenticated()) return
+
+    const auctionId = auction.id
+    let joined = false
+
+    async function joinRoom() {
+      try {
+        const res = await privatePost<RoomPresenceResponse>(`/auctions/${auctionId}/join`)
+        const participant = res.data?.participant
+        const participantId = participant?.participant_id ?? participant?.id ?? null
+        const bidderLabel = participant?.bidder_label ?? participant?.label ?? null
+
+        if (typeof participantId === 'number') {
+          setCurrentParticipantId(participantId)
+        }
+        if (bidderLabel) {
+          setCurrentBidderLabel(bidderLabel)
+        }
+        if (res.data?.server_time ?? res.timestamp) {
+          setServerNow(res.data?.server_time ?? res.timestamp)
+        }
+        if (typeof res.data?.participant_count === 'number') {
+          setRoomParticipantCount(res.data.participant_count)
+        }
+        joined = true
+      } catch {
+      }
+    }
+
+    joinRoom()
+
+    return () => {
+      if (!joined) return
+      privateDelete(`/auctions/${auctionId}/join`).catch(() => undefined)
+    }
+  }, [auction?.id, auction?.status, isAuthenticated])
+
+  const handleBidPlaced = useCallback((payload: unknown) => {
+    const p = payload as BidPlacedPayload
+    const isSelf =
+      p.is_self === true ||
+      (currentUserId !== null && p.bidder_id != null && String(p.bidder_id) === currentUserId) ||
+      (currentParticipantId !== null && p.participant_id === currentParticipantId) ||
+      (currentBidderLabel !== null && p.bidder_label === currentBidderLabel) ||
+      (pendingSelfBidAmountRef.current !== null && pendingSelfBidAmountRef.current === p.amount)
+
+    if (p.server_time) {
+      setServerNow(p.server_time)
+    }
+    if (isSelf) {
+      setCurrentBidderLabel(p.bidder_label)
+      if (typeof p.participant_id === 'number') {
+        setCurrentParticipantId(p.participant_id)
+      }
+      pendingSelfBidAmountRef.current = null
+    }
+
+    setAuction((prev) => {
+      if (!prev) return prev
+      return {
+        ...prev,
+        current_price: p.current_price,
+        bid_count: p.bid_count,
+        highest_bidder_id: p.bidder_id ?? prev.highest_bidder_id,
+        highest_bidder_label: p.bidder_label,
+        highest_bidder_is_self: isSelf,
+        server_time: p.server_time ?? prev.server_time,
+      }
+    })
+
+    const newItem: BidHistoryItem = {
+      id: p.bid_id,
+      bidder_label: p.bidder_label,
+      bidder_id: p.bidder_id,
+      participant_id: p.participant_id,
+      amount: p.amount,
+      type: p.bid_type,
+      is_winning: true,
+      is_self: isSelf,
+      placed_at: new Date().toISOString(),
+    }
+    setBidFeed((prev) => [newItem, ...prev])
+  }, [currentBidderLabel, currentParticipantId, currentUserId])
+
+  const handleAuctionExtended = useCallback((payload: unknown) => {
+    const p = payload as AuctionExtendedPayload
+    setAuction((prev) => {
+      if (!prev) return prev
+      return {
+        ...prev,
+        ends_at: p.new_ends_at,
+        extension_count: p.extension_count,
+      }
+    })
+    message.info(`Phiên đấu giá được gia hạn thêm (lần ${p.extension_count})`)
+  }, [message])
+
+  const handleAuctionEnded = useCallback((payload: unknown) => {
+    const p = payload as AuctionEndedPayload
+    const winnerIsSelf =
+      p.winner_is_self === true ||
+      (currentUserId !== null && p.winner_user_id != null && String(p.winner_user_id) === currentUserId) ||
+      (currentUserId !== null && p.winner_id != null && String(p.winner_id) === currentUserId) ||
+      (currentBidderLabel !== null && p.winner_label === currentBidderLabel)
+
+    if (p.server_time) {
+      setServerNow(p.server_time)
+    }
+
+    setAuction((prev) => {
+      if (!prev) return prev
+      return {
+        ...prev,
+        status: 'ended',
+        current_price: p.final_price,
+        bid_count: p.bid_count,
+        winner_label: p.winner_label,
+        winner_id: p.winner_id,
+        winner_user_id: p.winner_user_id,
+        winner_is_self: winnerIsSelf,
+        order_id: p.order_id,
+        checkout_url: p.checkout_url,
+        payment_deadline: p.payment_deadline,
+        server_time: p.server_time ?? prev.server_time,
+      }
+    })
+
+    const winner = p.winner_label ?? 'Không có'
+    message.success(`Phiên kết thúc · Người thắng: ${winner}`)
+  }, [currentBidderLabel, currentUserId, message])
+
+  const handleDutchTick = useCallback((payload: unknown) => {
+    const p = payload as DutchPriceTickPayload
+    if (p.server_time) {
+      setServerNow(p.server_time)
+    }
+    setAuction((prev) => {
+      if (!prev) return prev
+      return {
+        ...prev,
+        current_price: p.new_price,
+        server_time: p.server_time ?? prev.server_time,
+      }
+    })
+  }, [])
+
+  const handleSealedRevealed = useCallback((payload: unknown) => {
+    const p = payload as SealedRevealedPayload
+    const winnerIsSelf =
+      p.winner_is_self === true ||
+      (currentUserId !== null && p.winner_user_id != null && String(p.winner_user_id) === currentUserId) ||
+      (currentUserId !== null && p.winner_id != null && String(p.winner_id) === currentUserId) ||
+      (currentBidderLabel !== null && p.winner_label === currentBidderLabel)
+
+    if (p.server_time) {
+      setServerNow(p.server_time)
+    }
+
+    setAuction((prev) => {
+      if (!prev) return prev
+      return {
+        ...prev,
+        current_price: p.current_price,
+        bid_count: p.bid_count,
+        status: 'ended',
+        winner_label: p.winner_label ?? prev.winner_label,
+        winner_id: p.winner_id ?? prev.winner_id,
+        winner_user_id: p.winner_user_id ?? prev.winner_user_id,
+        winner_is_self: winnerIsSelf,
+        order_id: p.order_id ?? prev.order_id,
+        checkout_url: p.checkout_url ?? prev.checkout_url,
+        payment_deadline: p.payment_deadline ?? prev.payment_deadline,
+        server_time: p.server_time ?? prev.server_time,
+      }
+    })
+    message.info('Kết quả sealed bid đã được công bố')
+  }, [currentBidderLabel, currentUserId, message])
+
+  useEffect(() => {
+    subscribe('bid.placed', handleBidPlaced)
+    subscribe('auction.extended', handleAuctionExtended)
+    subscribe('auction.ended', handleAuctionEnded)
+    subscribe('dutch.price_tick', handleDutchTick)
+    subscribe('sealed.revealed', handleSealedRevealed)
+
+    return () => {
+      unsubscribe('bid.placed', handleBidPlaced)
+      unsubscribe('auction.extended', handleAuctionExtended)
+      unsubscribe('auction.ended', handleAuctionEnded)
+      unsubscribe('dutch.price_tick', handleDutchTick)
+      unsubscribe('sealed.revealed', handleSealedRevealed)
+    }
+  }, [
+    subscribe,
+    unsubscribe,
+    handleBidPlaced,
+    handleAuctionExtended,
+    handleAuctionEnded,
+    handleDutchTick,
+    handleSealedRevealed,
+  ])
+
   if (loading) {
     return (
-      <div className="ad-loading" aria-label="Đang tải">
+      <div className="room-loading" aria-label="Đang tải">
         <Spin size="large" />
       </div>
     )
   }
 
-  if (error || !auction) {
+  if (notFound || !auction) {
     return (
-      <div className="ad-error">
-        <p className="ad-error-msg">{error ?? 'Phiên đấu giá không tồn tại.'}</p>
-        <Link to="/auctions" className="ad-back-link">← Quay lại danh sách</Link>
+      <div className="room-error">
+        <p className="room-error__msg">Phiên đấu giá không tồn tại hoặc đã bị xoá.</p>
+        <Link to="/auctions" className="room-back-link">← Quay lại danh sách</Link>
       </div>
     )
   }
 
-  const title       = auction.product?.title ?? `Auction #${auction.id.slice(0, 8)}`
-  const publicLabel = auction.public_id
-    ? `#${auction.public_id}`
-    : `#${auction.id.slice(-6).toUpperCase()}`
-  const seller = auction.seller?.id && auction.seller.display_name
-    ? auction.seller
-    : null
+  const title = auction.product?.title ?? `Auction #${auction.id.slice(0, 8)}`
+  const isActive = auction.status === 'active'
+  const authed = isAuthenticated()
+  const visibleParticipantCount = participantCount > 0 ? participantCount : roomParticipantCount
 
   return (
     <>
-      {/* ── Breadcrumb ──────────────────────────────────────── */}
-      <nav className="ad-breadcrumb" aria-label="Breadcrumb">
+      <nav className="room-breadcrumb" aria-label="Breadcrumb">
         <Link to="/">Trang chủ</Link>
-        <span className="ad-bc-sep" aria-hidden="true">/</span>
+        <span className="room-breadcrumb__sep" aria-hidden="true">/</span>
         <Link to="/auctions">Khám phá</Link>
-        {auction.product?.category_name && (
-          <>
-            <span className="ad-bc-sep" aria-hidden="true">/</span>
-            <Link to={`/auctions?cat=${auction.product?.category_id}`}>
-              {auction.product?.category_name}
-            </Link>
-          </>
-        )}
-        <span className="ad-bc-sep" aria-hidden="true">/</span>
-        <span className="ad-bc-current" aria-current="page">{title}</span>
+        <span className="room-breadcrumb__sep" aria-hidden="true">/</span>
+        <span className="room-breadcrumb__current" aria-current="page">{title}</span>
       </nav>
 
-      {/* ── Room shell ──────────────────────────────────────── */}
-      <div className="ad-shell">
+      <div className="room-shell">
+        <div className="room-left">
+          <ProductHero auction={auction} />
 
-        {/* ══ LEFT ══ */}
-        <div className="ad-left">
-
-          {/* Product hero card */}
-          <div className="ad-product-hero">
-            <div className="ad-product-grid">
-
-              {/* Gallery placeholder */}
-              <div className="ad-gallery">
-                <div className="ad-main-img" aria-label={`Hình ảnh: ${title}`}>
-                  <div className="ad-img-badges">
-                    <span className={modeBadgeClass(auction.mode)}>
-                      {modeBadgeLabel(auction.mode)}
-                    </span>
-                  </div>
-                  <div className="ad-img-content">
-                    <span className="ad-img-title">{title}</span>
-                    <span className="ad-img-sub">
-                      {conditionLabel(auction.product?.condition ?? '')}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Product info */}
-              <div className="ad-product-info">
-                <div className="ad-product-ref">
-                  {publicLabel} · Đăng {formatDateTime(auction.starts_at)}
-                </div>
-                <h1 className="ad-product-title">{title}</h1>
-
-                <div className="ad-product-meta">
-                  <span className="ad-condition-badge">
-                    {conditionLabel(auction.product?.condition ?? '')}
-                  </span>
-                  {auction.product?.category_name && (
-                    <>
-                      <span className="ad-meta-dot" aria-hidden="true">·</span>
-                      <Link
-                        to={`/auctions?cat=${auction.product?.category_id}`}
-                        className="ad-meta-link"
-                      >
-                        {auction.product?.category_name}
-                      </Link>
-                    </>
-                  )}
-                </div>
-
-                {auction.product?.description && (
-                  <p className="ad-product-desc">{auction.product?.description}</p>
-                )}
-
-                {seller && (
-                  <div className="ad-seller-card">
-                    <div className="ad-seller-avatar" aria-hidden="true">
-                      {seller.display_name.slice(0, 2).toUpperCase()}
-                    </div>
-                    <div className="ad-seller-info">
-                      <div className="ad-seller-name">{seller.display_name}</div>
-                      <div className="ad-seller-sub">Người bán</div>
-                    </div>
-                    <Link
-                      to={`/sellers/${seller.id}`}
-                      className="ad-seller-link"
-                      aria-label={`Xem shop của ${seller.display_name}`}
-                    >
-                      Xem shop →
-                    </Link>
-                  </div>
-                )}
-              </div>
-
-            </div>
-          </div>
-
-          {/* Bid history */}
-          <section className="ad-section" aria-labelledby="bid-history-heading">
-            <h2 className="ad-section-title" id="bid-history-heading">
-              Lịch sử bid
-              <span className="ad-section-count">{auction.bid_count} lượt</span>
-            </h2>
-            <BidHistoryTable auctionId={id!} />
-          </section>
-
+          <RoomTabs
+            auction={auction}
+            bidFeed={bidFeed}
+            currentUserId={currentUserId}
+            currentBidderLabel={currentBidderLabel}
+            currentParticipantId={currentParticipantId}
+            isLoggedIn={authed}
+            participantCount={visibleParticipantCount}
+            subscribe={subscribe}
+            unsubscribe={unsubscribe}
+          />
         </div>
 
-        {/* ══ RIGHT — Bid panel ══ */}
-        <aside className="ad-bid-panel" aria-label="Thông tin và hành động đấu giá">
-
-          {/* Countdown */}
-          <CountdownTimer endsAt={auction.ends_at} />
-
-          {/* Bid summary card */}
-          <div className="ad-bid-card">
-
-            <div className="ad-bid-current">
-              <div>
-                <div className="ad-bid-label">
-                  {auction.mode === 'sealed_bid'  && 'Giá khởi điểm'}
-                  {auction.mode === 'dutch'        && 'Giá hiện tại (đang giảm)'}
-                  {auction.mode === 'reverse'      && 'Ngân sách buyer'}
-                  {auction.mode === 'english'      && 'Bid hiện tại'}
-                </div>
-                <div className="ad-bid-amount">
-                  {auction.mode === 'sealed_bid'
-                    ? '? ? ?. ? ? ?. ? ? ? ₫'
-                    : formatPrice(auction.current_price)}
-                </div>
-                {auction.mode !== 'sealed_bid' && (
-                  <div className="ad-bid-delta">
-                    + {formatPrice(auction.current_price - auction.starting_price)} vs khởi điểm
-                  </div>
-                )}
-              </div>
-              <span className={modeBadgeClass(auction.mode)}>
-                {modeBadgeLabel(auction.mode)}
-              </span>
-            </div>
-
-            {/* Stats row */}
-            <div className="ad-bid-stats">
-              <div className="ad-bid-stat">
-                <span className="ad-bid-stat-val">{auction.bid_count}</span>
-                <span className="ad-bid-stat-label">
-                  {auction.mode === 'reverse' ? 'sellers' : 'bids'}
-                </span>
-              </div>
-              {auction.mode !== 'sealed_bid' && (
-                <div className="ad-bid-stat">
-                  <span className="ad-bid-stat-val">
-                    {formatPrice(auction.min_increment ?? 0)}
-                  </span>
-                  <span className="ad-bid-stat-label">bước tối thiểu</span>
-                </div>
-              )}
-              <div className="ad-bid-stat">
-                <span className="ad-bid-stat-val">
-                  {formatPrice(auction.starting_price)}
-                </span>
-                <span className="ad-bid-stat-label">khởi điểm</span>
-              </div>
-            </div>
-
-            {/* Action */}
-            <div className="ad-bid-action">
-              {isAuthenticated() ? (
-                <button
-                  className="ad-join-btn"
-                  type="button"
-                  onClick={() => {
-                  }}
-                >
-                  Tham gia phiên này →
-                </button>
-              ) : (
-                <button
-                  className="ad-login-btn"
-                  type="button"
-                  onClick={() => navigate('/login')}
-                >
-                  Đăng nhập để bid →
-                </button>
-              )}
-              <p className="ad-action-note">
-                Escrow bảo vệ — tiền giữ đến khi xác nhận nhận hàng
-              </p>
-            </div>
-
-          </div>
-
-          {seller && (
-            <div className="ad-panel-seller">
-              <div className="ad-panel-seller-avatar" aria-hidden="true">
-                {seller.display_name.slice(0, 2).toUpperCase()}
-              </div>
-              <div className="ad-panel-seller-info">
-                <div className="ad-panel-seller-label">Người bán</div>
-                <div className="ad-panel-seller-name">{seller.display_name}</div>
-              </div>
-              <Link
-                to={`/sellers/${seller.id}`}
-                className="ad-panel-seller-link"
-                aria-label={`Xem trang người bán ${seller.display_name}`}
-              >
-                Xem →
-              </Link>
+        <aside className="room-right" aria-label="Thông tin và hành động đấu giá">
+          {isActive && (
+            <div
+              className={`room-ws-badge${isConnected ? ' room-ws-badge--live' : ''}`}
+              aria-label={isConnected ? 'Đang kết nối trực tiếp' : 'Đang kết nối lại'}
+            >
+              <span className="room-ws-badge__dot" aria-hidden="true" />
+              {isConnected ? 'LIVE' : 'Connecting…'}
             </div>
           )}
 
+          <CountdownBox
+            endsAt={auction.ends_at}
+            serverNow={serverNow ?? auction.server_time}
+            antiSnipeSeconds={auction.anti_snipe_threshold_seconds}
+            extensionCount={auction.extension_count}
+            maxExtensions={auction.max_extensions}
+          />
+
+          <BidPanel
+            auction={auction}
+            isLoggedIn={authed}
+            currentUserId={currentUserId}
+            currentBidderLabel={currentBidderLabel}
+            currentParticipantId={currentParticipantId}
+            onBidPlaced={markSelfBid}
+          />
+
+          <div className="escrow-banner">
+            <strong>Escrow bảo vệ</strong> — tiền giữ lại an toàn đến khi xác nhận nhận hàng thành công.
+          </div>
         </aside>
       </div>
     </>
   )
 }
-
-export const Component = AuctionDetail
