@@ -1,0 +1,322 @@
+/* ═══ NOTIFICATIONS PAGE ═══ */
+
+.notif-page {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 24px;
+}
+
+.notif-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.notif-header__title {
+  font-family: var(--font-mono);
+  font-size: 24px;
+  font-weight: 700;
+  letter-spacing: -0.5px;
+  margin: 0;
+}
+
+.notif-header__actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.notif-action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 7px 12px;
+  min-height: 32px;
+  background: var(--color-surface);
+  border: 1.5px solid var(--color-border);
+  border-radius: 4px;
+  color: var(--color-text);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: border-color 0.13s, background 0.13s, color 0.13s;
+}
+
+.notif-action-btn:hover:not(:disabled) {
+  border-color: var(--color-text);
+}
+
+.notif-action-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+/* ── Filter pills ── */
+.notif-filters {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 18px;
+}
+
+.notif-filter-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  background: var(--color-surface);
+  border: 1.5px solid var(--color-border);
+  border-radius: 20px;
+  font-size: 12px;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.13s, border-color 0.13s, color 0.13s;
+  color: var(--color-text);
+  line-height: 1;
+}
+
+.notif-filter-btn:hover {
+  border-color: var(--color-text);
+}
+
+.notif-filter-btn--active {
+  background: var(--color-text);
+  color: var(--color-surface);
+  border-color: var(--color-text);
+}
+
+/* ── Notification item ── */
+.notif-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.notif-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 14px 16px;
+  background: var(--color-surface);
+  border: 1.5px solid var(--color-border);
+  border-radius: 3px;
+  margin-bottom: 8px;
+  cursor: pointer;
+  transition: border-color 0.13s, background 0.13s;
+  position: relative;
+  text-align: left;
+  width: 100%;
+}
+
+.notif-item:hover {
+  border-color: var(--color-text);
+}
+
+.notif-item--unread {
+  background: #f0f6ff;
+  border-color: #b3d0f7;
+}
+
+.notif-item--unread:hover {
+  border-color: var(--color-primary);
+}
+
+.notif-item__icon {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 0.3px;
+  flex-shrink: 0;
+  width: 44px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-bg);
+  border: 1.5px solid var(--color-border);
+  border-radius: 999px;
+  line-height: 1;
+}
+
+.notif-item__body {
+  flex: 1;
+  min-width: 0;
+}
+
+.notif-item__title {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  color: var(--color-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.4;
+}
+
+.notif-item--unread .notif-item__title {
+  font-weight: 700;
+}
+
+.notif-item__content {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--color-muted);
+  margin-top: 3px;
+  line-height: 1.5;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.notif-item__time {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--color-muted);
+  white-space: nowrap;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+/* Unread blue dot indicator */
+.notif-item__dot {
+  position: absolute;
+  top: 16px;
+  right: 14px;
+  width: 8px;
+  height: 8px;
+  background: var(--color-primary, #1677ff);
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+/* ── Empty state ── */
+.notif-empty {
+  text-align: center;
+  padding: 60px 0;
+  font-family: var(--font-mono);
+  color: var(--color-muted);
+  font-size: 14px;
+}
+
+.notif-empty__icon {
+  font-size: 14px;
+  font-weight: 800;
+  letter-spacing: 0.8px;
+  margin-bottom: 12px;
+  display: block;
+  color: var(--color-text);
+}
+
+/* ── Preferences modal ── */
+.pref-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--color-border);
+  gap: 16px;
+}
+
+.pref-row:last-child {
+  border-bottom: none;
+}
+
+.pref-row__label {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 700;
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.pref-row__mandatory {
+  display: inline-flex;
+  align-items: center;
+  min-height: 20px;
+  padding: 2px 8px;
+  border: 1px solid var(--color-border-strong);
+  border-radius: 999px;
+  color: var(--color-muted);
+  background: var(--color-surface);
+  font-size: 10px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.pref-row__toggles {
+  display: flex;
+  gap: 24px;
+  flex-shrink: 0;
+}
+
+.pref-toggle {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  color: var(--color-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.pref-header {
+  display: flex;
+  justify-content: flex-end;
+  gap: 24px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid var(--color-border-strong);
+  margin-bottom: 4px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: var(--color-muted);
+}
+
+.pref-header__col {
+  width: 48px;
+  text-align: center;
+}
+
+/* ── Pagination ── */
+.notif-pagination {
+  display: flex;
+  justify-content: center;
+  margin-top: 24px;
+}
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+  .notif-page {
+    padding: 0;
+  }
+
+  .notif-header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .notif-item {
+    padding: 12px;
+  }
+
+  .notif-item__icon {
+    width: 30px;
+    height: 30px;
+    font-size: 18px;
+  }
+}
