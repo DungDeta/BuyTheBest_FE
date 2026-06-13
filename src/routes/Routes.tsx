@@ -18,6 +18,12 @@ export const router = createBrowserRouter([
     ],
   },
   {
+    element: <PublicLayout />,
+    children: [
+      { path: '/payment/callback', lazy: () => import('@/pages/Dashboard/PaymentCallback') },
+    ],
+  },
+  {
     element: <PublicRoute />,
     children: [
       { path: '/login', lazy: () => import('@/pages/Auth/Login') },
@@ -42,7 +48,6 @@ export const router = createBrowserRouter([
           { path: '/orders', lazy: () => import('@/pages/Dashboard/Orders') },
           { path: '/orders/:id', lazy: () => import('@/pages/Dashboard/OrderDetail') },
           { path: '/orders/:id/checkout', lazy: () => import('@/pages/Dashboard/Checkout') },
-          { path: '/disputes/:id', lazy: () => import('@/pages/Dashboard/DisputeDetail') },
         ],
       },
     ],

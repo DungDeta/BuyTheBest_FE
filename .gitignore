@@ -32,6 +32,10 @@ pnpm-debug.log*
 # Test coverage
 coverage/
 
+# Local E2E/debug artifacts
+.codex-artifacts/
+.playwright-mcp/
+
 # Docs (local reference only)
 docs/
 
