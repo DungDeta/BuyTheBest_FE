@@ -77,6 +77,7 @@ em {
   flex: 1;
   padding: 24px;
   overflow-y: auto;
+  min-width: 0;
 }
 
 /* Header */
@@ -223,9 +224,57 @@ em {
 .sidebar,
 .admin-sidebar {
   width: 220px;
+  flex: 0 0 220px;
   background: var(--color-surface);
   border-right: 1px solid var(--color-border);
   padding-top: 8px;
+}
+
+@media (max-width: 768px) {
+  .dashboard-container {
+    flex-direction: column;
+  }
+
+  .dashboard-content {
+    width: 100%;
+    padding: 16px;
+    overflow-x: hidden;
+  }
+
+  .sidebar {
+    width: 100%;
+    flex: 0 0 auto;
+    border-right: 0;
+    border-bottom: 1px solid var(--color-border);
+    padding-top: 0;
+    overflow-x: auto;
+  }
+
+  .sidebar .ant-menu {
+    display: flex;
+    width: max-content;
+    min-width: 100%;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+
+  .sidebar .ant-menu-item,
+  .sidebar .ant-menu-submenu-title {
+    flex: 0 0 auto;
+    width: auto !important;
+    margin-inline: 0 !important;
+    padding-inline: 14px !important;
+  }
+
+  .sidebar .ant-menu-item-divider {
+    display: none;
+  }
+}
+
+@media (max-width: 480px) {
+  .dashboard-content {
+    padding: 12px;
+  }
 }
 
 .admin-brand {
