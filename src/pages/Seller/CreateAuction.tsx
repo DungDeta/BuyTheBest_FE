@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import {
   App,
+  Alert,
   Button,
   Collapse,
   DatePicker,
@@ -109,6 +110,7 @@ export function Component() {
   const [showPreview, setShowPreview] = useState(false)
 
   const [form] = Form.useForm<AuctionFormValues>()
+  const hasApprovedProducts = products.length > 0
 
   useEffect(() => {
     let cancelled = false
@@ -298,6 +300,19 @@ export function Component() {
               notFoundContent="Chưa có sản phẩm nào được duyệt"
             />
           </Form.Item>
+          {!loadingProducts && !hasApprovedProducts && (
+            <Alert
+              type="info"
+              message="Chưa có sản phẩm đã duyệt"
+              description="Bạn cần tạo sản phẩm và gửi duyệt trước khi mở phiên đấu giá."
+              action={
+                <Button size="small" onClick={() => navigate('/seller/products/new')}>
+                  Tạo sản phẩm
+                </Button>
+              }
+              style={{ marginBottom: 16 }}
+            />
+          )}
 
           <Form.Item
             label="Danh mục đấu giá"
@@ -654,9 +669,19 @@ export function Component() {
         <div className="auction-form__footer">
           <Button onClick={() => navigate('/seller/products')}>Huỷ</Button>
           {!showPreview && (
-            <Button onClick={handlePreview}>Xem trước</Button>
+            <Button
+              onClick={handlePreview}
+              disabled={loadingProducts || !hasApprovedProducts}
+            >
+              Xem trước
+            </Button>
           )}
-          <Button type="primary" htmlType="submit" loading={submitting}>
+          <Button
+            type="primary"
+            htmlType="submit"
+            loading={submitting}
+            disabled={loadingProducts || !hasApprovedProducts}
+          >
             Tạo phiên đấu giá
           </Button>
         </div>

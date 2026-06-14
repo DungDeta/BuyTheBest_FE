@@ -161,7 +161,7 @@ export function Component() {
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const { isConnected, sendTypingStart, sendTypingStop, sendReadReceipt, subscribe, unsubscribe } =
-    useChatWebSocket()
+    useChatWebSocket(activeConvId)
 
   useEffect(() => {
     activeConvIdRef.current = activeConvId
