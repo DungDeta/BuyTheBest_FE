@@ -69,7 +69,7 @@ export function Component() {
         const res = await publicGet<Auction>(`/auctions/${id}`)
         if (!cancelled) {
           setServerNow(res.data?.server_time ?? res.timestamp ?? null)
-          if (res.data) {
+          if (res.data && typeof res.data.id === 'string') {
             setAuction(res.data)
           } else {
             setNotFound(true)
@@ -87,9 +87,9 @@ export function Component() {
   }, [id])
 
   useEffect(() => {
-    if (!auction || auction.status !== 'active' || !isAuthenticated()) return
+    if (!wsAuctionId || !isAuthenticated()) return
 
-    const auctionId = auction.id
+    const auctionId = wsAuctionId
     let joined = false
 
     async function joinRoom() {
@@ -122,7 +122,7 @@ export function Component() {
       if (!joined) return
       privateDelete(`/auctions/${auctionId}/join`).catch(() => undefined)
     }
-  }, [auction?.id, auction?.status, isAuthenticated])
+  }, [wsAuctionId, isAuthenticated])
 
   const handleBidPlaced = useCallback((payload: unknown) => {
     const p = payload as BidPlacedPayload

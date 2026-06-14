@@ -20,17 +20,33 @@ interface Auction {
   seller?: { id: string; display_name: string }
 }
 
-const CATEGORIES = [
-  { label: 'Điện thoại', slug: 'phone' },
-  { label: 'Laptop',     slug: 'laptop' },
-  { label: 'Đồng hồ',   slug: 'watch' },
-  { label: 'Sneakers',   slug: 'sneaker' },
-  { label: 'Xe máy',    slug: 'motor' },
-  { label: 'Đồ sưu tầm', slug: 'collectible' },
-  { label: 'Gaming',    slug: 'gaming' },
-  { label: 'Nội thất',  slug: 'furniture' },
-  { label: 'Nghệ thuật', slug: 'art' },
+interface CategoryOption {
+  id?: number
+  name: string
+  slug: string
+}
+
+interface HomeData {
+  categories?: CategoryOption[]
+}
+
+const FALLBACK_CATEGORIES: CategoryOption[] = [
+  { name: 'Điện tử',  slug: 'dien-tu' },
+  { name: 'Đồng hồ',  slug: 'dong-ho' },
+  { name: 'Xe cộ',    slug: 'xe-co' },
+  { name: 'Sneakers', slug: 'sneakers' },
+  { name: 'Sưu tầm',  slug: 'suu-tam' },
+  { name: 'Gaming',   slug: 'gaming' },
 ]
+
+const CATEGORY_LABELS: Record<string, string> = {
+  'dien-tu': 'Công nghệ',
+  'dong-ho': 'Đồng hồ',
+  'xe-co': 'Xe cộ',
+  sneakers: 'Sneakers',
+  'suu-tam': 'Sưu tầm',
+  gaming: 'Gaming',
+}
 
 const AUCTION_TYPES = [
   {
@@ -139,6 +155,10 @@ function isAuctionEndingSoon(auction: Auction): boolean {
   return auction.status === 'active' && remaining > 0 && remaining <= ENDING_SOON_WINDOW_MS
 }
 
+function categoryLabel(category: CategoryOption): string {
+  return CATEGORY_LABELS[category.slug] ?? category.name
+}
+
 interface CountdownCellProps {
   endsAt: string
 }
@@ -216,6 +236,7 @@ function AuctionCard({ auction }: AuctionCardProps) {
 
 export default function Home() {
   const [liveAuctions, setLiveAuctions] = useState<Auction[]>([])
+  const [categories, setCategories] = useState<CategoryOption[]>(FALLBACK_CATEGORIES)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -224,13 +245,21 @@ export default function Home() {
     async function fetchAuctions() {
       setLoading(true)
       try {
-        const res = await publicGet<PageResponse<Auction>>('/auctions', {
-          status: 'active',
-          limit: 100,
-          sort: 'ending_soon',
-        })
-        if (!cancelled && res.data?.items) {
-          setLiveAuctions(res.data.items.filter(isAuctionLive))
+        const [auctionResult, homeResult] = await Promise.allSettled([
+          publicGet<PageResponse<Auction>>('/auctions', {
+            status: 'active',
+            limit: 100,
+            sort: 'ending_soon',
+          }),
+          publicGet<HomeData>('/home'),
+        ])
+
+        if (!cancelled && auctionResult.status === 'fulfilled' && auctionResult.value.data?.items) {
+          setLiveAuctions(auctionResult.value.data.items.filter(isAuctionLive))
+        }
+        if (!cancelled && homeResult.status === 'fulfilled') {
+          const nextCategories = homeResult.value.data?.categories
+          setCategories(nextCategories?.length ? nextCategories : FALLBACK_CATEGORIES)
         }
       } catch {
       } finally {
@@ -249,9 +278,9 @@ export default function Home() {
     <>
       {/* ── Category bar ─────────────────────────────────────────── */}
       <div className="cat-bar">
-        {CATEGORIES.map((cat) => (
-          <Link key={cat.slug} to={`/auctions?cat=${cat.slug}`}>
-            {cat.label}
+        {categories.map((cat) => (
+          <Link key={cat.slug} to={`/categories/${cat.slug}`}>
+            {categoryLabel(cat)}
           </Link>
         ))}
       </div>

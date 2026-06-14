@@ -17,7 +17,7 @@ const WS_BASE = import.meta.env.VITE_WS_URL ?? 'ws://localhost:3000/ws'
 const MAX_ATTEMPTS = 10
 const MAX_BACKOFF_MS = 30_000
 
-export function useChatWebSocket(): UseChatWebSocketResult {
+export function useChatWebSocket(conversationId: number | null): UseChatWebSocketResult {
   const [isConnected, setIsConnected] = useState(false)
 
   const wsRef = useRef<WebSocket | null>(null)
@@ -63,7 +63,7 @@ export function useChatWebSocket(): UseChatWebSocketResult {
 
   useEffect(() => {
     const token = useAuthStore.getState().accessToken
-    if (!token) return
+    if (!token || !conversationId) return
 
     let cancelled = false
 
@@ -73,7 +73,7 @@ export function useChatWebSocket(): UseChatWebSocketResult {
       const currentToken = useAuthStore.getState().accessToken
       if (!currentToken) return
 
-      const url = `${WS_BASE}/chat?token=${currentToken}`
+      const url = `${WS_BASE}/chat?token=${currentToken}&conversation_id=${conversationId}`
       const ws = new WebSocket(url)
       wsRef.current = ws
 
@@ -136,7 +136,7 @@ export function useChatWebSocket(): UseChatWebSocketResult {
       setIsConnected(false)
       attemptsRef.current = 0
     }
-  }, [dispatch])
+  }, [conversationId, dispatch])
 
   return { isConnected, sendTypingStart, sendTypingStop, sendReadReceipt, subscribe, unsubscribe }
 }

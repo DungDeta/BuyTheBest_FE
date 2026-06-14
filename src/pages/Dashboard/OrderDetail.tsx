@@ -511,7 +511,6 @@ export function Component() {
       {order.dispute && currentUserId && (
         <DisputeSection
           dispute={order.dispute}
-          orderId={order.id}
           currentUserId={currentUserId}
           buyerId={order.buyer_id}
           sellerId={order.seller_id}

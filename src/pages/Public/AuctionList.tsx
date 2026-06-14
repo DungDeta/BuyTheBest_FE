@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState, useCallback } from 'react'
 import type { CSSProperties } from 'react'
-import { Link, useSearchParams } from 'react-router-dom'
+import { Link, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { Spin } from 'antd'
 import { publicGet } from '@/api/api'
 import type { PageResponse } from '@/types/api'
@@ -111,16 +111,20 @@ function priceValue(item: AuctionItem): number {
   return item.current_price ?? item.starting_price ?? 0
 }
 
+function isAuctionLive(item: AuctionItem): boolean {
+  return item.status === 'active' && new Date(item.ends_at).getTime() > Date.now()
+}
+
 function isEndingSoon(item: AuctionItem): boolean {
   const endsAt = new Date(item.ends_at).getTime()
   const diff = endsAt - Date.now()
-  return item.status === 'active' && diff > 0 && diff <= ENDING_SOON_WINDOW_MS
+  return isAuctionLive(item) && diff <= ENDING_SOON_WINDOW_MS
 }
 
 function statusMatches(item: AuctionItem, statuses: StatusFilter[]): boolean {
   if (statuses.length === 0) return true
   return statuses.some((status) => {
-    if (status === 'live') return item.status === 'active'
+    if (status === 'live') return isAuctionLive(item)
     if (status === 'scheduled') return item.status === 'scheduled'
     return isEndingSoon(item)
   })
@@ -326,15 +330,22 @@ function AuctionListRow({ auction }: AuctionListRowProps) {
 }
 
 export default function AuctionList() {
+  const location = useLocation()
+  const navigate = useNavigate()
+  const { slug } = useParams<{ slug?: string }>()
   const [searchParams, setSearchParams] = useSearchParams()
 
   const currentPage    = parseInt(searchParams.get('page') ?? '1', 10)
   const currentSort    = (searchParams.get('sort') ?? 'ending_soon') as SortValue
-  const currentCat     = searchParams.get('cat') ?? ''
-  const activeModes    = readModeParams(searchParams)
-  const activeStatuses = searchParams.getAll('status') as StatusFilter[]
-  const activeModeKey  = activeModes.join(',')
-  const activeStatusKey = activeStatuses.join(',')
+  const isEndingSoonRoute = location.pathname === '/auctions/ending-soon'
+  const isHotRoute = location.pathname === '/auctions/hot'
+  const routeCategorySlug = location.pathname.startsWith('/categories/') ? (slug ?? '') : ''
+  const currentCat     = routeCategorySlug || searchParams.get('cat') || ''
+  const activeModes = useMemo(() => readModeParams(searchParams), [searchParams])
+  const activeStatuses = useMemo(
+    () => searchParams.getAll('status') as StatusFilter[],
+    [searchParams],
+  )
   const priceMin       = searchParams.get('price_min') ?? ''
   const priceMax       = searchParams.get('price_max') ?? ''
 
@@ -348,8 +359,16 @@ export default function AuctionList() {
   const fetchAuctions = useCallback(async () => {
     setLoading(true)
     try {
+      const auctionPath = isHotRoute
+        ? '/auctions/hot'
+        : isEndingSoonRoute
+          ? '/auctions/ending-soon'
+          : routeCategorySlug
+            ? `/categories/${routeCategorySlug}/auctions`
+            : '/auctions'
+
       const [auctionResult, homeResult] = await Promise.allSettled([
-        publicGet<PageResponse<AuctionItem>>('/auctions', {
+        publicGet<PageResponse<AuctionItem>>(auctionPath, {
           limit: FACET_LIMIT,
           offset: 0,
           sort: 'ending_soon',
@@ -374,7 +393,7 @@ export default function AuctionList() {
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [isEndingSoonRoute, isHotRoute, routeCategorySlug])
 
   useEffect(() => {
     fetchAuctions()
@@ -411,7 +430,7 @@ export default function AuctionList() {
   const statusCounts = useMemo(() => {
     const counts = { ...EMPTY_STATUS_COUNTS }
     allItems.forEach((item) => {
-      if (item.status === 'active') counts.live += 1
+      if (isAuctionLive(item)) counts.live += 1
       if (item.status === 'scheduled') counts.scheduled += 1
       if (isEndingSoon(item)) counts.ending += 1
     })
@@ -445,14 +464,15 @@ export default function AuctionList() {
     searchParams,
     currentCat,
     selectedCategory,
-    activeModeKey,
-    activeStatusKey,
+    activeModes,
+    activeStatuses,
     priceMin,
     priceMax,
     currentSort,
   ])
 
   const total = filteredItems.length
+  const hasLiveResults = filteredItems.some(isAuctionLive)
   const pageItems = useMemo(() => {
     const offset = (currentPage - 1) * PAGE_SIZE
     return filteredItems.slice(offset, offset + PAGE_SIZE)
@@ -467,13 +487,30 @@ export default function AuctionList() {
     })
   }
 
-  function setPage(page: number | string) {
+  function searchWithout(keys: string[]): string {
+    const next = new URLSearchParams(searchParams)
+    keys.forEach((key) => next.delete(key))
+    next.delete('page')
+    const query = next.toString()
+    return query ? `?${query}` : ''
+  }
+
+  function categoryHref(value: string): string {
+    const query = searchWithout(['cat'])
+    return value ? `/categories/${value}${query}` : `/auctions${query}`
+  }
+
+  function clearCategoryFilter() {
+    navigate(categoryHref(''))
+  }
+
+  const setPage = useCallback((page: number | string) => {
     setSearchParams((prev) => {
       const next = new URLSearchParams(prev)
       next.set('page', String(page))
       return next
     })
-  }
+  }, [setSearchParams])
 
   function toggleMultiParam(key: string, value: string) {
     setSearchParams((prev) => {
@@ -596,7 +633,7 @@ export default function AuctionList() {
 
   if (currentCat) {
     const catLabel = selectedCategory ? categoryLabel(selectedCategory) : currentCat
-    chips.push({ label: catLabel, onRemove: () => deleteParam('cat') })
+    chips.push({ label: catLabel, onRemove: clearCategoryFilter })
   }
 
   const totalPages       = Math.max(1, Math.ceil(total / PAGE_SIZE))
@@ -606,21 +643,20 @@ export default function AuctionList() {
     if (!loading && currentPage > totalPages) {
       setPage(totalPages)
     }
-  }, [currentPage, loading, totalPages])
+  }, [currentPage, loading, setPage, totalPages])
 
   return (
     <>
       {/* Category bar */}
       <div className="cat-bar">
         {categoryNav.map((cat) => (
-          <a
+          <Link
             key={cat.slug}
-            href="#"
+            to={categoryHref(cat.slug)}
             className={(cat.slug === '' && currentCat === '') || selectedCategory?.id === cat.id ? 'active' : undefined}
-            onClick={(e) => { e.preventDefault(); setParam('cat', cat.slug) }}
           >
             {categoryLabel(cat)}
-          </a>
+          </Link>
         ))}
       </div>
 
@@ -751,10 +787,12 @@ export default function AuctionList() {
             <div className="left">
               <h1>Khám phá <em>phiên đấu giá</em></h1>
               <span className="count">{total} kết quả</span>
-              <span className="live-pill">
-                <span className="live-dot" />
-                LIVE
-              </span>
+              {hasLiveResults && (
+                <span className="live-pill">
+                  <span className="live-dot" />
+                  LIVE
+                </span>
+              )}
             </div>
 
             <select

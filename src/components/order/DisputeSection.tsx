@@ -7,7 +7,6 @@ import type { OrderDispute } from '@/types/order'
 
 interface DisputeSectionProps {
   dispute: OrderDispute
-  orderId: string
   currentUserId: string
   buyerId?: number
   sellerId?: number
@@ -69,7 +68,6 @@ function canUploadEvidence(status: string, isBuyer: boolean, isSeller: boolean):
 
 export function DisputeSection({
   dispute,
-  orderId: _orderId,
   currentUserId,
   buyerId,
   sellerId,

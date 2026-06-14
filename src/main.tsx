@@ -1,6 +1,7 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import { RouterProvider } from 'react-router-dom'
+import '@ant-design/v5-patch-for-react-19'
 import { ConfigProvider, App } from 'antd'
 import viVN from 'antd/locale/vi_VN'
 import { router } from '@/routes/Routes'

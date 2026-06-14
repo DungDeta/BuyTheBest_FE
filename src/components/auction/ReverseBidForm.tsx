@@ -52,7 +52,7 @@ export function ReverseBidForm({ auction, onBidPlaced }: ReverseBidFormProps) {
       </div>
 
       <div className="reverse-info" role="note">
-        🔄 Buyer đặt yêu cầu + ngân sách. Seller cạnh tranh giá thấp nhất.
+        Buyer đặt yêu cầu + ngân sách. Seller cạnh tranh giá thấp nhất.
       </div>
 
       <div className="reverse-lowest" aria-label="Bid thấp nhất hiện tại">

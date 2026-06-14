@@ -294,6 +294,39 @@ em {
   flex: 1;
   padding: 24px;
   background: var(--color-bg);
+  min-width: 0;
+  overflow-x: hidden;
+}
+
+@media (max-width: 768px) {
+  .admin-layout {
+    flex-direction: column;
+  }
+  .admin-sidebar {
+    width: 100%;
+    flex: 0 0 auto;
+    height: auto;
+    border-right: none;
+    border-bottom: 2px solid var(--color-border-strong);
+    padding-top: 0;
+    overflow-x: auto;
+  }
+  .admin-sidebar .ant-menu {
+    display: flex;
+    width: max-content;
+    min-width: 100%;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+  .admin-sidebar .ant-menu-item {
+    flex: 0 0 auto;
+    width: auto !important;
+    margin-inline: 0 !important;
+    padding-inline: 14px !important;
+  }
+  .admin-content {
+    padding: 16px;
+  }
 }
 
 /* Footer */
