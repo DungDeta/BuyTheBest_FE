@@ -159,6 +159,7 @@ function WatchlistCard({ item, onUnwatch, unwatching }: WatchlistCardProps) {
 export function Component() {
   useDocumentTitle('Theo dõi')
   const { message } = App.useApp()
+  const [filter, setFilter] = useState<StatusFilter>('all')
   const [page, setPage] = useState(1)
   const [items, setItems] = useState<WatchlistItem[]>([])
   const [total, setTotal] = useState(0)

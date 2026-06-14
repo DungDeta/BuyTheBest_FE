@@ -123,7 +123,7 @@ function RecentOrderItem({ order }: { order: Order }) {
 export function Component() {
   useDocumentTitle('Dashboard')
   const user = useAuthStore((s) => s.user)
-  const [data, setData] = useState({
+  const [data, setData] = useState<DashboardData>({
     orderCount: 0,
     watchlistCount: 0,
     notifCount: 0,
