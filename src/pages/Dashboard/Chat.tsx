@@ -4,6 +4,7 @@ import { privateGet, privatePost, privatePut } from '@/api/api'
 import { useAuthStore } from '@/store/useAuthStore'
 import { useChatWebSocket } from '@/hooks/useChatWebSocket'
 import type { Conversation, PrivateMessage, ChatWsEvent } from '@/types/chat'
+import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import './chat.css'
 
 const PAGE_LIMIT = 30
@@ -129,6 +130,7 @@ function Avatar({ name, avatarUrl, size = 36, online }: AvatarProps) {
 }
 
 export function Component() {
+  useDocumentTitle('Tin nhắn')
   const { message } = App.useApp()
   const currentUser = useAuthStore((s) => s.user)
 

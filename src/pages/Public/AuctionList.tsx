@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState, useCallback } from 'react'
+import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import type { CSSProperties } from 'react'
 import { Link, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { Spin } from 'antd'
@@ -330,6 +331,7 @@ function AuctionListRow({ auction }: AuctionListRowProps) {
 }
 
 export default function AuctionList() {
+  useDocumentTitle('Khám phá phiên đấu giá')
   const location = useLocation()
   const navigate = useNavigate()
   const { slug } = useParams<{ slug?: string }>()

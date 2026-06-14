@@ -434,3 +434,12 @@ em {
   justify-content: center;
   min-height: 300px;
 }
+
+/* Responsive safety */
+html, body {
+  overflow-x: hidden;
+}
+
+.app-layout {
+  overflow-x: hidden;
+}

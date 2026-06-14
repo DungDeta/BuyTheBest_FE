@@ -6,6 +6,7 @@ import relativeTime from 'dayjs/plugin/relativeTime'
 import 'dayjs/locale/vi'
 import { privateGet, privatePut } from '@/api/api'
 import type { Notification, NotificationFilter, NotificationPreference } from '@/types/notification'
+import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import './notifications.css'
 
 dayjs.extend(relativeTime)
@@ -88,10 +89,9 @@ function isMandatoryPreference(eventType: string): boolean {
 }
 
 export function Component() {
+  useDocumentTitle('Thông báo')
   const { message } = App.useApp()
   const navigate = useNavigate()
-
-  const [filter, setFilter] = useState<NotificationFilter>('all')
   const [page, setPage] = useState(1)
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [total, setTotal] = useState(0)

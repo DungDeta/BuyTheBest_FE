@@ -5,6 +5,7 @@ import dayjs from 'dayjs'
 import { privateGet } from '@/api/api'
 import { useAuthStore } from '@/store/useAuthStore'
 import type { Order } from '@/types/order'
+import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import './dashboard.css'
 
 interface WatchlistItem {
@@ -439,6 +440,7 @@ function CreatedTab() {
 /* ------------------------------------------------------------------ */
 
 export function Component() {
+  useDocumentTitle('Phiên của tôi')
   const isSeller = useAuthStore((s) => s.isSeller)
 
   const tabItems = [

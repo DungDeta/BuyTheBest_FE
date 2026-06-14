@@ -5,6 +5,7 @@ import { publicPost } from '@/api/api'
 import { useAuthStore } from '@/store/useAuthStore'
 import type { LoginResponse } from '@/types/user'
 import type { ErrorResponse } from '@/types/api'
+import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import './auth.css'
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL as string
@@ -37,6 +38,8 @@ export function AuthPanel({ initialTab = 'login', variant = 'page', onSuccess }:
   const [activeTab, setActiveTab] = useState<AuthMode>(initialTab)
   const [forgotOpen, setForgotOpen] = useState(false)
   const [loading, setLoading] = useState(false)
+
+  useDocumentTitle(variant === 'page' ? (activeTab === 'login' ? 'Đăng nhập' : 'Đăng ký') : '')
 
   const [loginEmail, setLoginEmail] = useState('')
   const [loginPassword, setLoginPassword] = useState('')

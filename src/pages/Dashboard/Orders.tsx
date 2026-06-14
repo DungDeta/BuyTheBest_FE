@@ -5,6 +5,7 @@ import { privateGet } from '@/api/api'
 import { useAuthStore } from '@/store/useAuthStore'
 import { OrderCard } from '@/components/order/OrderCard'
 import type { Order, OrderStatus } from '@/types/order'
+import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import './post-win.css'
 
 interface OrdersResponse {
@@ -27,8 +28,8 @@ const STATUS_FILTERS: { value: OrderStatus | 'all'; label: string }[] = [
 const PAGE_SIZE = 20
 
 export function Component() {
+  useDocumentTitle('Đơn hàng')
   const { message } = App.useApp()
-  const isSeller = useAuthStore((s) => s.isSeller)
   const [searchParams, setSearchParams] = useSearchParams()
 
   const roleParam = searchParams.get('role') as RoleTab | null

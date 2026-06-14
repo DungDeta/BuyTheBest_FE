@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router-dom'
 import { Spin } from 'antd'
 import { publicGet } from '@/api/api'
 import type { PageResponse } from '@/types/api'
+import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import './seller-profile.css'
 
 interface SellerProfile {
@@ -172,6 +173,8 @@ export default function SellerProfile() {
   const { id } = useParams<{ id: string }>()
 
   const [seller,   setSeller]   = useState<SellerProfile | null>(null)
+
+  useDocumentTitle(seller ? (seller.shop_name || seller.username) : 'Hồ sơ người bán')
   const [auctions, setAuctions] = useState<Auction[]>([])
   const [reviews,  setReviews]  = useState<Review[]>([])
 

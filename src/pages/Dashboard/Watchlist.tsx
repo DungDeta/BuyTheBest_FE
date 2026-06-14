@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { App, Pagination, Spin } from 'antd'
 import { privateGet, privatePost } from '@/api/api'
 import { useCountdown } from '@/hooks/useCountdown'
+import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import './dashboard.css'
 
 interface WatchlistItem {
@@ -156,9 +157,8 @@ function WatchlistCard({ item, onUnwatch, unwatching }: WatchlistCardProps) {
 }
 
 export function Component() {
+  useDocumentTitle('Theo dõi')
   const { message } = App.useApp()
-
-  const [filter, setFilter] = useState<StatusFilter>('all')
   const [page, setPage] = useState(1)
   const [items, setItems] = useState<WatchlistItem[]>([])
   const [total, setTotal] = useState(0)

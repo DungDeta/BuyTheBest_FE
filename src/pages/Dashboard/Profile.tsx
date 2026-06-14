@@ -3,6 +3,7 @@ import { App, Button, Input, Spin } from 'antd'
 import { privatePut, privatePost } from '@/api/api'
 import { useAuthStore } from '@/store/useAuthStore'
 import type { User, TokenResponse } from '@/types/user'
+import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import './profile.css'
 
 interface UserResponse {
@@ -601,6 +602,7 @@ function SellerProfileSection({ initialProfile, loading }: SellerProfileSectionP
 }
 
 export function Component() {
+  useDocumentTitle('Hồ sơ cá nhân')
   const user = useAuthStore((s) => s.user)
   const isSeller = useAuthStore((s) => s.isSeller)
 

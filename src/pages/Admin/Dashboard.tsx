@@ -8,6 +8,7 @@ import {
 import dayjs, { type Dayjs } from 'dayjs'
 import { privateGet } from '@/api/api'
 import type { ErrorResponse } from '@/types/api'
+import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import './admin.css'
 
 interface DashboardKPI {
@@ -33,6 +34,7 @@ function formatCount(n: number): string {
 }
 
 export function Component() {
+  useDocumentTitle('Admin · Dashboard')
   const { message } = App.useApp()
   const navigate = useNavigate()
 

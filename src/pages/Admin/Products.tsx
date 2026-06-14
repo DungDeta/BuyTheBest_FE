@@ -16,6 +16,7 @@ import { CheckOutlined, CloseOutlined, PictureOutlined } from '@ant-design/icons
 import dayjs from 'dayjs'
 import { privateGet, privatePost } from '@/api/api'
 import type { ErrorResponse } from '@/types/api'
+import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import './admin.css'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -89,6 +90,7 @@ const TAB_ITEMS = [
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export function Component() {
+  useDocumentTitle('Admin · Sản phẩm')
   const { message } = App.useApp()
 
   const [status, setStatus] = useState<ProductStatus>('pending_review')

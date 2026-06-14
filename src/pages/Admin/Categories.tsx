@@ -18,6 +18,7 @@ import {
 } from '@ant-design/icons'
 import { privateDelete, privateGet, privatePost, privatePut } from '@/api/api'
 import type { ErrorResponse } from '@/types/api'
+import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import './admin.css'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -187,6 +188,7 @@ function CategoryTreeNode({
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export function Component() {
+  useDocumentTitle('Admin · Danh mục')
   const { message } = App.useApp()
   const [form] = Form.useForm<CategoryFormValues>()
 

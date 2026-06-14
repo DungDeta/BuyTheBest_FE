@@ -98,5 +98,7 @@ export const router = createBrowserRouter([
       },
     ],
   },
+  { path: '403', lazy: () => import('@/pages/Public/Forbidden') },
+  { path: '500', lazy: () => import('@/pages/Public/ServerError') },
   { path: '*', element: <NotFound /> },
 ])

@@ -2,6 +2,7 @@ import { useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { App, Button, Form, Input, Select, Steps } from 'antd'
 import { privateDelete, privatePost, privatePut } from '@/api/api'
+import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import './seller.css'
 
 type ProductCondition = 'new' | 'like_new' | 'used' | 'refurbished'
@@ -90,6 +91,7 @@ function formatFileSize(bytes: number): string {
 }
 
 export function Component() {
+  useDocumentTitle('Thêm sản phẩm')
   const { message } = App.useApp()
   const navigate = useNavigate()
 

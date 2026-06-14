@@ -19,6 +19,7 @@ import { FileImageOutlined } from '@ant-design/icons'
 import dayjs from 'dayjs'
 import { privateGet, privatePost } from '@/api/api'
 import type { ErrorResponse } from '@/types/api'
+import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import type {
   DisputeEvidence,
   DisputeMessage,
@@ -134,6 +135,7 @@ function evidenceSrc(ev: DisputeEvidence): string {
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export function Component() {
+  useDocumentTitle('Admin · Tranh chấp')
   const { message } = App.useApp()
 
   const [statusFilter, setStatusFilter] = useState<DisputeStatusFilter>('admin_review')

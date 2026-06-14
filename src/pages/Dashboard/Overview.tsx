@@ -6,6 +6,7 @@ import { privateGet } from '@/api/api'
 import { useAuthStore } from '@/store/useAuthStore'
 import { useCountdown } from '@/hooks/useCountdown'
 import type { Order } from '@/types/order'
+import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import './dashboard.css'
 
 interface WatchlistItem {
@@ -120,9 +121,9 @@ function RecentOrderItem({ order }: { order: Order }) {
 }
 
 export function Component() {
+  useDocumentTitle('Dashboard')
   const user = useAuthStore((s) => s.user)
-
-  const [data, setData] = useState<DashboardData>({
+  const [data, setData] = useState({
     orderCount: 0,
     watchlistCount: 0,
     notifCount: 0,

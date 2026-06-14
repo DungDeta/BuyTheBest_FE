@@ -21,6 +21,7 @@ import {
 import dayjs, { type Dayjs } from 'dayjs'
 import { privateDelete, privateGet, privatePost, privatePut } from '@/api/api'
 import type { ErrorResponse } from '@/types/api'
+import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import './admin.css'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -60,6 +61,7 @@ const ACCEPTED_TYPES = ['image/jpeg', 'image/png', 'image/webp']
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export function Component() {
+  useDocumentTitle('Admin · Banner')
   const { message } = App.useApp()
   const [form] = Form.useForm<BannerFormValues>()
   const fileInputRef = useRef<HTMLInputElement>(null)

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import { Link, useParams } from 'react-router-dom'
 import { App, Spin } from 'antd'
 import { publicGet, privateDelete, privatePost } from '@/api/api'
@@ -29,6 +30,8 @@ export function Component() {
 
   const [auction, setAuction] = useState<Auction | null>(null)
   const [loading, setLoading] = useState(true)
+
+  useDocumentTitle(auction?.product?.title ?? 'Chi tiết phiên đấu giá')
   const [notFound, setNotFound] = useState(false)
   const [bidFeed, setBidFeed] = useState<BidHistoryItem[]>([])
   const [serverNow, setServerNow] = useState<string | null>(null)

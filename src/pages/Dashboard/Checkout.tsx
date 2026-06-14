@@ -12,6 +12,7 @@ import {
   getOrderProductTitle,
 } from '@/utils/orderDisplay'
 import type { Order, AddressRequest, OrderPayment } from '@/types/order'
+import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import './post-win.css'
 
 type OrderDetailResponse = Order | { order: Order }
@@ -233,6 +234,7 @@ function PaymentMethodCard({
 }
 
 export function Component() {
+  useDocumentTitle('Thanh toán')
   const { id } = useParams<{ id: string }>()
   const location = useLocation()
   const navigate = useNavigate()

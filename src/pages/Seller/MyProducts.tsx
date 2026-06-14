@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { App, Button, Pagination, Popconfirm, Spin } from 'antd'
 import { privateDelete, privateGet, privatePost } from '@/api/api'
+import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import './seller.css'
 
 type ProductStatus = 'draft' | 'pending_review' | 'approved' | 'rejected'
@@ -59,6 +60,7 @@ const CONDITION_LABELS: Record<string, string> = {
 }
 
 export function Component() {
+  useDocumentTitle('Sản phẩm của tôi')
   const { message } = App.useApp()
   const navigate = useNavigate()
 

@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import { Link } from 'react-router-dom'
 import { Spin } from 'antd'
 import { publicGet } from '@/api/api'
@@ -235,6 +236,7 @@ function AuctionCard({ auction }: AuctionCardProps) {
 }
 
 export default function Home() {
+  useDocumentTitle('Trang chủ')
   const [liveAuctions, setLiveAuctions] = useState<Auction[]>([])
   const [categories, setCategories] = useState<CategoryOption[]>(FALLBACK_CATEGORIES)
   const [loading, setLoading] = useState(true)

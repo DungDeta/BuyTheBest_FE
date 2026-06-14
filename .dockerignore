@@ -1,0 +1,10 @@
+node_modules
+dist
+.git
+.codex-artifacts
+.playwright-mcp
+.claude
+docs
+*.md
+.env
+.env.local

@@ -20,6 +20,7 @@ import dayjs, { type Dayjs } from 'dayjs'
 import { privateGet, privatePost } from '@/api/api'
 import { useAuthStore } from '@/store/useAuthStore'
 import type { ErrorResponse } from '@/types/api'
+import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import './admin.css'
 
 // ─── Types ────────────────────────────────────────────────────────
@@ -84,6 +85,7 @@ function formatDate(iso: string): string {
 // ─── Component ────────────────────────────────────────────────────
 
 export function Component() {
+  useDocumentTitle('Admin · Người dùng')
   const { message } = App.useApp()
 
   // Filter state

@@ -13,6 +13,7 @@ import {
 import dayjs, { Dayjs } from 'dayjs'
 import { privateGet, privatePost } from '@/api/api'
 import type { AuctionMode } from '@/types/auction'
+import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import './seller.css'
 
 interface ProductListItem {
@@ -96,6 +97,7 @@ const VND_PARSER = (val: string | undefined) =>
   Number((val ?? '').replace(/,/g, ''))
 
 export function Component() {
+  useDocumentTitle('Tạo phiên đấu giá')
   const { message } = App.useApp()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
