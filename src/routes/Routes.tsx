@@ -28,6 +28,7 @@ export const router = createBrowserRouter([
     hydrateFallbackElement: routeHydrateFallback,
     children: [
       { path: '/payment/callback', lazy: () => import('@/pages/Dashboard/PaymentCallback') },
+      { path: '/oauth/callback', lazy: () => import('@/pages/Auth/OAuthCallback') },
     ],
   },
   {
