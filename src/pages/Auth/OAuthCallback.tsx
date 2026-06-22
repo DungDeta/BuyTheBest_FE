@@ -39,7 +39,12 @@ export function OAuthCallbackContent() {
 
     privateGet<User>('/auth/me')
       .then((res) => {
-        store.updateUser(res.data!)
+        const store2 = useAuthStore.getState()
+        store2.updateUser(res.data as Partial<User>)
+        if (!store2.user) {
+          // updateUser skips when user is null, set directly
+          useAuthStore.setState({ user: res.data as User })
+        }
         navigate('/dashboard', { replace: true })
       })
       .catch(() => {
