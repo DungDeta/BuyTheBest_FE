@@ -174,10 +174,12 @@ export function Component() {
   const getCurrentInternalUserId = useCallback(
     (conv: Conversation): number | null => {
       if (typeof conv.current_user_id === 'number') return conv.current_user_id
-      if (conv.current_user_role === 'buyer') return conv.participant1_id
-      if (conv.current_user_role === 'seller') return conv.participant2_id
       if (!currentUser) return null
-      return currentUser.is_seller ? conv.participant2_id : conv.participant1_id
+      // Fallback: match by checking which participant matches our user ID from store
+      const storeId = Number(currentUser.id) || 0
+      if (storeId === conv.participant1_id) return conv.participant1_id
+      if (storeId === conv.participant2_id) return conv.participant2_id
+      return null
     },
     [currentUser],
   )
@@ -316,6 +318,7 @@ export function Component() {
   const handleWsEvent = useCallback(
     (event: ChatWsEvent) => {
       switch (event.type) {
+        case 'chat.message':
         case 'message.new': {
           if (!event.data) break
           const newMsg = event.data
@@ -401,6 +404,7 @@ export function Component() {
 
   useEffect(() => {
     const types: Array<ChatWsEvent['type']> = [
+      'chat.message',
       'message.new',
       'typing.start',
       'typing.stop',

@@ -3,6 +3,29 @@
    All design tokens come from global.css
    ===================================================== */
 
+/* ---------- BANNERS ---------- */
+.home-banners {
+  display: flex;
+  gap: 12px;
+  padding: 16px 24px;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+}
+.home-banners .banner-slide {
+  flex: 0 0 100%;
+  scroll-snap-align: start;
+  border-radius: 12px;
+  overflow: hidden;
+  display: block;
+}
+.home-banners .banner-slide img {
+  width: 100%;
+  height: auto;
+  max-height: 280px;
+  object-fit: cover;
+  display: block;
+}
+
 /* ---------- CATEGORY BAR ---------- */
 .cat-bar {
   background: var(--surface);

@@ -29,6 +29,15 @@ interface CategoryOption {
 
 interface HomeData {
   categories?: CategoryOption[]
+  banners?: Banner[]
+}
+
+interface Banner {
+  id: number
+  image_url: string
+  link_url?: string
+  sort_order: number
+  is_active: boolean
 }
 
 const FALLBACK_CATEGORIES: CategoryOption[] = [
@@ -239,6 +248,7 @@ export default function Home() {
   useDocumentTitle('Trang chủ')
   const [liveAuctions, setLiveAuctions] = useState<Auction[]>([])
   const [categories, setCategories] = useState<CategoryOption[]>(FALLBACK_CATEGORIES)
+  const [banners, setBanners] = useState<Banner[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -262,6 +272,8 @@ export default function Home() {
         if (!cancelled && homeResult.status === 'fulfilled') {
           const nextCategories = homeResult.value.data?.categories
           setCategories(nextCategories?.length ? nextCategories : FALLBACK_CATEGORIES)
+          const nextBanners = homeResult.value.data?.banners
+          if (nextBanners?.length) setBanners(nextBanners)
         }
       } catch {
       } finally {
@@ -286,6 +298,23 @@ export default function Home() {
           </Link>
         ))}
       </div>
+
+      {/* ── Banners ────────────────────────────────────────────── */}
+      {banners.length > 0 && (
+        <section className="home-banners">
+          {banners.map((banner) => (
+            <a
+              key={banner.id}
+              href={banner.link_url || '#'}
+              className="banner-slide"
+              target={banner.link_url ? '_blank' : undefined}
+              rel="noopener noreferrer"
+            >
+              <img src={banner.image_url} alt="" loading="eager" />
+            </a>
+          ))}
+        </section>
+      )}
 
       {/* ── Hero ─────────────────────────────────────────────────── */}
       <section className="home-hero">

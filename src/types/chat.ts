@@ -32,6 +32,7 @@ export interface PrivateMessage {
 }
 
 export type ChatWsEventType =
+  | 'chat.message'
   | 'message.new'
   | 'typing.start'
   | 'typing.stop'
