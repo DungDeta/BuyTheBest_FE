@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
-import { Link, useParams } from 'react-router-dom'
+import { Link, useNavigate, useParams } from 'react-router-dom'
 import { App, Spin } from 'antd'
 import { publicGet, privateDelete, privatePost } from '@/api/api'
 import { useAuthStore } from '@/store/useAuthStore'
@@ -25,6 +25,7 @@ import './auction-room.css'
 export function Component() {
   const { id } = useParams<{ id: string }>()
   const { message } = App.useApp()
+  const navigate = useNavigate()
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
   const currentUserId = useAuthStore((s) => s.user?.id ?? null)
 
@@ -372,6 +373,24 @@ export function Component() {
           <div className="escrow-banner">
             <strong>Escrow bảo vệ</strong> — tiền giữ lại an toàn đến khi xác nhận nhận hàng thành công.
           </div>
+
+          {authed && auction.seller_id && Number(currentUserId) !== auction.seller_id && (
+            <button
+              className="contact-seller-btn"
+              onClick={async () => {
+                try {
+                  const res = await privatePost<{ id: number }>('/conversations', { seller_id: auction.seller_id });
+                  if (res.data?.id) {
+                    navigate('/chat');
+                  }
+                } catch {
+                  message.error('Không thể mở cuộc trò chuyện');
+                }
+              }}
+            >
+              💬 Nhắn tin người bán
+            </button>
+          )}
         </aside>
       </div>
     </>

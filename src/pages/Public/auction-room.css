@@ -546,6 +546,23 @@
   font-weight: 700;
 }
 
+.contact-seller-btn {
+  width: 100%;
+  padding: 10px 16px;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--fg);
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+.contact-seller-btn:hover {
+  background: var(--accent-soft, #f0f7ff);
+  border-color: var(--accent, #2563eb);
+}
+
 /* ── Room tabs placeholder ───────────────────────────── */
 
 .room-tabs {
