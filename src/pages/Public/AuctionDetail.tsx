@@ -374,7 +374,7 @@ export function Component() {
             <strong>Escrow bảo vệ</strong> — tiền giữ lại an toàn đến khi xác nhận nhận hàng thành công.
           </div>
 
-          {authed && auction.seller_id && Number(currentUserId) !== auction.seller_id && (
+          {authed && auction.seller && currentUserId !== auction.seller.id && (
             <button
               className="contact-seller-btn"
               onClick={async () => {
