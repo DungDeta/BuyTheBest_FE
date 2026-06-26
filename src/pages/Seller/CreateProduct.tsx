@@ -70,7 +70,7 @@ const CONDITION_LABELS: Record<ProductCondition, string> = {
   refurbished: 'Tân trang',
 }
 
-const MAX_IMAGES = 10
+const MAX_IMAGES = 6
 const MAX_PRODUCT_IMAGE_BYTES = 5 * 1024 * 1024
 const PRODUCT_IMAGE_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp'])
 
