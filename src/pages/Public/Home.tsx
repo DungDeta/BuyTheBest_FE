@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom'
 import { Spin } from 'antd'
 import { publicGet } from '@/api/api'
 import type { PageResponse } from '@/types/api'
+import { getDemoProductImage } from '@/utils/demoProductImages'
 import './home.css'
 
 interface Auction {
@@ -159,10 +160,10 @@ function modeBadgeClass(mode: Auction['mode']): string {
   }
 }
 
-function productImageUrl(product?: Auction['product']): string | null {
+function productImageUrl(product: Auction['product'] | undefined, title?: string): string | null {
   const images = product?.images ?? []
   const primary = images.find((img) => img.is_primary) ?? images[0]
-  return primary?.thumbnail_url || primary?.url || null
+  return primary?.thumbnail_url || primary?.url || getDemoProductImage(title ?? product?.title)
 }
 
 function remainingMs(endsAt: string): number {
@@ -214,7 +215,7 @@ function AuctionCard({ auction }: AuctionCardProps) {
   const isReverse = auction.mode === 'reverse'
 
   const title = auction.product?.title ?? auction.title ?? `Auction #${auction.id}`
-  const imageUrl = productImageUrl(auction.product)
+  const imageUrl = productImageUrl(auction.product, title)
 
   return (
     <Link to={`/auctions/${auction.id}`} className="listing">

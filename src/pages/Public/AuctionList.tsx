@@ -5,6 +5,7 @@ import { Link, useLocation, useNavigate, useParams, useSearchParams } from 'reac
 import { Spin } from 'antd'
 import { publicGet } from '@/api/api'
 import type { PageResponse } from '@/types/api'
+import { getDemoProductImage } from '@/utils/demoProductImages'
 import './home.css'
 import './auction-list.css'
 
@@ -215,7 +216,7 @@ function auctionTitle(item: AuctionItem): string {
 function auctionImageUrl(item: AuctionItem): string | null {
   const images = item.product?.images ?? []
   const primary = images.find((img) => img.is_primary) ?? images[0]
-  return primary?.thumbnail_url || primary?.url || null
+  return primary?.thumbnail_url || primary?.url || getDemoProductImage(auctionTitle(item))
 }
 
 function normalizeModeParam(value: string): AuctionMode | null {

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import dayjs from 'dayjs'
 import type { Auction } from '@/types/auction'
+import { getDemoProductImage } from '@/utils/demoProductImages'
 
 interface ProductHeroProps {
   auction: Auction
@@ -45,11 +46,12 @@ export function ProductHero({ auction }: ProductHeroProps) {
   const images = product?.images ?? []
   const sortedImages = [...images].sort((a, b) => a.sort_order - b.sort_order)
   const primaryImage = sortedImages.find((img) => img.is_primary) ?? sortedImages[0] ?? null
+  const title = product?.title ?? `Auction #${id.slice(0, 8)}`
 
   const [activeIndex, setActiveIndex] = useState(0)
   const displayImage = sortedImages[activeIndex] ?? primaryImage
+  const displayImageUrl = displayImage?.url || displayImage?.thumbnail_url || getDemoProductImage(title)
 
-  const title = product?.title ?? `Auction #${id.slice(0, 8)}`
   const publicLabel = `#${id.slice(-6).toUpperCase()}`
   const isHot = bid_count > 10
 
@@ -64,9 +66,9 @@ export function ProductHero({ auction }: ProductHeroProps) {
               {isHot && <span className="hot-badge">HOT</span>}
             </div>
 
-            {displayImage ? (
+            {displayImageUrl ? (
               <img
-                src={displayImage.url}
+                src={displayImageUrl}
                 alt={title}
                 className="gallery__main-img"
               />
