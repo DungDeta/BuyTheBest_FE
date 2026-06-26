@@ -15,7 +15,7 @@ export interface Conversation {
   last_message_at?: string | null
   created_at: string
   other_user?: ChatUser | null
-  last_message?: { content: string; sender_id: number } | null
+  last_message?: { id: number; content: string; sender_id: number; created_at: string } | null
   unread_count?: number
 }
 

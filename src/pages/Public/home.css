@@ -245,6 +245,19 @@
   font-family: var(--font-mono);
   padding: 8px;
   text-align: center;
+  overflow: hidden;
+}
+.listing-img img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.listing-img span {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 .listing-title {
   font-family: var(--font-display);

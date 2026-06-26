@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { App, Spin } from 'antd'
+import { MessageOutlined } from '@ant-design/icons'
 import { publicGet, privateDelete, privatePost } from '@/api/api'
 import { useAuthStore } from '@/store/useAuthStore'
 import { useAuctionWebSocket } from '@/hooks/useAuctionWebSocket'
@@ -379,16 +380,16 @@ export function Component() {
               className="contact-seller-btn"
               onClick={async () => {
                 try {
-                  const res = await privatePost<{ id: number }>('/conversations', { seller_id: auction.seller_id });
+                  const res = await privatePost<{ id: number }>('/conversations', { seller_id: auction.seller_id })
                   if (res.data?.id) {
-                    navigate('/chat');
+                    navigate(`/chat?conversation=${res.data.id}`)
                   }
                 } catch {
-                  message.error('Không thể mở cuộc trò chuyện');
+                  message.error('Không thể mở cuộc trò chuyện')
                 }
               }}
             >
-              💬 Nhắn tin người bán
+              <MessageOutlined aria-hidden="true" /> Nhắn tin người bán
             </button>
           )}
         </aside>

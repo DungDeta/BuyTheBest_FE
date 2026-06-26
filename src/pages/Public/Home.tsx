@@ -17,8 +17,15 @@ interface Auction {
   starts_at: string
   ends_at: string
   title?: string
-  product?: { title: string; slug: string; condition: string; images: unknown[] }
+  product?: { title: string; slug: string; condition: string; images?: ProductImage[] }
   seller?: { id: string; display_name: string }
+}
+
+interface ProductImage {
+  url?: string
+  thumbnail_url?: string
+  is_primary?: boolean
+  sort_order?: number
 }
 
 interface CategoryOption {
@@ -152,6 +159,12 @@ function modeBadgeClass(mode: Auction['mode']): string {
   }
 }
 
+function productImageUrl(product?: Auction['product']): string | null {
+  const images = product?.images ?? []
+  const primary = images.find((img) => img.is_primary) ?? images[0]
+  return primary?.thumbnail_url || primary?.url || null
+}
+
 function remainingMs(endsAt: string): number {
   return new Date(endsAt).getTime() - Date.now()
 }
@@ -201,6 +214,7 @@ function AuctionCard({ auction }: AuctionCardProps) {
   const isReverse = auction.mode === 'reverse'
 
   const title = auction.product?.title ?? auction.title ?? `Auction #${auction.id}`
+  const imageUrl = productImageUrl(auction.product)
 
   return (
     <Link to={`/auctions/${auction.id}`} className="listing">
@@ -212,7 +226,9 @@ function AuctionCard({ auction }: AuctionCardProps) {
           <span className="status-badge status-ending">Sắp hết</span>
         )}
       </div>
-      <div className="listing-img">{title}</div>
+      <div className="listing-img">
+        {imageUrl ? <img src={imageUrl} alt={title} /> : <span>{title}</span>}
+      </div>
       <div className="listing-title">{title}</div>
 
       {isSealed ? (

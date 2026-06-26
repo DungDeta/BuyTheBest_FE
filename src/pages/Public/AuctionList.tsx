@@ -22,7 +22,15 @@ interface AuctionItem {
   product?: {
     title: string
     slug: string
+    images?: ProductImage[]
   }
+}
+
+interface ProductImage {
+  url?: string
+  thumbnail_url?: string
+  is_primary?: boolean
+  sort_order?: number
 }
 
 interface CategoryOption {
@@ -204,6 +212,12 @@ function auctionTitle(item: AuctionItem): string {
   return item.product?.title ?? item.title ?? `Auction #${item.id}`
 }
 
+function auctionImageUrl(item: AuctionItem): string | null {
+  const images = item.product?.images ?? []
+  const primary = images.find((img) => img.is_primary) ?? images[0]
+  return primary?.thumbnail_url || primary?.url || null
+}
+
 function normalizeModeParam(value: string): AuctionMode | null {
   return MODE_PARAM_MAP[value.toLowerCase()] ?? null
 }
@@ -261,6 +275,7 @@ function AuctionCard({ auction }: AuctionCardProps) {
   const isReverse = auction.mode === 'reverse'
   const title     = auctionTitle(auction)
   const short     = modeBadgeShort(auction.mode)
+  const imageUrl  = auctionImageUrl(auction)
 
   return (
     <Link to={`/auctions/${auction.id}`} className="listing">
@@ -269,7 +284,9 @@ function AuctionCard({ auction }: AuctionCardProps) {
           {short} · {MODE_LABELS[short]}
         </span>
       </div>
-      <div className="listing-img">{title}</div>
+      <div className="listing-img">
+        {imageUrl ? <img src={imageUrl} alt={title} /> : <span>{title}</span>}
+      </div>
       <div className="listing-title">{title}</div>
 
       {isSealed ? (
@@ -307,10 +324,13 @@ function AuctionListRow({ auction }: AuctionListRowProps) {
   const isSealed = auction.mode === 'sealed_bid'
   const title    = auctionTitle(auction)
   const short    = modeBadgeShort(auction.mode)
+  const imageUrl = auctionImageUrl(auction)
 
   return (
     <Link to={`/auctions/${auction.id}`} className="listing-list-row">
-      <div className="thumb">{title.split(' ').slice(0, 2).join(' ')}</div>
+      <div className="thumb">
+        {imageUrl ? <img src={imageUrl} alt={title} /> : title.split(' ').slice(0, 2).join(' ')}
+      </div>
       <div>
         <div className="name">{title}</div>
         <div className="meta">

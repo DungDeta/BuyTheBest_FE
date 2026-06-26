@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { App, Spin } from 'antd'
+import { useSearchParams } from 'react-router-dom'
 import { privateGet, privatePost, privatePut } from '@/api/api'
 import { useAuthStore } from '@/store/useAuthStore'
 import { useChatWebSocket } from '@/hooks/useChatWebSocket'
@@ -132,6 +133,8 @@ function Avatar({ name, avatarUrl, size = 36, online }: AvatarProps) {
 export function Component() {
   useDocumentTitle('Tin nhắn')
   const { message } = App.useApp()
+  const [searchParams, setSearchParams] = useSearchParams()
+  const requestedConversationId = Number(searchParams.get('conversation')) || null
   const currentUser = useAuthStore((s) => s.user)
 
   const [conversations, setConversations] = useState<Conversation[]>([])
@@ -263,7 +266,7 @@ export function Component() {
     [message],
   )
 
-  function handleSelectConversation(conv: Conversation) {
+  const handleSelectConversation = useCallback((conv: Conversation) => {
     if (conv.id === activeConvId) return
     setActiveConvId(conv.id)
     setMessages([])
@@ -277,7 +280,21 @@ export function Component() {
     setConversations((prev) =>
       prev.map((c) => (c.id === conv.id ? { ...c, unread_count: 0 } : c)),
     )
-  }
+  }, [activeConvId, fetchMessages])
+
+  useEffect(() => {
+    if (!requestedConversationId || convLoading || conversations.length === 0) return
+    const target = conversations.find((conv) => conv.id === requestedConversationId)
+    if (!target) return
+    handleSelectConversation(target)
+    setSearchParams({}, { replace: true })
+  }, [
+    requestedConversationId,
+    convLoading,
+    conversations,
+    handleSelectConversation,
+    setSearchParams,
+  ])
 
   function handleLoadMore() {
     if (!activeConvId || !msgCursor || msgLoading) return
@@ -339,7 +356,12 @@ export function Component() {
               if (c.id !== convId) return c
               return {
                 ...c,
-                last_message: { content: newMsg.content, sender_id: newMsg.sender_id },
+                last_message: {
+                  id: newMsg.id,
+                  content: newMsg.content,
+                  sender_id: newMsg.sender_id,
+                  created_at: newMsg.created_at,
+                },
                 last_message_at: newMsg.created_at,
                 unread_count:
                   convId === activeConvIdRef.current ? 0 : (c.unread_count ?? 0) + 1,
@@ -477,6 +499,23 @@ export function Component() {
       })
       if (res.data) {
         setMessages((prev) => [...prev, res.data!])
+        setConversations((prev) =>
+          prev.map((conv) =>
+            conv.id === activeConvId
+              ? {
+                  ...conv,
+                  last_message: {
+                    id: res.data!.id,
+                    content: res.data!.content,
+                    sender_id: res.data!.sender_id,
+                    created_at: res.data!.created_at,
+                  },
+                  last_message_at: res.data!.created_at,
+                  unread_count: 0,
+                }
+              : conv,
+          ),
+        )
         setSelectedImage(null)
         setTimeout(() => {
           messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
