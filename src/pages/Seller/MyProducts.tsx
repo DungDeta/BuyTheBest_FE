@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { App, Button, Pagination, Popconfirm, Spin } from 'antd'
 import { privateDelete, privateGet, privatePost } from '@/api/api'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
+import { getDemoProductImage } from '@/utils/demoProductImages'
 import './seller.css'
 
 type ProductStatus = 'draft' | 'pending_review' | 'approved' | 'rejected'
@@ -233,13 +234,14 @@ function ProductCard({
   onCreateAuction,
 }: ProductCardProps) {
   const createdDate = new Date(product.created_at).toLocaleDateString('vi-VN')
+  const imageUrl = product.cover?.url || getDemoProductImage(product.title)
 
   return (
     <article className="product-card" role="listitem">
-      {product.cover?.url ? (
+      {imageUrl ? (
         <img
           className="product-card__thumb"
-          src={product.cover.url}
+          src={imageUrl}
           alt={product.title}
         />
       ) : (

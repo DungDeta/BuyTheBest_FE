@@ -6,6 +6,8 @@ import { privateGet } from '@/api/api'
 import { useAuthStore } from '@/store/useAuthStore'
 import type { Order } from '@/types/order'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
+import { getOrderProductImageUrl, getOrderProductTitle } from '@/utils/orderDisplay'
+import { getDemoProductImage } from '@/utils/demoProductImages'
 import './dashboard.css'
 
 interface WatchlistItem {
@@ -61,6 +63,16 @@ interface ProductsResponse {
   items?: SellerProduct[]
   products?: SellerProduct[]
   total: number
+}
+
+function resolveProductImage(
+  title: string,
+  ...candidates: Array<string | null | undefined>
+): string | null {
+  return (
+    candidates.find((candidate): candidate is string => Boolean(candidate)) ??
+    getDemoProductImage(title)
+  )
 }
 
 function auctionStatusLabel(status: string): string {
@@ -157,39 +169,43 @@ function WatchingTab() {
         role="list"
         aria-label="Phiên đang theo dõi"
       >
-        {items.map((item) => (
-          <button
-            key={item.auction_id}
-            className="my-auctions-item"
-            onClick={() => navigate(`/auctions/${item.auction_id}`)}
-            type="button"
-            role="listitem"
-            aria-label={item.title}
-          >
-            {item.thumbnail_url ? (
-              <img
-                src={item.thumbnail_url}
-                alt={item.title}
-                className="my-auctions-item__thumb"
-              />
-            ) : (
-              <div className="my-auctions-item__thumb--placeholder" aria-hidden="true">
-                IMG
+        {items.map((item) => {
+          const imageUrl = resolveProductImage(item.title, item.thumbnail_url)
+
+          return (
+            <button
+              key={item.auction_id}
+              className="my-auctions-item"
+              onClick={() => navigate(`/auctions/${item.auction_id}`)}
+              type="button"
+              role="listitem"
+              aria-label={item.title}
+            >
+              {imageUrl ? (
+                <img
+                  src={imageUrl}
+                  alt={item.title}
+                  className="my-auctions-item__thumb"
+                />
+              ) : (
+                <div className="my-auctions-item__thumb--placeholder" aria-hidden="true">
+                  IMG
+                </div>
+              )}
+              <div className="my-auctions-item__info">
+                <div className="my-auctions-item__title">{item.title}</div>
+                <div className="my-auctions-item__meta">
+                  {auctionStatusLabel(item.status)} · {item.bid_count} lượt đặt
+                </div>
               </div>
-            )}
-            <div className="my-auctions-item__info">
-              <div className="my-auctions-item__title">{item.title}</div>
-              <div className="my-auctions-item__meta">
-                {auctionStatusLabel(item.status)} · {item.bid_count} lượt đặt
+              <div className="my-auctions-item__right">
+                <span className="my-auctions-item__price">
+                  {item.current_price.toLocaleString('vi-VN')} ₫
+                </span>
               </div>
-            </div>
-            <div className="my-auctions-item__right">
-              <span className="my-auctions-item__price">
-                {item.current_price.toLocaleString('vi-VN')} ₫
-              </span>
-            </div>
-          </button>
-        ))}
+            </button>
+          )
+        })}
       </div>
 
       {total > 20 && (
@@ -256,15 +272,9 @@ function BoughtTab() {
     <>
       <div className="my-auctions-list" role="list" aria-label="Đơn hàng đã mua">
         {orders.map((order) => {
+          const title = getOrderProductTitle(order)
           const imageUrl =
-            order.auction?.product?.images?.find((img) => img.is_primary)
-              ?.thumbnail_url ??
-            order.auction?.product?.images?.[0]?.thumbnail_url ??
-            null
-          const title =
-            order.auction?.product?.title ??
-            order.auction?.product_title ??
-            `Đơn hàng #${order.id}`
+            getOrderProductImageUrl(order) || getDemoProductImage(title)
 
           return (
             <button
@@ -378,9 +388,13 @@ function CreatedTab() {
         <div className="my-auctions-list" role="list" aria-label="Sản phẩm đã tạo">
           {products.map((product) => {
             const imageUrl =
-              product.images?.find((img) => img.is_primary)?.thumbnail_url ??
-              product.images?.[0]?.thumbnail_url ??
-              null
+              resolveProductImage(
+                product.title,
+                product.images?.find((img) => img.is_primary)?.thumbnail_url,
+                product.images?.find((img) => img.is_primary)?.url,
+                product.images?.[0]?.thumbnail_url,
+                product.images?.[0]?.url,
+              )
 
             const auctionInfo = product.auction
               ? `${auctionStatusLabel(product.auction.status)}${product.auction.current_price ? ' · ' + product.auction.current_price.toLocaleString('vi-VN') + ' ₫' : ''}`

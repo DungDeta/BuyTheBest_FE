@@ -7,6 +7,8 @@ import { useAuthStore } from '@/store/useAuthStore'
 import { useCountdown } from '@/hooks/useCountdown'
 import type { Order } from '@/types/order'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
+import { getOrderProductImageUrl, getOrderProductTitle } from '@/utils/orderDisplay'
+import { getDemoProductImage } from '@/utils/demoProductImages'
 import './dashboard.css'
 
 interface WatchlistItem {
@@ -66,11 +68,13 @@ function CountdownDisplay({ endTime }: { endTime: string }) {
 }
 
 function EndingSoonCard({ item }: { item: WatchlistItem }) {
+  const imageUrl = item.thumbnail_url || getDemoProductImage(item.title)
+
   return (
     <Link to={`/auctions/${item.auction_id}`} className="overview-mini-card">
-      {item.thumbnail_url ? (
+      {imageUrl ? (
         <img
-          src={item.thumbnail_url}
+          src={imageUrl}
           alt={item.title}
           className="overview-mini-card__thumb"
         />
@@ -89,14 +93,8 @@ function EndingSoonCard({ item }: { item: WatchlistItem }) {
 }
 
 function RecentOrderItem({ order }: { order: Order }) {
-  const imageUrl =
-    order.auction?.product?.images?.find((img) => img.is_primary)?.thumbnail_url ??
-    order.auction?.product?.images?.[0]?.thumbnail_url ??
-    null
-  const title =
-    order.auction?.product?.title ??
-    order.auction?.product_title ??
-    `Đơn hàng #${order.id}`
+  const title = getOrderProductTitle(order)
+  const imageUrl = getOrderProductImageUrl(order) || getDemoProductImage(title)
 
   return (
     <Link to="/orders" className="overview-order-item">

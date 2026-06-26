@@ -4,6 +4,7 @@ import { App, Pagination, Spin } from 'antd'
 import { privateGet, privatePost } from '@/api/api'
 import { useCountdown } from '@/hooks/useCountdown'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
+import { getDemoProductImage } from '@/utils/demoProductImages'
 import './dashboard.css'
 
 interface WatchlistItem {
@@ -93,6 +94,7 @@ interface WatchlistCardProps {
 
 function WatchlistCard({ item, onUnwatch, unwatching }: WatchlistCardProps) {
   const navigate = useNavigate()
+  const imageUrl = item.thumbnail_url || getDemoProductImage(item.title)
 
   return (
     <article className="watchlist-card" aria-label={item.title}>
@@ -106,9 +108,9 @@ function WatchlistCard({ item, onUnwatch, unwatching }: WatchlistCardProps) {
         tabIndex={0}
         aria-label={`Xem phiên: ${item.title}`}
       >
-        {item.thumbnail_url ? (
+        {imageUrl ? (
           <img
-            src={item.thumbnail_url}
+            src={imageUrl}
             alt={item.title}
             className="watchlist-card__thumb"
           />

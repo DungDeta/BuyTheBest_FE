@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { getOrderProductInitials } from '@/utils/orderDisplay'
+import { getDemoProductImage } from '@/utils/demoProductImages'
 
 interface OrderProductThumbProps {
   className: string
@@ -8,16 +9,22 @@ interface OrderProductThumbProps {
 }
 
 export function OrderProductThumb({ className, src, title }: OrderProductThumbProps) {
-  const [failed, setFailed] = useState(false)
+  const fallbackSrc = getDemoProductImage(title)
+  const candidates = [src, fallbackSrc].filter(
+    (value, index, values): value is string =>
+      Boolean(value) && values.indexOf(value) === index,
+  )
+  const [attempt, setAttempt] = useState(0)
+  const imageSrc = candidates[attempt] ?? null
 
   useEffect(() => {
-    setFailed(false)
-  }, [src])
+    setAttempt(0)
+  }, [src, fallbackSrc])
 
   return (
     <div className={className} aria-hidden="true">
-      {src && !failed ? (
-        <img src={src} alt="" onError={() => setFailed(true)} />
+      {imageSrc ? (
+        <img src={imageSrc} alt="" onError={() => setAttempt((value) => value + 1)} />
       ) : (
         <span>{getOrderProductInitials(title)}</span>
       )}
