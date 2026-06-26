@@ -73,6 +73,7 @@ const CONDITION_LABELS: Record<ProductCondition, string> = {
 const MAX_IMAGES = 6
 const MAX_PRODUCT_IMAGE_BYTES = 5 * 1024 * 1024
 const PRODUCT_IMAGE_UPLOAD_TIMEOUT_MS = 20_000
+const PRODUCT_IMAGE_MESSAGE_KEY = 'product-image-upload'
 const PRODUCT_IMAGE_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp'])
 
 function getProductImageContentType(file: File): string | null {
@@ -136,17 +137,26 @@ export function Component() {
     if (!file || !product) return
 
     if (images.length >= MAX_IMAGES) {
-      message.warning(`Tối đa ${MAX_IMAGES} ảnh`)
+      message.warning({
+        content: `Tối đa ${MAX_IMAGES} ảnh`,
+        key: PRODUCT_IMAGE_MESSAGE_KEY,
+      })
       return
     }
 
     const contentType = getProductImageContentType(file)
     if (!contentType) {
-      message.error('Chỉ hỗ trợ ảnh JPG, PNG hoặc WEBP')
+      message.error({
+        content: 'Chỉ hỗ trợ ảnh JPG, PNG hoặc WEBP',
+        key: PRODUCT_IMAGE_MESSAGE_KEY,
+      })
       return
     }
     if (file.size > MAX_PRODUCT_IMAGE_BYTES) {
-      message.error(`Ảnh tối đa ${formatFileSize(MAX_PRODUCT_IMAGE_BYTES)}`)
+      message.error({
+        content: `Ảnh tối đa ${formatFileSize(MAX_PRODUCT_IMAGE_BYTES)}`,
+        key: PRODUCT_IMAGE_MESSAGE_KEY,
+      })
       return
     }
 
@@ -163,7 +173,10 @@ export function Component() {
       const { object_key, upload_url, form_fields } = presignRes.data
       const maxSize = presignRes.data.max_size ?? MAX_PRODUCT_IMAGE_BYTES
       if (file.size > maxSize) {
-        message.error(`Ảnh tối đa ${formatFileSize(maxSize)}`)
+        message.error({
+          content: `Ảnh tối đa ${formatFileSize(maxSize)}`,
+          key: PRODUCT_IMAGE_MESSAGE_KEY,
+        })
         return
       }
 
@@ -202,9 +215,16 @@ export function Component() {
       if (!attachRes.data) throw new Error('Attach failed')
 
       setImages((prev) => [...prev, attachRes.data!])
-      message.success('Đã tải lên ảnh')
+      message.success({
+        content: 'Đã tải lên ảnh',
+        key: PRODUCT_IMAGE_MESSAGE_KEY,
+        duration: 1.5,
+      })
     } catch {
-      message.error('Tải ảnh thất bại. Vui lòng thử lại.')
+      message.error({
+        content: 'Tải ảnh thất bại. Vui lòng thử lại.',
+        key: PRODUCT_IMAGE_MESSAGE_KEY,
+      })
     } finally {
       setUploadingSlot(null)
     }
