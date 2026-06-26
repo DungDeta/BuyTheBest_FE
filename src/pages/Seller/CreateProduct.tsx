@@ -72,6 +72,7 @@ const CONDITION_LABELS: Record<ProductCondition, string> = {
 
 const MAX_IMAGES = 6
 const MAX_PRODUCT_IMAGE_BYTES = 5 * 1024 * 1024
+const PRODUCT_IMAGE_UPLOAD_TIMEOUT_MS = 20_000
 const PRODUCT_IMAGE_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp'])
 
 function getProductImageContentType(file: File): string | null {
@@ -172,10 +173,21 @@ export function Component() {
       }
       formData.append('file', file)
 
-      const uploadRes = await fetch(upload_url, {
-        method: 'POST',
-        body: formData,
-      })
+      const uploadController = new AbortController()
+      const uploadTimeout = window.setTimeout(
+        () => uploadController.abort(),
+        PRODUCT_IMAGE_UPLOAD_TIMEOUT_MS,
+      )
+      let uploadRes: Response
+      try {
+        uploadRes = await fetch(upload_url, {
+          method: 'POST',
+          body: formData,
+          signal: uploadController.signal,
+        })
+      } finally {
+        window.clearTimeout(uploadTimeout)
+      }
       if (!uploadRes.ok) throw new Error('Upload failed')
 
       const isPrimary = images.length === 0
