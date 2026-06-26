@@ -17,7 +17,7 @@ interface ProductCover {
 }
 
 interface ProductListItem {
-  id: number
+  id: string
   title: string
   slug: string
   condition: string
@@ -70,7 +70,7 @@ export function Component() {
   const [products, setProducts] = useState<ProductListItem[]>([])
   const [total, setTotal] = useState(0)
   const [loading, setLoading] = useState(false)
-  const [actionLoading, setActionLoading] = useState<Record<number, boolean>>({})
+  const [actionLoading, setActionLoading] = useState<Record<string, boolean>>({})
 
   useEffect(() => {
     let cancelled = false
@@ -108,7 +108,7 @@ export function Component() {
     setPage(1)
   }
 
-  function setItemLoading(id: number, state: boolean) {
+  function setItemLoading(id: string, state: boolean) {
     setActionLoading((prev) => ({ ...prev, [id]: state }))
   }
 
@@ -119,8 +119,8 @@ export function Component() {
       message.success('Đã xoá sản phẩm')
       setProducts((prev) => prev.filter((p) => p.id !== product.id))
       setTotal((t) => t - 1)
-    } catch {
-      message.error('Không thể xoá sản phẩm')
+    } catch (error) {
+      message.error(getApiErrorMessage(error, 'Không thể xoá sản phẩm'))
     } finally {
       setItemLoading(product.id, false)
     }
@@ -216,6 +216,18 @@ export function Component() {
   )
 }
 
+function getApiErrorMessage(error: unknown, fallback: string): string {
+  if (
+    typeof error === 'object' &&
+    error !== null &&
+    'error' in error &&
+    typeof error.error === 'string'
+  ) {
+    return error.error
+  }
+  return fallback
+}
+
 interface ProductCardProps {
   product: ProductListItem
   loading: boolean
@@ -284,18 +296,6 @@ function ProductCard({
             >
               Gửi duyệt
             </Button>
-            <Popconfirm
-              title="Xoá sản phẩm?"
-              description="Hành động này không thể hoàn tác."
-              onConfirm={onDelete}
-              okText="Xoá"
-              cancelText="Huỷ"
-              okButtonProps={{ danger: true }}
-            >
-              <Button size="small" danger disabled={loading}>
-                Xoá
-              </Button>
-            </Popconfirm>
           </>
         )}
 
@@ -312,14 +312,19 @@ function ProductCard({
         )}
 
         {product.status === 'approved' && (
-          <Button
-            size="small"
-            type="primary"
-            onClick={onCreateAuction}
-            disabled={loading}
-          >
-            Tạo phiên đấu giá
-          </Button>
+          <>
+            <Button size="small" onClick={onEdit} disabled={loading}>
+              Sửa
+            </Button>
+            <Button
+              size="small"
+              type="primary"
+              onClick={onCreateAuction}
+              disabled={loading}
+            >
+              Tạo phiên đấu giá
+            </Button>
+          </>
         )}
 
         {product.status === 'rejected' && (
@@ -337,6 +342,19 @@ function ProductCard({
             </Button>
           </>
         )}
+
+        <Popconfirm
+          title="Xoá sản phẩm?"
+          description="Sản phẩm có phiên đấu giá đang mở sẽ không thể xoá."
+          onConfirm={onDelete}
+          okText="Xoá"
+          cancelText="Huỷ"
+          okButtonProps={{ danger: true }}
+        >
+          <Button size="small" danger disabled={loading}>
+            Xoá
+          </Button>
+        </Popconfirm>
       </div>
     </article>
   )

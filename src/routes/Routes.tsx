@@ -75,6 +75,7 @@ export const router = createBrowserRouter([
         children: [
           { path: '/seller/products', lazy: () => import('@/pages/Seller/MyProducts') },
           { path: '/seller/products/new', lazy: () => import('@/pages/Seller/CreateProduct') },
+          { path: '/seller/products/:id/edit', lazy: () => import('@/pages/Seller/CreateProduct') },
           { path: '/seller/auctions/new', lazy: () => import('@/pages/Seller/CreateAuction') },
           { path: '/seller/auctions/:id', lazy: () => import('@/pages/Seller/AuctionDetail') },
         ],

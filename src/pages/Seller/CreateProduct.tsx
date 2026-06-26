@@ -1,7 +1,7 @@
-import { useRef, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { App, Button, Form, Input, Select, Steps } from 'antd'
-import { privateDelete, privatePost, privatePut } from '@/api/api'
+import { useEffect, useRef, useState } from 'react'
+import { useNavigate, useParams } from 'react-router-dom'
+import { Alert, App, Button, Form, Input, Select, Spin, Steps } from 'antd'
+import { privateDelete, privateGet, privatePost, privatePut } from '@/api/api'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import './seller.css'
 
@@ -16,7 +16,7 @@ interface ProductImageResponse {
 }
 
 interface ProductResponse {
-  id: number
+  id: string
   title: string
   slug: string
   description: string
@@ -26,6 +26,7 @@ interface ProductResponse {
   category_id: number
   seller_id: number
   images: ProductImageResponse[]
+  has_open_auction?: boolean
   created_at: string
   updated_at: string
 }
@@ -92,13 +93,29 @@ function formatFileSize(bytes: number): string {
   return `${(bytes / 1024 / 1024).toFixed(1)} MB`
 }
 
+function getApiErrorMessage(error: unknown, fallback: string): string {
+  if (
+    typeof error === 'object' &&
+    error !== null &&
+    'error' in error &&
+    typeof error.error === 'string'
+  ) {
+    return error.error
+  }
+  return fallback
+}
+
 export function Component() {
-  useDocumentTitle('Thêm sản phẩm')
   const { message } = App.useApp()
   const navigate = useNavigate()
+  const { id: editProductId } = useParams()
+  const isEditing = Boolean(editProductId)
+  useDocumentTitle(isEditing ? 'Sửa sản phẩm' : 'Thêm sản phẩm')
 
   const [currentStep, setCurrentStep] = useState(0)
   const [submitting, setSubmitting] = useState(false)
+  const [loadingProduct, setLoadingProduct] = useState(isEditing)
+  const [loadError, setLoadError] = useState(false)
 
   const [product, setProduct] = useState<ProductResponse | null>(null)
 
@@ -111,21 +128,76 @@ export function Component() {
 
   const [form] = Form.useForm<BasicInfoValues>()
 
-  async function handleCreateProduct(values: BasicInfoValues) {
+  useEffect(() => {
+    if (!editProductId) return
+
+    let cancelled = false
+    async function loadProduct() {
+      setLoadingProduct(true)
+      setLoadError(false)
+      try {
+        const res = await privateGet<ProductResponse>(`/me/products/${editProductId}`)
+        if (!res.data || cancelled) return
+        setProduct(res.data)
+        setImages(res.data.images ?? [])
+        form.setFieldsValue({
+          title: res.data.title,
+          description: res.data.description,
+          category_id: res.data.category_id,
+          condition: res.data.condition,
+        })
+      } catch {
+        if (!cancelled) setLoadError(true)
+      } finally {
+        if (!cancelled) setLoadingProduct(false)
+      }
+    }
+
+    loadProduct()
+    return () => {
+      cancelled = true
+    }
+  }, [editProductId, form])
+
+  const isDescriptionOnly = Boolean(isEditing && product?.has_open_auction)
+
+  async function handleSaveBasicInfo(values: BasicInfoValues) {
     setSubmitting(true)
     try {
-      const res = await privatePost<ProductResponse>('/products', {
-        title: values.title,
-        description: values.description,
-        category_id: values.category_id,
-        condition: values.condition,
-      })
+      const payload = isDescriptionOnly
+        ? { description: values.description }
+        : {
+            title: values.title,
+            description: values.description,
+            category_id: values.category_id,
+            condition: values.condition,
+          }
+      const res = isEditing && editProductId
+        ? await privatePut<ProductResponse>(`/products/${editProductId}`, payload)
+        : await privatePost<ProductResponse>('/products', payload)
       if (!res.data) throw new Error('No data returned')
-      setProduct(res.data)
-      setImages(res.data.images ?? [])
+      const nextProduct = isEditing && product
+        ? {
+            ...product,
+            ...res.data,
+            images,
+            has_open_auction: product.has_open_auction,
+          }
+        : res.data
+      setProduct(nextProduct)
+      setImages(nextProduct.images ?? [])
+      if (isDescriptionOnly) {
+        message.success('Đã cập nhật mô tả sản phẩm')
+        navigate('/seller/products')
+        return
+      }
+      if (isEditing) message.success('Đã cập nhật thông tin sản phẩm')
       setCurrentStep(1)
-    } catch {
-      message.error('Không thể tạo sản phẩm. Vui lòng thử lại.')
+    } catch (error) {
+      const fallback = isEditing
+        ? 'Không thể cập nhật sản phẩm. Vui lòng thử lại.'
+        : 'Không thể tạo sản phẩm. Vui lòng thử lại.'
+      message.error(getApiErrorMessage(error, fallback))
     } finally {
       setSubmitting(false)
     }
@@ -220,9 +292,12 @@ export function Component() {
         key: PRODUCT_IMAGE_MESSAGE_KEY,
         duration: 1.5,
       })
-    } catch {
+    } catch (error) {
       message.error({
-        content: 'Tải ảnh thất bại. Vui lòng thử lại.',
+        content: getApiErrorMessage(
+          error,
+          'Tải ảnh thất bại. Vui lòng thử lại.',
+        ),
         key: PRODUCT_IMAGE_MESSAGE_KEY,
       })
     } finally {
@@ -237,8 +312,8 @@ export function Component() {
       await privateDelete(`/products/${product.id}/images/${img.id}`)
       setImages((prev) => prev.filter((i) => i.id !== img.id))
       message.success('Đã xoá ảnh')
-    } catch {
-      message.error('Không thể xoá ảnh')
+    } catch (error) {
+      message.error(getApiErrorMessage(error, 'Không thể xoá ảnh'))
     } finally {
       setDeletingId(null)
     }
@@ -252,8 +327,8 @@ export function Component() {
       setImages((prev) =>
         prev.map((i) => ({ ...i, is_primary: i.id === img.id })),
       )
-    } catch {
-      message.error('Không thể đặt ảnh chính')
+    } catch (error) {
+      message.error(getApiErrorMessage(error, 'Không thể đặt ảnh chính'))
     } finally {
       setSettingPrimaryId(null)
     }
@@ -266,47 +341,101 @@ export function Component() {
       await privatePost(`/products/${product.id}/submit`)
       message.success('Đã gửi sản phẩm để duyệt!')
       navigate('/seller/products')
-    } catch {
-      message.error('Không thể gửi duyệt. Vui lòng thử lại.')
+    } catch (error) {
+      message.error(
+        getApiErrorMessage(
+          error,
+          'Không thể gửi duyệt. Vui lòng thử lại.',
+        ),
+      )
     } finally {
       setSubmitting(false)
     }
   }
 
   function handleSaveDraft() {
-    message.success('Sản phẩm đã được lưu nháp')
+    message.success(isEditing ? 'Đã lưu thay đổi sản phẩm' : 'Sản phẩm đã được lưu nháp')
     navigate('/seller/products')
   }
 
   const categoryName =
     CATEGORIES.find((c) => c.id === product?.category_id)?.name ?? ''
+  const canSubmitForReview =
+    product?.status === 'draft' || product?.status === 'rejected'
+  const steps = isDescriptionOnly
+    ? [{ title: 'Chỉnh sửa mô tả' }]
+    : [
+        { title: 'Thông tin cơ bản' },
+        { title: 'Hình ảnh' },
+        { title: isEditing ? 'Hoàn tất' : 'Gửi duyệt' },
+      ]
+
+  if (loadingProduct) {
+    return (
+      <div className="seller-page">
+        <div
+          style={{ display: 'flex', justifyContent: 'center', padding: 80 }}
+          aria-label="Đang tải sản phẩm"
+        >
+          <Spin size="large" />
+        </div>
+      </div>
+    )
+  }
+
+  if (loadError || (isEditing && !product)) {
+    return (
+      <div className="seller-page">
+        <div className="seller-empty" role="alert">
+          <span className="seller-empty__icon">PRD</span>
+          <p className="seller-empty__text">
+            Không thể tải sản phẩm hoặc bạn không có quyền chỉnh sửa.
+          </p>
+          <Button type="primary" onClick={() => navigate('/seller/products')}>
+            Quay lại danh sách
+          </Button>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="seller-page">
       <div className="seller-page__header">
-        <h1 className="seller-page__title">Thêm sản phẩm mới</h1>
+        <h1 className="seller-page__title">
+          {isEditing ? 'Chỉnh sửa sản phẩm' : 'Thêm sản phẩm mới'}
+        </h1>
       </div>
 
       <div className="wizard-shell">
         <div className="wizard-steps">
-          <Steps
-            current={currentStep}
-            items={[
-              { title: 'Thông tin cơ bản' },
-              { title: 'Hình ảnh' },
-              { title: 'Gửi duyệt' },
-            ]}
-          />
+          <Steps current={currentStep} items={steps} />
         </div>
 
         {currentStep === 0 && (
           <div className="wizard-step">
-            <h2 className="wizard-step__title">Thông tin sản phẩm</h2>
+            <h2 className="wizard-step__title">
+              {isDescriptionOnly
+                ? 'Cập nhật mô tả sản phẩm'
+                : isEditing
+                  ? 'Chỉnh sửa thông tin sản phẩm'
+                  : 'Thông tin sản phẩm'}
+            </h2>
+
+            {isDescriptionOnly && (
+              <Alert
+                type="info"
+                showIcon
+                style={{ marginBottom: 20 }}
+                message="Sản phẩm đang có phiên đấu giá mở"
+                description="Để bảo đảm thông tin của phiên đấu giá không thay đổi, bạn chỉ có thể cập nhật phần mô tả."
+              />
+            )}
 
             <Form
               form={form}
               layout="vertical"
-              onFinish={handleCreateProduct}
+              onFinish={handleSaveBasicInfo}
               requiredMark={false}
             >
               <Form.Item
@@ -321,6 +450,7 @@ export function Component() {
                 <Input
                   placeholder="Tên sản phẩm"
                   style={{ fontFamily: 'var(--font-mono)' }}
+                  disabled={isDescriptionOnly}
                 />
               </Form.Item>
 
@@ -348,6 +478,7 @@ export function Component() {
                 <Select
                   placeholder="Chọn danh mục"
                   style={{ fontFamily: 'var(--font-mono)' }}
+                  disabled={isDescriptionOnly}
                   options={CATEGORIES.map((c) => ({
                     value: c.id,
                     label: c.name,
@@ -363,6 +494,7 @@ export function Component() {
                 <Select
                   placeholder="Chọn tình trạng"
                   style={{ fontFamily: 'var(--font-mono)' }}
+                  disabled={isDescriptionOnly}
                   options={CONDITIONS.map((c) => ({
                     value: c.value,
                     label: c.label,
@@ -379,7 +511,11 @@ export function Component() {
                   htmlType="submit"
                   loading={submitting}
                 >
-                  Tiếp theo
+                  {isDescriptionOnly
+                    ? 'Lưu thay đổi'
+                    : isEditing
+                      ? 'Lưu và tiếp tục'
+                      : 'Tiếp theo'}
                 </Button>
               </div>
             </Form>
@@ -488,7 +624,19 @@ export function Component() {
         {/* ── Step 2: Submit ── */}
         {currentStep === 2 && product && (
           <div className="wizard-step">
-            <h2 className="wizard-step__title">Xác nhận & gửi duyệt</h2>
+            <h2 className="wizard-step__title">
+              {isEditing ? 'Xác nhận thay đổi' : 'Xác nhận & gửi duyệt'}
+            </h2>
+
+            {product.status === 'pending_review' && (
+              <Alert
+                type="success"
+                showIcon
+                style={{ marginBottom: 20 }}
+                message="Sản phẩm đang chờ duyệt lại"
+                description="Các thay đổi đã được lưu. Sản phẩm sẽ hiển thị lại sau khi quản trị viên phê duyệt."
+              />
+            )}
 
             <div className="product-summary">
               <div className="product-summary__row">
@@ -523,14 +671,20 @@ export function Component() {
 
             <div className="wizard-step__actions">
               <Button onClick={() => setCurrentStep(1)}>Quay lại</Button>
-              <Button onClick={handleSaveDraft}>Lưu nháp</Button>
-              <Button
-                type="primary"
-                onClick={handleSubmitForReview}
-                loading={submitting}
-              >
-                Gửi duyệt
+              <Button onClick={handleSaveDraft}>
+                {isEditing ? 'Hoàn tất' : 'Lưu nháp'}
               </Button>
+              {canSubmitForReview && (
+                <Button
+                  type="primary"
+                  onClick={handleSubmitForReview}
+                  loading={submitting}
+                >
+                  {product.status === 'rejected'
+                    ? 'Gửi lại duyệt'
+                    : 'Gửi duyệt'}
+                </Button>
+              )}
             </div>
           </div>
         )}
