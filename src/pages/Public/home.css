@@ -21,8 +21,6 @@
 .home-banners .banner-slide img {
   width: 100%;
   height: auto;
-  max-height: 280px;
-  object-fit: cover;
   display: block;
 }
 
