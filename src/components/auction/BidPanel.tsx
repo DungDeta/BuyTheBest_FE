@@ -28,6 +28,37 @@ function formatVnd(amount: number): string {
   return amount.toLocaleString('vi-VN') + ' đ'
 }
 
+const MODE_SUMMARY = {
+  english: { code: 'E', label: 'TĂNG DẦN', priceLabel: 'Giá hiện tại' },
+  dutch: { code: 'D', label: 'GIẢM DẦN', priceLabel: 'Giá hiện tại' },
+  sealed_bid: { code: 'S', label: 'KÍN', priceLabel: 'Giá khởi điểm' },
+  reverse: { code: 'R', label: 'NGƯỢC', priceLabel: 'Giá tốt nhất' },
+} as const
+
+function ReadOnlyBidSummary({ auction }: { auction: Auction }) {
+  const mode = MODE_SUMMARY[auction.mode]
+
+  return (
+    <div className="bid-form">
+      <div className="bid-current">
+        <div className="bid-current__left">
+          <span className="bid-current__label">{mode.priceLabel}</span>
+          <span className="bid-current__price">{formatVnd(auction.current_price)}</span>
+        </div>
+        <span className={`mode-badge ${mode.code}`}>
+          {mode.code} · {mode.label}
+        </span>
+      </div>
+      <div className="bid-gate">
+        <span className="bid-gate__msg">Đăng nhập để đặt giá</span>
+        <Link to="/login" className="bid-gate__login-btn" aria-label="Đến trang đăng nhập">
+          Đăng nhập →
+        </Link>
+      </div>
+    </div>
+  )
+}
+
 function isExternalUrl(url: string): boolean {
   return /^https?:\/\//.test(url)
 }
@@ -189,14 +220,7 @@ export function BidPanel({
     }
 
     if (!isLoggedIn) {
-      return (
-        <div className="bid-gate">
-          <span className="bid-gate__msg">Đăng nhập để đặt giá</span>
-          <Link to="/login" className="bid-gate__login-btn" aria-label="Đến trang đăng nhập">
-            Đăng nhập →
-          </Link>
-        </div>
-      )
+      return <ReadOnlyBidSummary auction={auction} />
     }
 
     if (isSeller) {

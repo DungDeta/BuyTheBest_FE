@@ -14,6 +14,7 @@ import type {
   Auction,
   AuctionEndedPayload,
   AuctionExtendedPayload,
+  AuditLogEvent,
   BidActionResponse,
   BidHistoryItem,
   BidPlacedPayload,
@@ -81,7 +82,27 @@ export function Component() {
         if (!cancelled) {
           setServerNow(res.data?.server_time ?? res.timestamp ?? null)
           if (res.data && typeof res.data.id === 'string') {
-            setAuction(res.data)
+            let nextAuction = res.data
+            if (res.data.status === 'ended' || res.data.status === 'closed_bin') {
+              try {
+                const log = await publicGet<{ events: AuditLogEvent[] }>(
+                  `/auctions/${id}/log`,
+                )
+                const endedEvent = log.data?.events?.find(
+                  (event) => event.type === 'AuctionEnded' || event.type === 'auction.ended',
+                )
+                const winnerLabel = endedEvent?.data?.winner_label
+                if (typeof winnerLabel === 'string') {
+                  nextAuction = {
+                    ...nextAuction,
+                    winner_label: winnerLabel,
+                    winner_is_self: nextAuction.highest_bidder_is_self,
+                  }
+                }
+              } catch {
+              }
+            }
+            if (!cancelled) setAuction(nextAuction)
           } else {
             setNotFound(true)
           }
@@ -197,11 +218,6 @@ export function Component() {
 
   const handleAuctionEnded = useCallback((payload: unknown) => {
     const p = payload as AuctionEndedPayload
-    const winnerIsSelf =
-      p.winner_is_self === true ||
-      (currentUserId !== null && p.winner_user_id != null && String(p.winner_user_id) === currentUserId) ||
-      (currentUserId !== null && p.winner_id != null && String(p.winner_id) === currentUserId) ||
-      (currentBidderLabel !== null && p.winner_label === currentBidderLabel)
 
     if (p.server_time) {
       setServerNow(p.server_time)
@@ -209,13 +225,21 @@ export function Component() {
 
     setAuction((prev) => {
       if (!prev) return prev
+      const winnerLabel = p.winner_label ?? prev.highest_bidder_label ?? null
+      const winnerIsSelf =
+        p.winner_is_self === true ||
+        prev.highest_bidder_is_self === true ||
+        (currentUserId !== null && p.winner_user_id != null && String(p.winner_user_id) === currentUserId) ||
+        (currentUserId !== null && p.winner_id != null && String(p.winner_id) === currentUserId) ||
+        (currentBidderLabel !== null && winnerLabel === currentBidderLabel)
+
       return {
         ...prev,
         status: 'ended',
         current_price: p.final_price,
         bid_count: p.bid_count,
-        winner_label: p.winner_label,
-        winner_id: p.winner_id,
+        winner_label: winnerLabel,
+        winner_id: p.winner_id ?? prev.highest_bidder_id,
         winner_user_id: p.winner_user_id,
         winner_is_self: winnerIsSelf,
         order_id: p.order_id,
