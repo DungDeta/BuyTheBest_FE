@@ -59,7 +59,7 @@ function normalizeNotification(
   }
 }
 
-export function useNotifications(connect = true): UseNotificationsResult {
+export function useNotifications(enabled = true): UseNotificationsResult {
   const unreadCount = useNotificationStore((state) => state.unreadCount)
   const isConnected = useNotificationStore((state) => state.isConnected)
   const latestNotification = useNotificationStore((state) => state.latestNotification)
@@ -77,7 +77,7 @@ export function useNotifications(connect = true): UseNotificationsResult {
   const accessToken = useAuthStore((s) => s.accessToken)
 
   useEffect(() => {
-    if (!connect) return
+    if (!enabled) return
 
     if (!accessToken) {
       reset()
@@ -186,7 +186,7 @@ export function useNotifications(connect = true): UseNotificationsResult {
     }
   }, [
     accessToken,
-    connect,
+    enabled,
     reset,
     setConnected,
     setLatestNotification,
