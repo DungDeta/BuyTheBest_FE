@@ -1,6 +1,7 @@
-import { useState, useEffect, useRef } from 'react'
+import { useEffect, useRef } from 'react'
 import { privateGet } from '@/api/api'
 import { useAuthStore } from '@/store/useAuthStore'
+import { useNotificationStore } from '@/store/useNotificationStore'
 import type { Notification } from '@/types/notification'
 
 const WS_BASE = import.meta.env.VITE_WS_URL ?? 'ws://localhost:3000/ws'
@@ -58,10 +59,16 @@ function normalizeNotification(
   }
 }
 
-export function useNotifications(): UseNotificationsResult {
-  const [unreadCount, setUnreadCount] = useState(0)
-  const [isConnected, setIsConnected] = useState(false)
-  const [latestNotification, setLatestNotification] = useState<Notification | null>(null)
+export function useNotifications(connect = true): UseNotificationsResult {
+  const unreadCount = useNotificationStore((state) => state.unreadCount)
+  const isConnected = useNotificationStore((state) => state.isConnected)
+  const latestNotification = useNotificationStore((state) => state.latestNotification)
+  const setUnreadCount = useNotificationStore((state) => state.setUnreadCount)
+  const setConnected = useNotificationStore((state) => state.setConnected)
+  const setLatestNotification = useNotificationStore(
+    (state) => state.setLatestNotification,
+  )
+  const reset = useNotificationStore((state) => state.reset)
 
   const wsRef = useRef<WebSocket | null>(null)
   const attemptsRef = useRef(0)
@@ -70,9 +77,10 @@ export function useNotifications(): UseNotificationsResult {
   const accessToken = useAuthStore((s) => s.accessToken)
 
   useEffect(() => {
+    if (!connect) return
+
     if (!accessToken) {
-      setUnreadCount(0)
-      setLatestNotification(null)
+      reset()
       return
     }
 
@@ -104,7 +112,7 @@ export function useNotifications(): UseNotificationsResult {
           return
         }
         attemptsRef.current = 0
-        setIsConnected(true)
+        setConnected(true)
       }
 
       ws.onmessage = (msg: MessageEvent<unknown>) => {
@@ -125,7 +133,7 @@ export function useNotifications(): UseNotificationsResult {
               if (typeof parsed.unread_count === 'number') {
                 setUnreadCount(parsed.unread_count)
               } else {
-                setUnreadCount((prev) => prev + 1)
+                setUnreadCount(useNotificationStore.getState().unreadCount + 1)
               }
             } else if (
               parsed.type === 'notification.unread_count' ||
@@ -147,7 +155,7 @@ export function useNotifications(): UseNotificationsResult {
 
       ws.onclose = () => {
         if (cancelled) return
-        setIsConnected(false)
+        setConnected(false)
 
         if (attemptsRef.current >= MAX_ATTEMPTS) return
 
@@ -173,10 +181,17 @@ export function useNotifications(): UseNotificationsResult {
         wsRef.current.close()
         wsRef.current = null
       }
-      setIsConnected(false)
+      setConnected(false)
       attemptsRef.current = 0
     }
-  }, [accessToken])
+  }, [
+    accessToken,
+    connect,
+    reset,
+    setConnected,
+    setLatestNotification,
+    setUnreadCount,
+  ])
 
   return { unreadCount, isConnected, latestNotification }
 }

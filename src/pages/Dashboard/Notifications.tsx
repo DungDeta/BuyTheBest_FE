@@ -98,7 +98,7 @@ export function Component() {
   useDocumentTitle('Thông báo')
   const { message } = App.useApp()
   const navigate = useNavigate()
-  const { latestNotification } = useNotifications()
+  const { latestNotification } = useNotifications(false)
   const [filter, setFilter] = useState<NotificationFilter>('all')
   const [page, setPage] = useState(1)
   const [notifications, setNotifications] = useState<Notification[]>([])
