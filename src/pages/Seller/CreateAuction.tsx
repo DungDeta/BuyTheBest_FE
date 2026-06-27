@@ -12,18 +12,20 @@ import {
 } from 'antd'
 import dayjs, { Dayjs } from 'dayjs'
 import { privateGet, privatePost } from '@/api/api'
-import type { AuctionMode } from '@/types/auction'
+import type { Auction, AuctionMode } from '@/types/auction'
+import type { ErrorResponse } from '@/types/api'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import './seller.css'
 
 interface ProductListItem {
-  id: number
+  id: string
   title: string
   slug: string
   condition: string
   status: 'draft' | 'pending_review' | 'approved' | 'rejected'
   category_id: number
   seller_id: number
+  has_open_auction?: boolean
   cover?: { id: number; url: string; sort_order: number; is_primary: boolean } | null
   created_at: string
 }
@@ -36,8 +38,7 @@ interface ProductsResponse {
 }
 
 interface AuctionFormValues {
-  product_id: number
-  category_id: number
+  product_public_id: string
   starting_price: number
   min_increment?: number
   buy_now_price?: number
@@ -52,16 +53,6 @@ interface AuctionFormValues {
   anti_snipe_threshold_seconds?: number
   anti_snipe_extension_seconds?: number
 }
-
-const CATEGORIES = [
-  { id: 1, name: 'Điện thoại' },
-  { id: 2, name: 'Laptop' },
-  { id: 3, name: 'Đồng hồ' },
-  { id: 4, name: 'Thời trang' },
-  { id: 5, name: 'Điện tử' },
-  { id: 6, name: 'Xe' },
-  { id: 7, name: 'Khác' },
-]
 
 const MODE_INFO: {
   value: AuctionMode
@@ -80,12 +71,12 @@ const MODE_INFO: {
   },
   {
     value: 'sealed_bid',
-    label: 'Bịt kín',
+    label: 'Đấu giá kín',
     desc: 'Mỗi người đặt một lần. Công bố kết quả sau thời hạn.',
   },
   {
     value: 'reverse',
-    label: 'Đảo ngược',
+    label: 'Đấu giá ngược',
     desc: 'Người bán nhận đề xuất từ người mua, chọn giá phù hợp.',
   },
 ]
@@ -101,9 +92,7 @@ export function Component() {
   const { message } = App.useApp()
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
-  const preselectedProductId = searchParams.get('product_id')
-    ? Number(searchParams.get('product_id'))
-    : undefined
+  const preselectedProductId = searchParams.get('product_id') ?? undefined
 
   const [mode, setMode] = useState<AuctionMode>('english')
   const [products, setProducts] = useState<ProductListItem[]>([])
@@ -112,7 +101,8 @@ export function Component() {
   const [showPreview, setShowPreview] = useState(false)
 
   const [form] = Form.useForm<AuctionFormValues>()
-  const hasApprovedProducts = products.length > 0
+  const availableProducts = products.filter((product) => !product.has_open_auction)
+  const hasAvailableProducts = availableProducts.length > 0
 
   useEffect(() => {
     let cancelled = false
@@ -142,7 +132,7 @@ export function Component() {
     try {
       type AuctionBody = {
         mode: AuctionMode
-        product_id: number
+        product_public_id: string
         category_id: number
         starting_price: number
         starts_at: string
@@ -159,10 +149,18 @@ export function Component() {
         anti_snipe_extension_seconds?: number
       }
 
+      const selectedProduct = products.find(
+        (product) => product.id === values.product_public_id,
+      )
+      if (!selectedProduct) {
+        message.error('Sản phẩm đã chọn không còn khả dụng')
+        return
+      }
+
       const body: AuctionBody = {
         mode,
-        product_id: values.product_id,
-        category_id: values.category_id,
+        product_public_id: values.product_public_id,
+        category_id: selectedProduct.category_id,
         starting_price: mode === 'reverse' ? (values.budget_cap ?? 0) : values.starting_price,
         starts_at: values.starts_at.toISOString(),
         ends_at: values.ends_at.toISOString(),
@@ -193,11 +191,12 @@ export function Component() {
       if (values.anti_snipe_extension_seconds !== undefined)
         body.anti_snipe_extension_seconds = values.anti_snipe_extension_seconds
 
-      await privatePost('/auctions', body)
+      const response = await privatePost<Auction>('/auctions', body)
       message.success('Tạo phiên đấu giá thành công!')
-      navigate('/my-auctions')
-    } catch {
-      message.error('Không thể tạo phiên đấu giá. Vui lòng thử lại.')
+      navigate(`/seller/auctions/${response.data.id}`)
+    } catch (error) {
+      const apiError = error as ErrorResponse
+      message.error(apiError.error || 'Không thể tạo phiên đấu giá. Vui lòng thử lại.')
     } finally {
       setSubmitting(false)
     }
@@ -212,13 +211,12 @@ export function Component() {
 
   function renderPreview() {
     const vals = form.getFieldsValue()
-    const productTitle = products.find((p) => p.id === vals.product_id)?.title ?? '—'
-    const categoryName = CATEGORIES.find((c) => c.id === vals.category_id)?.name ?? '—'
+    const selectedProduct = products.find((p) => p.id === vals.product_public_id)
+    const productTitle = selectedProduct?.title ?? '—'
     const modeLabel = MODE_INFO.find((m) => m.value === mode)?.label ?? mode
 
     const rows: { label: string; value: string }[] = [
       { label: 'Sản phẩm', value: productTitle },
-      { label: 'Danh mục', value: categoryName },
       { label: 'Chế độ', value: modeLabel },
       {
         label: 'Giá khởi điểm',
@@ -279,7 +277,7 @@ export function Component() {
         onFinish={handleFinish}
         requiredMark={false}
         initialValues={{
-          product_id: preselectedProductId,
+          product_public_id: preselectedProductId,
           max_extensions: 10,
           anti_snipe_threshold_seconds: 120,
           anti_snipe_extension_seconds: 120,
@@ -291,18 +289,25 @@ export function Component() {
 
           <Form.Item
             label="Sản phẩm đã duyệt"
-            name="product_id"
+            name="product_public_id"
             rules={[{ required: true, message: 'Vui lòng chọn sản phẩm' }]}
           >
             <Select
               placeholder="Chọn sản phẩm"
               loading={loadingProducts}
               style={{ fontFamily: 'var(--font-mono)' }}
-              options={products.map((p) => ({ value: p.id, label: p.title }))}
+              onChange={() => setShowPreview(false)}
+              options={products.map((product) => ({
+                value: product.id,
+                label: product.has_open_auction
+                  ? `${product.title} — đã có phiên đang mở`
+                  : product.title,
+                disabled: product.has_open_auction,
+              }))}
               notFoundContent="Chưa có sản phẩm nào được duyệt"
             />
           </Form.Item>
-          {!loadingProducts && !hasApprovedProducts && (
+          {!loadingProducts && products.length === 0 && (
             <Alert
               type="info"
               message="Chưa có sản phẩm đã duyệt"
@@ -315,18 +320,14 @@ export function Component() {
               style={{ marginBottom: 16 }}
             />
           )}
-
-          <Form.Item
-            label="Danh mục đấu giá"
-            name="category_id"
-            rules={[{ required: true, message: 'Vui lòng chọn danh mục' }]}
-          >
-            <Select
-              placeholder="Chọn danh mục"
-              style={{ fontFamily: 'var(--font-mono)' }}
-              options={CATEGORIES.map((c) => ({ value: c.id, label: c.name }))}
+          {!loadingProducts && products.length > 0 && !hasAvailableProducts && (
+            <Alert
+              type="warning"
+              message="Tất cả sản phẩm đã có phiên đấu giá"
+              description="Mỗi sản phẩm chỉ có thể tham gia một phiên đang mở. Hãy chờ phiên hiện tại kết thúc hoặc chọn sản phẩm khác."
+              style={{ marginBottom: 16 }}
             />
-          </Form.Item>
+          )}
         </div>
 
         <div className="auction-form__section">
@@ -673,7 +674,7 @@ export function Component() {
           {!showPreview && (
             <Button
               onClick={handlePreview}
-              disabled={loadingProducts || !hasApprovedProducts}
+              disabled={loadingProducts || !hasAvailableProducts}
             >
               Xem trước
             </Button>
@@ -682,7 +683,7 @@ export function Component() {
             type="primary"
             htmlType="submit"
             loading={submitting}
-            disabled={loadingProducts || !hasApprovedProducts}
+            disabled={loadingProducts || !hasAvailableProducts}
           >
             Tạo phiên đấu giá
           </Button>

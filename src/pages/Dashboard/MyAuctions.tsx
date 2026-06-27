@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { App, Button, Spin, Tabs } from 'antd'
+import { App, Button, Segmented, Spin, Tabs } from 'antd'
 import dayjs from 'dayjs'
 import { privateGet } from '@/api/api'
 import { useAuthStore } from '@/store/useAuthStore'
+import type { Auction } from '@/types/auction'
 import type { Order } from '@/types/order'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import { getOrderProductImageUrl, getOrderProductTitle } from '@/utils/orderDisplay'
@@ -33,36 +34,11 @@ interface OrdersResponse {
   total: number
 }
 
-interface ProductImage {
-  id: number
-  url: string
-  thumbnail_url: string
-  is_primary: boolean
-  sort_order: number
-}
-
-interface ProductAuction {
-  id: string
-  status: string
-  current_price?: number
-  ends_at?: string
-}
-
-interface SellerProduct {
-  id: string | number
-  title: string
-  slug?: string
-  condition?: string
-  status: string
-  images?: ProductImage[]
-  auction?: ProductAuction | null
-  created_at: string
-}
-
-interface ProductsResponse {
-  items?: SellerProduct[]
-  products?: SellerProduct[]
+interface AuctionsResponse {
+  items: Auction[]
   total: number
+  limit: number
+  offset: number
 }
 
 function resolveProductImage(
@@ -99,15 +75,14 @@ function orderStatusLabel(status: string): string {
   return map[status] ?? status
 }
 
-function productStatusLabel(status: string): string {
-  const map: Record<string, string> = {
-    draft: 'Bản nháp',
-    pending: 'Chờ duyệt',
-    approved: 'Đã duyệt',
-    rejected: 'Từ chối',
-    active: 'Đang bán',
+function auctionModeLabel(mode: Auction['mode']): string {
+  const map: Record<Auction['mode'], string> = {
+    english: 'Giá tăng dần',
+    dutch: 'Giá giảm dần',
+    sealed_bid: 'Đấu giá kín',
+    reverse: 'Đấu giá ngược',
   }
-  return map[status] ?? status
+  return map[mode]
 }
 
 function WatchingTab() {
@@ -324,7 +299,9 @@ function BoughtTab() {
 function CreatedTab() {
   const { message } = App.useApp()
   const navigate = useNavigate()
-  const [products, setProducts] = useState<SellerProduct[]>([])
+  const [auctions, setAuctions] = useState<Auction[]>([])
+  const [total, setTotal] = useState(0)
+  const [group, setGroup] = useState<'scheduled' | 'active' | 'finished'>('scheduled')
   const [loading, setLoading] = useState(false)
 
   useEffect(() => {
@@ -333,12 +310,21 @@ function CreatedTab() {
     async function load() {
       setLoading(true)
       try {
-        const res = await privateGet<ProductsResponse>('/me/products', { limit: 20 })
+        const res = await privateGet<AuctionsResponse>('/me/auctions', {
+          limit: 100,
+          offset: 0,
+          sort: 'newest',
+        })
         if (!cancelled) {
-          setProducts(res.data?.items ?? res.data?.products ?? [])
+          const items = res.data?.items ?? []
+          setAuctions(items)
+          setTotal(res.data?.total ?? items.length)
+          if (!items.some((auction) => auction.status === 'scheduled')) {
+            setGroup(items.some((auction) => auction.status === 'active') ? 'active' : 'finished')
+          }
         }
       } catch {
-        if (!cancelled) message.error('Không thể tải sản phẩm')
+        if (!cancelled) message.error('Không thể tải danh sách phiên đấu giá')
       } finally {
         if (!cancelled) setLoading(false)
       }
@@ -358,6 +344,17 @@ function CreatedTab() {
     )
   }
 
+  const scheduled = auctions.filter((auction) => auction.status === 'scheduled')
+  const active = auctions.filter((auction) => auction.status === 'active')
+  const finished = auctions.filter((auction) =>
+    ['ended', 'closed_bin', 'cancelled'].includes(auction.status),
+  )
+  const groupedAuctions = {
+    scheduled,
+    active,
+    finished,
+  }[group]
+
   return (
     <>
       <div className="seller-tab-header">
@@ -368,7 +365,7 @@ function CreatedTab() {
             fontFamily: 'var(--font-mono, "JetBrains Mono", monospace)',
           }}
         >
-          {products.length} sản phẩm
+          {total} phiên đấu giá
         </span>
         <Button
           type="primary"
@@ -379,71 +376,88 @@ function CreatedTab() {
         </Button>
       </div>
 
-      {products.length === 0 ? (
+      {auctions.length === 0 ? (
         <div className="my-auctions-empty" role="status">
-          <span className="my-auctions-empty__icon" aria-hidden="true">PRD</span>
-          Chưa có sản phẩm nào.
+          <span className="my-auctions-empty__icon" aria-hidden="true">AUC</span>
+          <p>Bạn chưa tạo phiên đấu giá nào.</p>
+          <Button type="primary" onClick={() => navigate('/seller/auctions/new')}>
+            Tạo phiên đấu giá đầu tiên
+          </Button>
         </div>
       ) : (
-        <div className="my-auctions-list" role="list" aria-label="Sản phẩm đã tạo">
-          {products.map((product) => {
-            const imageUrl =
-              resolveProductImage(
-                product.title,
-                product.images?.find((img) => img.is_primary)?.thumbnail_url,
-                product.images?.find((img) => img.is_primary)?.url,
-                product.images?.[0]?.thumbnail_url,
-                product.images?.[0]?.url,
-              )
+        <>
+          <Segmented
+            block
+            className="seller-auction-groups"
+            value={group}
+            onChange={(value) => setGroup(value as typeof group)}
+            options={[
+              { value: 'scheduled', label: `Đã lên lịch (${scheduled.length})` },
+              { value: 'active', label: `Đang diễn ra (${active.length})` },
+              { value: 'finished', label: `Đã kết thúc (${finished.length})` },
+            ]}
+          />
 
-            const auctionInfo = product.auction
-              ? `${auctionStatusLabel(product.auction.status)}${product.auction.current_price ? ' · ' + product.auction.current_price.toLocaleString('vi-VN') + ' ₫' : ''}`
-              : 'Chưa có phiên'
+          {groupedAuctions.length === 0 ? (
+            <div className="my-auctions-empty my-auctions-empty--compact" role="status">
+              Không có phiên nào trong nhóm này.
+            </div>
+          ) : (
+            <div className="my-auctions-list" role="list" aria-label="Phiên đấu giá đã tạo">
+              {groupedAuctions.map((auction) => {
+                const title = auction.product?.title ?? `Phiên ${auction.id.slice(0, 8)}`
+                const primaryImage = auction.product?.images?.find((image) => image.is_primary)
+                const imageUrl = resolveProductImage(
+                  title,
+                  primaryImage?.thumbnail_url,
+                  primaryImage?.url,
+                  auction.product?.images?.[0]?.thumbnail_url,
+                  auction.product?.images?.[0]?.url,
+                )
+                const timeLabel =
+                  auction.status === 'scheduled'
+                    ? `Bắt đầu ${dayjs(auction.starts_at).format('DD/MM/YYYY HH:mm')}`
+                    : auction.status === 'active'
+                      ? `Kết thúc ${dayjs(auction.ends_at).format('DD/MM/YYYY HH:mm')}`
+                      : auction.status === 'cancelled'
+                        ? `Đã hủy ${dayjs(auction.updated_at).format('DD/MM/YYYY HH:mm')}`
+                        : `Kết thúc ${dayjs(auction.ends_at).format('DD/MM/YYYY HH:mm')}`
 
-            return (
-              <button
-                key={String(product.id)}
-                className="my-auctions-item"
-                onClick={() => navigate('/seller/auctions/new')}
-                type="button"
-                role="listitem"
-                aria-label={product.title}
-              >
-                {imageUrl ? (
-                  <img
-                    src={imageUrl}
-                    alt={product.title}
-                    className="my-auctions-item__thumb"
-                  />
-                ) : (
-                  <div
-                    className="my-auctions-item__thumb--placeholder"
-                    aria-hidden="true"
+                return (
+                  <button
+                    key={auction.id}
+                    className="my-auctions-item"
+                    onClick={() => navigate(`/seller/auctions/${auction.id}`)}
+                    type="button"
+                    role="listitem"
+                    aria-label={title}
                   >
-                    IMG
-                  </div>
-                )}
-                <div className="my-auctions-item__info">
-                  <div className="my-auctions-item__title">{product.title}</div>
-                  <div className="my-auctions-item__meta">
-                    {productStatusLabel(product.status)} · {auctionInfo}
-                  </div>
-                </div>
-                <div className="my-auctions-item__right">
-                  <span
-                    style={{
-                      fontSize: '0.72rem',
-                      color: 'var(--color-muted)',
-                      fontFamily: 'var(--font-mono, "JetBrains Mono", monospace)',
-                    }}
-                  >
-                    {dayjs(product.created_at).format('DD/MM/YYYY')}
-                  </span>
-                </div>
-              </button>
-            )
-          })}
-        </div>
+                    {imageUrl ? (
+                      <img src={imageUrl} alt={title} className="my-auctions-item__thumb" />
+                    ) : (
+                      <div className="my-auctions-item__thumb--placeholder" aria-hidden="true">
+                        IMG
+                      </div>
+                    )}
+                    <div className="my-auctions-item__info">
+                      <div className="my-auctions-item__title">{title}</div>
+                      <div className="my-auctions-item__meta">
+                        {auctionModeLabel(auction.mode)} · {auctionStatusLabel(auction.status)}
+                      </div>
+                      <div className="my-auctions-item__meta">{timeLabel}</div>
+                    </div>
+                    <div className="my-auctions-item__right">
+                      <span className="my-auctions-item__price">
+                        {auction.current_price.toLocaleString('vi-VN')} ₫
+                      </span>
+                      <span className="my-auctions-item__bids">{auction.bid_count} lượt đặt</span>
+                    </div>
+                  </button>
+                )
+              })}
+            </div>
+          )}
+        </>
       )}
     </>
   )
@@ -482,7 +496,7 @@ export function Component() {
   return (
     <div className="my-auctions-page">
       <h1 className="my-auctions-page__title">Phiên của tôi</h1>
-      <Tabs items={tabItems} defaultActiveKey="watching" />
+      <Tabs items={tabItems} defaultActiveKey={isSeller() ? 'created' : 'watching'} />
     </div>
   )
 }
