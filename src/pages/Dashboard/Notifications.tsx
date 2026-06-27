@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react'
+import { useEffect, useState, useCallback, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { App, Modal, Pagination, Spin, Switch } from 'antd'
 import dayjs from 'dayjs'
@@ -7,6 +7,8 @@ import 'dayjs/locale/vi'
 import { privateGet, privatePut } from '@/api/api'
 import type { Notification, NotificationFilter, NotificationPreference } from '@/types/notification'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
+import { useNotifications } from '@/hooks/useNotifications'
+import { NetworkError } from '@/components/common/NetworkError'
 import './notifications.css'
 
 dayjs.extend(relativeTime)
@@ -17,17 +19,21 @@ const PAGE_SIZE = 20
 const FILTER_TABS: { value: NotificationFilter; label: string }[] = [
   { value: 'all', label: 'Tất cả' },
   { value: 'auction', label: 'Đấu giá' },
+  { value: 'order', label: 'Đơn hàng' },
   { value: 'payment', label: 'Thanh toán' },
-  { value: 'shipping', label: 'Giao hàng' },
   { value: 'dispute', label: 'Khiếu nại' },
   { value: 'unread', label: 'Chưa đọc' },
 ]
 
 const EVENT_TYPE_MARKS: Record<string, string> = {
   auction: 'AUC',
+  outbid: 'AUC',
+  order: 'ORD',
   payment: 'PAY',
-  shipping: 'SHP',
+  escrow: 'PAY',
+  payout: 'PAY',
   dispute: 'DSP',
+  new_message: 'MSG',
 }
 
 const PREF_LABELS: Record<string, string> = {
@@ -92,12 +98,15 @@ export function Component() {
   useDocumentTitle('Thông báo')
   const { message } = App.useApp()
   const navigate = useNavigate()
+  const { latestNotification } = useNotifications()
   const [filter, setFilter] = useState<NotificationFilter>('all')
   const [page, setPage] = useState(1)
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [total, setTotal] = useState(0)
   const [loading, setLoading] = useState(false)
+  const [loadError, setLoadError] = useState<string | null>(null)
   const [markingAll, setMarkingAll] = useState(false)
+  const requestIdRef = useRef(0)
 
   const [prefOpen, setPrefOpen] = useState(false)
   const [preferences, setPreferences] = useState<NotificationPreference[]>([])
@@ -106,8 +115,9 @@ export function Component() {
 
   const fetchNotifications = useCallback(
     async (currentFilter: NotificationFilter, currentPage: number) => {
-      let cancelled = false
+      const requestId = ++requestIdRef.current
       setLoading(true)
+      setLoadError(null)
       try {
         const params: Record<string, unknown> = {
           page: currentPage,
@@ -115,25 +125,31 @@ export function Component() {
           ...filterToParams(currentFilter),
         }
         const res = await privateGet<NotificationsResponse>('/notifications', params)
-        if (!cancelled) {
+        if (requestId === requestIdRef.current) {
           setNotifications(res.data?.notifications ?? [])
           setTotal(res.data?.total ?? 0)
         }
       } catch {
-        if (!cancelled) {
-          message.error('Không thể tải thông báo')
+        if (requestId === requestIdRef.current) {
+          setNotifications([])
+          setTotal(0)
+          setLoadError('Không thể tải danh sách thông báo. Vui lòng kiểm tra kết nối và thử lại.')
         }
       } finally {
-        if (!cancelled) setLoading(false)
+        if (requestId === requestIdRef.current) setLoading(false)
       }
-      return () => { cancelled = true }
     },
-    [message],
+    [],
   )
 
   useEffect(() => {
-    fetchNotifications(filter, page)
+    void fetchNotifications(filter, page)
   }, [filter, page, fetchNotifications])
+
+  useEffect(() => {
+    if (!latestNotification) return
+    void fetchNotifications(filter, page)
+  }, [latestNotification, filter, page, fetchNotifications])
 
   function handleFilterChange(next: NotificationFilter) {
     setFilter(next)
@@ -149,7 +165,7 @@ export function Component() {
     try {
       await privatePut('/notifications/read-all')
       message.success('Đã đánh dấu tất cả đã đọc')
-      fetchNotifications(filter, page)
+      await fetchNotifications(filter, page)
     } catch {
       message.error('Không thể cập nhật trạng thái')
     } finally {
@@ -165,6 +181,8 @@ export function Component() {
           prev.map((n) => (n.id === notif.id ? { ...n, is_read: true } : n)),
         )
       } catch {
+        message.error('Không thể đánh dấu thông báo đã đọc')
+        return
       }
     }
     if (notif.link) {
@@ -261,6 +279,11 @@ export function Component() {
         >
           <Spin size="large" />
         </div>
+      ) : loadError ? (
+        <NetworkError
+          message={loadError}
+          onRetry={() => void fetchNotifications(filter, page)}
+        />
       ) : notifications.length === 0 ? (
         <div className="notif-empty" role="status">
           <span className="notif-empty__icon">SYS</span>

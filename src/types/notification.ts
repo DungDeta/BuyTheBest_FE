@@ -15,4 +15,4 @@ export interface NotificationPreference {
   channel_in_app: boolean
 }
 
-export type NotificationFilter = 'all' | 'auction' | 'payment' | 'shipping' | 'dispute' | 'unread'
+export type NotificationFilter = 'all' | 'auction' | 'order' | 'payment' | 'dispute' | 'unread'

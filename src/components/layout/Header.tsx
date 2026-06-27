@@ -5,6 +5,7 @@ import { BellOutlined, UserOutlined } from '@ant-design/icons'
 import { Badge, Button, Dropdown, Modal } from 'antd'
 import type { MenuProps } from 'antd'
 import { AuthPanel, type AuthMode } from '@/pages/Auth/AuthPanel'
+import { useNotifications } from '@/hooks/useNotifications'
 
 export default function Header() {
   const user = useAuthStore((s) => s.user)
@@ -13,6 +14,7 @@ export default function Header() {
   const logout = useAuthStore((s) => s.logout)
   const navigate = useNavigate()
   const [authMode, setAuthMode] = useState<AuthMode | null>(null)
+  const { unreadCount, isConnected } = useNotifications()
 
   const isLoggedIn = !!accessToken && !!user && !!expiresAt && Date.now() < expiresAt
 
@@ -43,8 +45,16 @@ export default function Header() {
         <div className="header-right">
           {isLoggedIn ? (
             <>
-              <Link to="/notifications">
-                <Badge count={0} size="small">
+              <Link
+                to="/notifications"
+                aria-label={
+                  unreadCount > 0
+                    ? `${unreadCount} thông báo chưa đọc`
+                    : 'Không có thông báo chưa đọc'
+                }
+                title={isConnected ? 'Thông báo realtime đang kết nối' : 'Thông báo'}
+              >
+                <Badge count={unreadCount} overflowCount={99} size="small">
                   <BellOutlined style={{ fontSize: 18 }} />
                 </Badge>
               </Link>
