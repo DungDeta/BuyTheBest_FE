@@ -89,9 +89,18 @@ export function useAuctionWebSocket(auctionId: string | null): UseAuctionWebSock
             raw !== null &&
             typeof raw === 'object' &&
             'type' in raw &&
-            'payload' in raw
+            typeof (raw as Record<string, unknown>).type === 'string'
           ) {
-            dispatch(raw as WsEvent)
+            const record = raw as Record<string, unknown>
+            const event = 'payload' in record
+              ? raw as WsEvent
+              : {
+                  type: record.type as WsEventType,
+                  payload: Object.fromEntries(
+                    Object.entries(record).filter(([key]) => key !== 'type'),
+                  ),
+                }
+            dispatch(event)
           }
         } catch {
         }

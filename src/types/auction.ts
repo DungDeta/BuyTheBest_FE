@@ -134,6 +134,7 @@ export interface AuditLogEvent {
 
 export type WsEventType =
   | 'bid.placed'
+  | 'autobid.triggered'
   | 'auction.extended'
   | 'auction.ended'
   | 'auction.started'
