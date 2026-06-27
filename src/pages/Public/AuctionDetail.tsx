@@ -407,6 +407,11 @@ export function Component() {
             antiSnipeSeconds={auction.anti_snipe_threshold_seconds}
             extensionCount={auction.extension_count}
             maxExtensions={auction.max_extensions}
+            ended={
+              auction.status === 'ended' ||
+              auction.status === 'closed_bin' ||
+              auction.status === 'cancelled'
+            }
           />
 
           <BidPanel

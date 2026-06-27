@@ -7,6 +7,7 @@ interface CountdownBoxProps {
   antiSnipeSeconds: number
   extensionCount: number
   maxExtensions: number
+  ended?: boolean
 }
 
 function pad(n: number): string {
@@ -19,6 +20,7 @@ export function CountdownBox({
   antiSnipeSeconds,
   extensionCount,
   maxExtensions,
+  ended = false,
 }: CountdownBoxProps) {
   const {
     hours,
@@ -30,26 +32,32 @@ export function CountdownBox({
     isWarning,
     isServerSynced,
   } = useCountdown(endsAt, serverNow)
+  const hasEnded = ended || isExpired
 
   let boxClass = 'countdown-box'
-  if (isExpired) boxClass += ' countdown-box--ended'
+  if (hasEnded) boxClass += ' countdown-box--ended'
   else if (isUrgent) boxClass += ' countdown-box--urgent'
   else if (isWarning) boxClass += ' countdown-box--warning'
 
   const endLabel = dayjs(endsAt).format('DD/MM/YYYY HH:mm:ss')
-  const timerDisplay = isExpired
+  const timerDisplay = hasEnded
     ? 'Đã kết thúc'
     : isUrgent
       ? `${pad(minutes)}:${pad(seconds)}.${tenths}`
       : `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`
 
   return (
-    <div className={boxClass} role="timer" aria-live="polite" aria-label="Đồng hồ đếm ngược">
+    <div
+      className={boxClass}
+      role="timer"
+      aria-live="polite"
+      aria-label={hasEnded ? 'Phiên đã kết thúc' : 'Đồng hồ đếm ngược'}
+    >
       <div className="countdown-box__label">
-        Còn lại · kết thúc lúc {endLabel}
+        {hasEnded ? 'Kết thúc' : 'Còn lại'} · kết thúc lúc {endLabel}
       </div>
       <div className="countdown-box__timer">{timerDisplay}</div>
-      {!isExpired && (
+      {!hasEnded && (
         <div className="countdown-box__snipe">
           Bid trong {antiSnipeSeconds}s cuối sẽ gia hạn tự động
         </div>
