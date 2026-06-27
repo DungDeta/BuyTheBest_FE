@@ -155,7 +155,7 @@ export function Component() {
         ...prev,
         current_price: p.current_price,
         bid_count: p.bid_count,
-        highest_bidder_id: p.bidder_id ?? prev.highest_bidder_id,
+        highest_bidder_id: p.bidder_id ?? null,
         highest_bidder_label: p.bidder_label,
         highest_bidder_is_self: isSelf,
         server_time: p.server_time ?? prev.server_time,

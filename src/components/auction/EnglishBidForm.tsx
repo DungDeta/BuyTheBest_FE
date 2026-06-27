@@ -48,9 +48,9 @@ export function EnglishBidForm({
 
   const [bidInput, setBidInput] = useState(String(minBid))
 
-  const isLeading =
-    auction.highest_bidder_is_self === true ||
-    isSelfBidder(
+  const isLeading = typeof auction.highest_bidder_is_self === 'boolean'
+    ? auction.highest_bidder_is_self
+    : isSelfBidder(
       {
         bidder_id: auction.highest_bidder_id,
         bidder_label: auction.highest_bidder_label,
