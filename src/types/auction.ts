@@ -2,6 +2,7 @@ export type AuctionMode = 'english' | 'dutch' | 'sealed_bid' | 'reverse'
 export type AuctionStatus = 'scheduled' | 'active' | 'ended' | 'closed_bin' | 'cancelled'
 export type BidType = 'manual' | 'auto' | 'buy_now'
 export type AutoBidStatus = 'active' | 'cancelled' | 'exhausted' | 'won'
+export type AuctionConnectionState = 'idle' | 'connecting' | 'connected' | 'reconnecting' | 'failed'
 
 export interface Auction {
   id: string

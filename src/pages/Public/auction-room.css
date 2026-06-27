@@ -127,6 +127,15 @@
   background: var(--success);
 }
 
+.room-ws-badge--error {
+  color: var(--danger);
+  border-color: var(--danger);
+}
+
+.room-ws-badge--error .room-ws-badge__dot {
+  background: var(--danger);
+}
+
 /* ── Product hero card ──────────────────────────────── */
 
 .product-hero {
@@ -1188,6 +1197,22 @@
   height: 5px;
   border-radius: 50%;
   background: #118c4f;
+  flex-shrink: 0;
+}
+
+.bid-panel-footer__offline {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: 700;
+  color: var(--danger);
+}
+
+.bid-panel-footer__offline-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--danger);
   flex-shrink: 0;
 }
 

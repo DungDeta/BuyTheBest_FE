@@ -5,7 +5,7 @@ import { DutchBidForm } from '@/components/auction/DutchBidForm'
 import { SealedBidForm } from '@/components/auction/SealedBidForm'
 import { ReverseBidForm } from '@/components/auction/ReverseBidForm'
 import { isSelfBidder } from '@/utils/auctionIdentity'
-import type { Auction, BidActionResponse } from '@/types/auction'
+import type { Auction, AuctionConnectionState, BidActionResponse } from '@/types/auction'
 
 interface BidPanelProps {
   auction: Auction
@@ -13,6 +13,7 @@ interface BidPanelProps {
   currentUserId: string | null
   currentBidderLabel: string | null
   currentParticipantId: number | null
+  connectionState: AuctionConnectionState
   onBidPlaced?: (amount: number, data?: BidActionResponse) => void
 }
 
@@ -142,6 +143,7 @@ export function BidPanel({
   currentUserId,
   currentBidderLabel,
   currentParticipantId,
+  connectionState,
   onBidPlaced,
 }: BidPanelProps) {
   const isEnded = auction.status === 'ended' || auction.status === 'closed_bin'
@@ -173,6 +175,15 @@ export function BidPanel({
           <span className="bid-gate__date">
             Bắt đầu lúc {dayjs(auction.starts_at).format('DD/MM/YYYY HH:mm')}
           </span>
+        </div>
+      )
+    }
+
+    if (connectionState === 'failed') {
+      return (
+        <div className="bid-gate" role="alert">
+          <span className="bid-gate__msg">Không thể kết nối phòng đấu giá</span>
+          <span className="bid-gate__date">Vui lòng tải lại trang để thử lại.</span>
         </div>
       )
     }
@@ -219,9 +230,27 @@ export function BidPanel({
           {bidCount} lượt bid · {watcherCount} đang xem
         </span>
         {isActive && (
-          <span className="bid-panel-footer__live" aria-label="Đang diễn ra trực tiếp">
-            <span className="bid-panel-footer__live-dot" aria-hidden="true" />
-            LIVE
+          <span
+            className={connectionState === 'failed'
+              ? 'bid-panel-footer__offline'
+              : 'bid-panel-footer__live'}
+            aria-label={connectionState === 'failed'
+              ? 'Mất kết nối thời gian thực'
+              : connectionState === 'connected'
+                ? 'Đang diễn ra trực tiếp'
+                : 'Đang đồng bộ kết nối'}
+          >
+            <span
+              className={connectionState === 'failed'
+                ? 'bid-panel-footer__offline-dot'
+                : 'bid-panel-footer__live-dot'}
+              aria-hidden="true"
+            />
+            {connectionState === 'failed'
+              ? 'OFFLINE'
+              : connectionState === 'connected'
+                ? 'LIVE'
+                : 'SYNCING'}
           </span>
         )}
       </div>

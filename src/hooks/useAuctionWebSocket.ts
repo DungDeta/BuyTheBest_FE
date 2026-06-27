@@ -1,10 +1,16 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
-import type { WsEvent, WsEventType, ParticipantPayload } from '@/types/auction'
+import type {
+  AuctionConnectionState,
+  ParticipantPayload,
+  WsEvent,
+  WsEventType,
+} from '@/types/auction'
 
 type EventCallback = (payload: unknown) => void
 
 export interface UseAuctionWebSocketResult {
   isConnected: boolean
+  connectionState: AuctionConnectionState
   lastEvent: WsEvent | null
   participantCount: number
   subscribe: (eventType: WsEventType, callback: EventCallback) => void
@@ -17,6 +23,7 @@ const MAX_BACKOFF_MS = 30_000
 
 export function useAuctionWebSocket(auctionId: string | null): UseAuctionWebSocketResult {
   const [isConnected, setIsConnected] = useState(false)
+  const [connectionState, setConnectionState] = useState<AuctionConnectionState>('idle')
   const [lastEvent, setLastEvent] = useState<WsEvent | null>(null)
   const [participantCount, setParticipantCount] = useState(0)
 
@@ -68,6 +75,7 @@ export function useAuctionWebSocket(auctionId: string | null): UseAuctionWebSock
       const id = auctionIdRef.current
       if (id === null) return
 
+      setConnectionState(attemptsRef.current === 0 ? 'connecting' : 'reconnecting')
       const url = `${WS_BASE}/auctions/${id}`
       const ws = new WebSocket(url)
       wsRef.current = ws
@@ -79,6 +87,7 @@ export function useAuctionWebSocket(auctionId: string | null): UseAuctionWebSock
         }
         attemptsRef.current = 0
         setIsConnected(true)
+        setConnectionState('connected')
       }
 
       ws.onmessage = (msg: MessageEvent<unknown>) => {
@@ -113,10 +122,14 @@ export function useAuctionWebSocket(auctionId: string | null): UseAuctionWebSock
         if (cancelled) return
         setIsConnected(false)
 
-        if (attemptsRef.current >= MAX_ATTEMPTS) return
+        if (attemptsRef.current >= MAX_ATTEMPTS) {
+          setConnectionState('failed')
+          return
+        }
 
         const backoff = Math.min(1000 * 2 ** attemptsRef.current, MAX_BACKOFF_MS)
         attemptsRef.current += 1
+        setConnectionState('reconnecting')
 
         reconnectTimerRef.current = setTimeout(() => {
           if (!cancelled) connect()
@@ -138,9 +151,17 @@ export function useAuctionWebSocket(auctionId: string | null): UseAuctionWebSock
         wsRef.current = null
       }
       setIsConnected(false)
+      setConnectionState('idle')
       attemptsRef.current = 0
     }
   }, [auctionId, dispatch])
 
-  return { isConnected, lastEvent, participantCount, subscribe, unsubscribe }
+  return {
+    isConnected,
+    connectionState,
+    lastEvent,
+    participantCount,
+    subscribe,
+    unsubscribe,
+  }
 }

@@ -43,7 +43,13 @@ export function Component() {
   const pendingSelfBidAmountRef = useRef<number | null>(null)
 
   const wsAuctionId = auction?.status === 'active' ? (auction.id ?? null) : null
-  const { isConnected, participantCount, subscribe, unsubscribe } = useAuctionWebSocket(wsAuctionId)
+  const {
+    isConnected,
+    connectionState,
+    participantCount,
+    subscribe,
+    unsubscribe,
+  } = useAuctionWebSocket(wsAuctionId)
 
   const markSelfBid = useCallback((amount: number, data?: BidActionResponse) => {
     pendingSelfBidAmountRef.current = amount
@@ -346,11 +352,28 @@ export function Component() {
         <aside className="room-right" aria-label="Thông tin và hành động đấu giá">
           {isActive && (
             <div
-              className={`room-ws-badge${isConnected ? ' room-ws-badge--live' : ''}`}
-              aria-label={isConnected ? 'Đang kết nối trực tiếp' : 'Đang kết nối lại'}
+              className={`room-ws-badge${
+                isConnected
+                  ? ' room-ws-badge--live'
+                  : connectionState === 'failed'
+                    ? ' room-ws-badge--error'
+                    : ''
+              }`}
+              aria-label={
+                isConnected
+                  ? 'Đang kết nối trực tiếp'
+                  : connectionState === 'failed'
+                    ? 'Không thể kết nối phòng đấu giá'
+                    : 'Đang kết nối lại'
+              }
+              role={connectionState === 'failed' ? 'alert' : 'status'}
             >
               <span className="room-ws-badge__dot" aria-hidden="true" />
-              {isConnected ? 'LIVE' : 'Connecting…'}
+              {isConnected
+                ? 'LIVE'
+                : connectionState === 'failed'
+                  ? 'Mất kết nối'
+                  : 'Đang kết nối…'}
             </div>
           )}
 
@@ -368,6 +391,7 @@ export function Component() {
             currentUserId={currentUserId}
             currentBidderLabel={currentBidderLabel}
             currentParticipantId={currentParticipantId}
+            connectionState={connectionState}
             onBidPlaced={markSelfBid}
           />
 
