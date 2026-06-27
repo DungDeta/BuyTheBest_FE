@@ -54,7 +54,7 @@ export function CountdownBox({
       aria-label={hasEnded ? 'Phiên đã kết thúc' : 'Đồng hồ đếm ngược'}
     >
       <div className="countdown-box__label">
-        {hasEnded ? 'Kết thúc' : 'Còn lại'} · kết thúc lúc {endLabel}
+        {hasEnded ? `Phiên kết thúc lúc ${endLabel}` : `Còn lại · kết thúc lúc ${endLabel}`}
       </div>
       <div className="countdown-box__timer">{timerDisplay}</div>
       {!hasEnded && (
