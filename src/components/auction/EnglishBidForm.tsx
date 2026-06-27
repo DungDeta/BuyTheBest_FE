@@ -149,7 +149,7 @@ export function EnglishBidForm({
     <div className="bid-form">
       <div className="bid-current">
         <div className="bid-current__left">
-          <span className="bid-current__label">Bid hiện tại</span>
+          <span className="bid-current__label">Giá hiện tại</span>
           <span className="bid-current__price">{formatVnd(auction.current_price)}</span>
           {delta > 0 && (
             <span className="bid-current__delta">
@@ -157,7 +157,9 @@ export function EnglishBidForm({
             </span>
           )}
         </div>
-        <span className="mode-badge E" aria-label="Phương thức English">E · English</span>
+        <span className="mode-badge E" aria-label="Phương thức đấu giá tăng dần">
+          E · Tăng dần
+        </span>
       </div>
 
       {hasEverBid && (
@@ -183,7 +185,7 @@ export function EnglishBidForm({
             disabled={loading}
             aria-label="Đặt giá"
           >
-            {loading ? '…' : 'Bid →'}
+            {loading ? '…' : 'Đặt giá →'}
           </button>
         </div>
         <p className="bid-input-hint">Tối thiểu {formatVnd(minBid)}</p>
@@ -203,7 +205,11 @@ export function EnglishBidForm({
         ))}
       </div>
 
-      <AutoBidSection auctionId={auction.id} minPrice={minBid} />
+      <AutoBidSection
+        auctionId={auction.id}
+        minPrice={minBid}
+        minIncrement={minIncrement}
+      />
 
       {auction.buy_now_price != null && (
         <button

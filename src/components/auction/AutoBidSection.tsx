@@ -5,14 +5,15 @@ import { useAutoBid } from '@/hooks/useAutoBid'
 interface AutoBidSectionProps {
   auctionId: string
   minPrice: number
+  minIncrement: number
 }
 
 function formatVnd(amount: number): string {
   return amount.toLocaleString('vi-VN') + ' ₫'
 }
 
-export function AutoBidSection({ auctionId, minPrice }: AutoBidSectionProps) {
-  const { message } = App.useApp()
+export function AutoBidSection({ auctionId, minPrice, minIncrement }: AutoBidSectionProps) {
+  const { message, modal } = App.useApp()
   const { autoBid, loading, error, configure, cancel, refresh } = useAutoBid(auctionId)
 
   const [expanded, setExpanded] = useState(false)
@@ -22,26 +23,33 @@ export function AutoBidSection({ auctionId, minPrice }: AutoBidSectionProps) {
 
   async function handleConfigure() {
     const parsed = parseInt(maxPriceInput.replace(/\D/g, ''), 10)
-    if (isNaN(parsed) || parsed <= minPrice) {
-      message.error(`Giá trần phải lớn hơn ${formatVnd(minPrice)}`)
+    if (isNaN(parsed) || parsed < minPrice) {
+      message.error(`Giá trần phải từ ${formatVnd(minPrice)}`)
       return
     }
     const ok = await configure(parsed)
     if (ok) {
-      message.success('Auto-bid đã được kích hoạt')
+      message.success('Đặt giá tự động đã được kích hoạt')
       setMaxPriceInput('')
     }
   }
 
-  async function handleCancel() {
-    const confirmed = window.confirm('Hủy auto-bid hiện tại?')
-    if (!confirmed) return
-
-    const ok = await cancel()
-    if (ok) {
-      message.success('Auto-bid đã được huỷ')
-      setExpanded(false)
-    }
+  function handleCancel() {
+    modal.confirm({
+      title: 'Hủy đặt giá tự động?',
+      content: 'Hệ thống sẽ dừng đặt giá thay bạn trong phiên đấu giá này.',
+      okText: 'Hủy đặt giá tự động',
+      cancelText: 'Giữ lại',
+      okButtonProps: { danger: true },
+      onOk: async () => {
+        const ok = await cancel()
+        if (!ok) {
+          throw new Error('AUTO_BID_CANCEL_FAILED')
+        }
+        message.success('Đặt giá tự động đã được hủy')
+        setExpanded(false)
+      },
+    })
   }
 
   function handleToggle() {
@@ -58,22 +66,22 @@ export function AutoBidSection({ auctionId, minPrice }: AutoBidSectionProps) {
           type="checkbox"
           checked={expanded || isActive}
           onChange={handleToggle}
-          aria-label="Bật auto-bid"
+          aria-label="Bật đặt giá tự động"
         />
-        Auto-bid — hệ thống tự tăng đủ để dẫn đầu
+        Đặt giá tự động — hệ thống tăng vừa đủ để dẫn đầu
       </label>
 
       {(expanded || isActive) && (
         <div className="auto-bid-section__body">
           {isActive && autoBid !== null ? (
             <>
-              <div className="auto-bid-status" aria-label="Trạng thái auto-bid">
+              <div className="auto-bid-status" aria-label="Trạng thái đặt giá tự động">
                 <div className="auto-bid-status__row">
                   <span>Giá trần</span>
                   <strong>{formatVnd(autoBid.max_price)}</strong>
                 </div>
                 <div className="auto-bid-status__row">
-                  <span>Bid hiện tại</span>
+                  <span>Giá đang đặt</span>
                   <strong>{formatVnd(autoBid.current_bid_amount)}</strong>
                 </div>
                 {autoBid.trigger_count !== null && (
@@ -88,9 +96,9 @@ export function AutoBidSection({ auctionId, minPrice }: AutoBidSectionProps) {
                 className="bid-btn bid-btn--cancel"
                 onClick={handleCancel}
                 disabled={loading}
-                aria-label="Huỷ auto-bid"
+                aria-label="Hủy đặt giá tự động"
               >
-                {loading ? 'Đang xử lý…' : 'Huỷ auto-bid'}
+                {loading ? 'Đang xử lý…' : 'Hủy đặt giá tự động'}
               </button>
             </>
           ) : (
@@ -102,20 +110,21 @@ export function AutoBidSection({ auctionId, minPrice }: AutoBidSectionProps) {
                   value={maxPriceInput}
                   onChange={(e) => setMaxPriceInput(e.target.value)}
                   placeholder="Giá trần tối đa…"
-                  aria-label="Giá trần auto-bid"
+                  aria-label="Giá trần đặt giá tự động"
                 />
                 <button
                   type="button"
                   className="bid-btn"
                   onClick={handleConfigure}
                   disabled={loading || maxPriceInput === ''}
-                  aria-label="Kích hoạt auto-bid"
+                  aria-label="Kích hoạt đặt giá tự động"
                 >
                   {loading ? '…' : 'Kích hoạt'}
                 </button>
               </div>
               <p className="auto-bid-hint">
-                Hệ thống chỉ tăng đủ để vượt người khác, tối đa đến giá trần.
+                Bước giá của phiên là {formatVnd(minIncrement)}. Hệ thống chỉ tăng vừa đủ
+                để vượt người khác, tối đa đến giá trần.
               </p>
             </>
           )}
