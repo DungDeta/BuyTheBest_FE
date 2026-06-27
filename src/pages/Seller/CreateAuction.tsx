@@ -498,16 +498,15 @@ export function Component() {
             <Form.Item
               label="Thời điểm công bố kết quả"
               name="reveal_at"
-              dependencies={['starts_at', 'ends_at']}
+              dependencies={['ends_at']}
               rules={[
                 { required: true, message: 'Chọn thời điểm công bố' },
                 ({ getFieldValue }) => ({
                   validator(_, value: Dayjs | undefined) {
-                    const start = getFieldValue('starts_at') as Dayjs | undefined
                     const end = getFieldValue('ends_at') as Dayjs | undefined
-                    if (!value || !start || !end) return Promise.resolve()
-                    if (!value.isBefore(start) && !value.isAfter(end)) return Promise.resolve()
-                    return Promise.reject(new Error('Thời điểm công bố phải nằm trong thời gian phiên'))
+                    if (!value || !end) return Promise.resolve()
+                    if (value.isAfter(end)) return Promise.resolve()
+                    return Promise.reject(new Error('Thời điểm công bố phải sau thời gian kết thúc'))
                   },
                 }),
               ]}
