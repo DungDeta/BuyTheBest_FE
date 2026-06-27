@@ -17,6 +17,82 @@ const WS_BASE = import.meta.env.VITE_WS_URL ?? 'ws://localhost:3000/ws'
 const MAX_ATTEMPTS = 10
 const MAX_BACKOFF_MS = 30_000
 
+function asRecord(value: unknown): Record<string, unknown> | null {
+  return value !== null && typeof value === 'object'
+    ? (value as Record<string, unknown>)
+    : null
+}
+
+function numberField(record: Record<string, unknown>, ...keys: string[]): number | undefined {
+  for (const key of keys) {
+    const value = record[key]
+    if (typeof value === 'number') return value
+  }
+  return undefined
+}
+
+function stringField(record: Record<string, unknown>, ...keys: string[]): string | undefined {
+  for (const key of keys) {
+    const value = record[key]
+    if (typeof value === 'string') return value
+  }
+  return undefined
+}
+
+function normalizeChatEvent(raw: unknown): ChatWsEvent | null {
+  const record = asRecord(raw)
+  if (!record || typeof record.type !== 'string') return null
+
+  const type = record.type as ChatWsEventType
+  const event: ChatWsEvent = {
+    type,
+    conversation_id: numberField(record, 'conversation_id', 'ConversationID'),
+    user_id: numberField(record, 'user_id', 'UserID'),
+  }
+
+  if (type !== 'chat.message' && type !== 'message.new') return event
+
+  const payload = asRecord(record.data) ?? asRecord(record.message)
+  if (!payload) return event
+
+  const id = numberField(payload, 'id', 'ID')
+  const conversationId = numberField(payload, 'conversation_id', 'ConversationID')
+  const senderId = numberField(payload, 'sender_id', 'SenderID')
+  const content = stringField(payload, 'content', 'Content')
+  const createdAt = stringField(payload, 'created_at', 'CreatedAt')
+  if (
+    id === undefined ||
+    conversationId === undefined ||
+    senderId === undefined ||
+    content === undefined ||
+    createdAt === undefined
+  ) {
+    return event
+  }
+
+  event.conversation_id ??= conversationId
+  event.data = {
+    id,
+    conversation_id: conversationId,
+    sender_id: senderId,
+    content,
+    image_url:
+      stringField(payload, 'image_url', 'ImageURL') ??
+      (payload.image_url === null || payload.ImageURL === null ? null : undefined),
+    has_violation:
+      typeof payload.has_violation === 'boolean'
+        ? payload.has_violation
+        : typeof payload.HasViolation === 'boolean'
+          ? payload.HasViolation
+          : false,
+    violation_type:
+      stringField(payload, 'violation_type', 'ViolationType') ??
+      (payload.violation_type === null || payload.ViolationType === null ? null : undefined),
+    created_at: createdAt,
+  }
+  return event
+}
+
 export function useChatWebSocket(conversationId: number | null): UseChatWebSocketResult {
   const [isConnected, setIsConnected] = useState(false)
 
@@ -90,14 +166,8 @@ export function useChatWebSocket(conversationId: number | null): UseChatWebSocke
         if (cancelled) return
         try {
           const raw: unknown = typeof msg.data === 'string' ? JSON.parse(msg.data) : msg.data
-          if (
-            raw !== null &&
-            typeof raw === 'object' &&
-            'type' in raw &&
-            typeof (raw as Record<string, unknown>).type === 'string'
-          ) {
-            dispatch(raw as ChatWsEvent)
-          }
+          const event = normalizeChatEvent(raw)
+          if (event) dispatch(event)
         } catch {
         }
       }

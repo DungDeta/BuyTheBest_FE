@@ -1,9 +1,11 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
 import { App, Spin } from 'antd'
+import { CloseOutlined, SearchOutlined } from '@ant-design/icons'
 import { useSearchParams } from 'react-router-dom'
 import { privateGet, privatePost, privatePut } from '@/api/api'
 import { useAuthStore } from '@/store/useAuthStore'
 import { useChatWebSocket } from '@/hooks/useChatWebSocket'
+import type { ErrorResponse } from '@/types/api'
 import type { Conversation, PrivateMessage, ChatWsEvent } from '@/types/chat'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import './chat.css'
@@ -11,6 +13,20 @@ import './chat.css'
 const PAGE_LIMIT = 30
 const MAX_CHAT_IMAGE_BYTES = 5 * 1024 * 1024
 const CHAT_IMAGE_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp'])
+
+function mergeMessagesChronologically(...groups: PrivateMessage[][]): PrivateMessage[] {
+  const byId = new Map<number, PrivateMessage>()
+  groups.flat().forEach((item) => byId.set(item.id, item))
+  return [...byId.values()].sort((a, b) => a.id - b.id)
+}
+
+function sortConversationsByLatest(items: Conversation[]): Conversation[] {
+  return [...items].sort((a, b) => {
+    const aTime = Date.parse(a.last_message_at ?? a.created_at)
+    const bTime = Date.parse(b.last_message_at ?? b.created_at)
+    return bTime - aTime
+  })
+}
 
 interface ChatImagePresignResponse {
   object_key: string
@@ -147,6 +163,14 @@ export function Component() {
   const [hasMoreMessages, setHasMoreMessages] = useState(false)
 
   const [searchQuery, setSearchQuery] = useState('')
+  const [messageSearchOpen, setMessageSearchOpen] = useState(false)
+  const [messageSearchQuery, setMessageSearchQuery] = useState('')
+  const [messageSearchResults, setMessageSearchResults] = useState<PrivateMessage[]>([])
+  const [messageSearchLoading, setMessageSearchLoading] = useState(false)
+  const [messageSearchError, setMessageSearchError] = useState<string | null>(null)
+  const [messageSearchSubmitted, setMessageSearchSubmitted] = useState(false)
+  const [highlightedMessageId, setHighlightedMessageId] = useState<number | null>(null)
+  const [otherReadThroughId, setOtherReadThroughId] = useState<number | null>(null)
   const [sending, setSending] = useState(false)
   const [inputValue, setInputValue] = useState('')
   const [selectedImage, setSelectedImage] = useState<File | null>(null)
@@ -163,6 +187,11 @@ export function Component() {
   const isTypingRef = useRef(false)
   const readTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const activeConvIdRef = useRef<number | null>(null)
+  const activeOwnUserIdRef = useRef<number | null>(null)
+  const messagesRef = useRef<PrivateMessage[]>([])
+  const messageElementsRef = useRef<Map<number, HTMLDivElement>>(new Map())
+  const searchRequestIdRef = useRef(0)
+  const highlightTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const { isConnected, sendTypingStart, sendTypingStop, sendReadReceipt, subscribe, unsubscribe } =
@@ -171,6 +200,10 @@ export function Component() {
   useEffect(() => {
     activeConvIdRef.current = activeConvId
   }, [activeConvId])
+
+  useEffect(() => {
+    messagesRef.current = messages
+  }, [messages])
 
   const activeConversation = conversations.find((c) => c.id === activeConvId) ?? null
 
@@ -198,6 +231,10 @@ export function Component() {
   const activeOwnUserId =
     activeConversation !== null ? getCurrentInternalUserId(activeConversation) : null
 
+  useEffect(() => {
+    activeOwnUserIdRef.current = activeOwnUserId
+  }, [activeOwnUserId])
+
   const isOwnMessage = useCallback(
     (msg: PrivateMessage): boolean => {
       return activeOwnUserId !== null && msg.sender_id === activeOwnUserId
@@ -213,7 +250,7 @@ export function Component() {
       try {
         const res = await privateGet<Conversation[]>('/conversations', { limit: 50 })
         if (!cancelled) {
-          setConversations(res.data ?? [])
+          setConversations(sortConversationsByLatest(res.data ?? []))
         }
       } catch {
         if (!cancelled) {
@@ -242,18 +279,19 @@ export function Component() {
           params,
         )
         const fetched = res.data ?? []
+        const chronological = [...fetched].reverse()
 
         if (cursor !== undefined) {
-          setMessages((prev) => [...fetched, ...prev])
+          setMessages((prev) => mergeMessagesChronologically(chronological, prev))
         } else {
-          setMessages(fetched)
+          setMessages(chronological)
           setTimeout(() => {
             messagesEndRef.current?.scrollIntoView({ behavior: 'instant' })
           }, 0)
         }
 
         setHasMoreMessages(fetched.length === PAGE_LIMIT)
-        const oldestMessage = fetched[0]
+        const oldestMessage = fetched[fetched.length - 1]
         if (oldestMessage) {
           setMsgCursor(oldestMessage.id)
         }
@@ -266,21 +304,59 @@ export function Component() {
     [message],
   )
 
-  const handleSelectConversation = useCallback((conv: Conversation) => {
-    if (conv.id === activeConvId) return
-    setActiveConvId(conv.id)
-    setMessages([])
-    setMsgCursor(null)
-    setHasMoreMessages(false)
-    setInputValue('')
-    setSelectedImage(null)
-    setShowMain(true)
-    fetchMessages(conv.id)
+  const closeMessageSearch = useCallback(() => {
+    searchRequestIdRef.current += 1
+    setMessageSearchOpen(false)
+    setMessageSearchQuery('')
+    setMessageSearchResults([])
+    setMessageSearchError(null)
+    setMessageSearchSubmitted(false)
+    setMessageSearchLoading(false)
+  }, [])
 
-    setConversations((prev) =>
-      prev.map((c) => (c.id === conv.id ? { ...c, unread_count: 0 } : c)),
-    )
-  }, [activeConvId, fetchMessages])
+  const handleSelectConversation = useCallback(
+    (conv: Conversation) => {
+      if (conv.id === activeConvId) {
+        setShowMain(true)
+        return
+      }
+      if (readTimerRef.current) {
+        clearTimeout(readTimerRef.current)
+        readTimerRef.current = null
+      }
+      if (typingTimerRef.current) {
+        clearTimeout(typingTimerRef.current)
+        typingTimerRef.current = null
+      }
+      if (isTypingRef.current && activeConvId !== null) {
+        sendTypingStop(activeConvId)
+        isTypingRef.current = false
+      }
+      const ownId = getCurrentInternalUserId(conv)
+      const otherReadId =
+        ownId === conv.participant1_id
+          ? conv.participant2_last_read_message_id
+          : conv.participant1_last_read_message_id
+
+      closeMessageSearch()
+      setActiveConvId(conv.id)
+      setMessages([])
+      setMsgCursor(null)
+      setHasMoreMessages(false)
+      setOtherReadThroughId(otherReadId ?? null)
+      setInputValue('')
+      setSelectedImage(null)
+      setShowMain(true)
+      fetchMessages(conv.id)
+    },
+    [
+      activeConvId,
+      closeMessageSearch,
+      fetchMessages,
+      getCurrentInternalUserId,
+      sendTypingStop,
+    ],
+  )
 
   useEffect(() => {
     if (!requestedConversationId || convLoading || conversations.length === 0) return
@@ -316,12 +392,18 @@ export function Component() {
       readTimerRef.current = setTimeout(async () => {
         try {
           await privatePut(`/conversations/${convId}/read`, { message_id: lastMsgId })
+          setConversations((prev) =>
+            prev.map((conv) =>
+              conv.id === convId ? { ...conv, unread_count: 0 } : conv,
+            ),
+          )
           sendReadReceipt(convId)
         } catch {
+          message.error('Không thể đánh dấu cuộc trò chuyện đã đọc')
         }
       }, 800)
     },
-    [sendReadReceipt],
+    [message, sendReadReceipt],
   )
 
   useEffect(() => {
@@ -342,7 +424,7 @@ export function Component() {
           const convId = newMsg.conversation_id
 
           if (convId === activeConvIdRef.current) {
-            setMessages((prev) => [...prev, newMsg])
+            setMessages((prev) => mergeMessagesChronologically(prev, [newMsg]))
             setTimeout(() => {
               messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
             }, 0)
@@ -352,7 +434,7 @@ export function Component() {
           }
 
           setConversations((prev) =>
-            prev.map((c) => {
+            sortConversationsByLatest(prev.map((c) => {
               if (c.id !== convId) return c
               return {
                 ...c,
@@ -366,7 +448,7 @@ export function Component() {
                 unread_count:
                   convId === activeConvIdRef.current ? 0 : (c.unread_count ?? 0) + 1,
               }
-            }),
+            })),
           )
           break
         }
@@ -417,8 +499,22 @@ export function Component() {
           break
         }
 
-        case 'read.receipt':
+        case 'read.receipt': {
+          if (
+            event.conversation_id !== activeConvIdRef.current ||
+            event.user_id === undefined ||
+            event.user_id === activeOwnUserIdRef.current
+          ) {
+            break
+          }
+          const latestOwnMessage = [...messagesRef.current]
+            .reverse()
+            .find((item) => item.sender_id === activeOwnUserIdRef.current)
+          if (latestOwnMessage) {
+            setOtherReadThroughId(latestOwnMessage.id)
+          }
           break
+        }
       }
     },
     [isOwnMessage, scheduleMarkRead],
@@ -439,6 +535,19 @@ export function Component() {
       types.forEach((t) => unsubscribe(t, handleWsEvent))
     }
   }, [subscribe, unsubscribe, handleWsEvent])
+
+  useEffect(
+    () => () => {
+      searchRequestIdRef.current += 1
+      if (typingTimerRef.current) clearTimeout(typingTimerRef.current)
+      if (readTimerRef.current) clearTimeout(readTimerRef.current)
+      if (highlightTimerRef.current) clearTimeout(highlightTimerRef.current)
+      if (isTypingRef.current && activeConvIdRef.current !== null) {
+        sendTypingStop(activeConvIdRef.current)
+      }
+    },
+    [sendTypingStop],
+  )
 
   async function handleSend() {
     if (!activeConvId || sending || uploadingImage) return
@@ -498,9 +607,9 @@ export function Component() {
         ...(imageObjectKey ? { image_object_key: imageObjectKey } : {}),
       })
       if (res.data) {
-        setMessages((prev) => [...prev, res.data!])
+        setMessages((prev) => mergeMessagesChronologically(prev, [res.data!]))
         setConversations((prev) =>
-          prev.map((conv) =>
+          sortConversationsByLatest(prev.map((conv) =>
             conv.id === activeConvId
               ? {
                   ...conv,
@@ -514,15 +623,16 @@ export function Component() {
                   unread_count: 0,
                 }
               : conv,
-          ),
+          )),
         )
         setSelectedImage(null)
         setTimeout(() => {
           messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
         }, 0)
       }
-    } catch {
-      message.error('Không thể gửi tin nhắn')
+    } catch (error) {
+      const apiError = error as ErrorResponse
+      message.error(apiError.error || 'Không thể gửi tin nhắn')
       setInputValue(content)
     } finally {
       setSending(false)
@@ -581,6 +691,57 @@ export function Component() {
     setShowMain(false)
   }
 
+  async function handleMessageSearch(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault()
+    if (!activeConvId) return
+
+    const query = messageSearchQuery.trim()
+    setMessageSearchSubmitted(true)
+    if (query.length < 2) {
+      setMessageSearchResults([])
+      setMessageSearchError('Nhập ít nhất 2 ký tự để tìm kiếm')
+      return
+    }
+
+    const requestId = ++searchRequestIdRef.current
+    setMessageSearchLoading(true)
+    setMessageSearchError(null)
+    try {
+      const res = await privateGet<PrivateMessage[]>(
+        `/conversations/${activeConvId}/messages/search`,
+        { q: query, limit: 50 },
+      )
+      if (requestId === searchRequestIdRef.current) {
+        setMessageSearchResults(res.data ?? [])
+      }
+    } catch {
+      if (requestId === searchRequestIdRef.current) {
+        setMessageSearchResults([])
+        setMessageSearchError('Không thể tìm kiếm tin nhắn. Vui lòng thử lại.')
+      }
+    } finally {
+      if (requestId === searchRequestIdRef.current) {
+        setMessageSearchLoading(false)
+      }
+    }
+  }
+
+  function handleSearchResultClick(result: PrivateMessage) {
+    setMessages((prev) => mergeMessagesChronologically(prev, [result]))
+    closeMessageSearch()
+    setHighlightedMessageId(result.id)
+    if (highlightTimerRef.current) clearTimeout(highlightTimerRef.current)
+
+    setTimeout(() => {
+      messageElementsRef.current
+        .get(result.id)
+        ?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    }, 0)
+    highlightTimerRef.current = setTimeout(() => {
+      setHighlightedMessageId(null)
+    }, 2400)
+  }
+
   const filteredConversations = searchQuery.trim()
     ? conversations.filter((c) => {
         const name = c.other_user?.display_name ?? ''
@@ -600,6 +761,8 @@ export function Component() {
 
   const isOtherOnline =
     activeConversation !== null ? onlineUsers.has(getOtherUserId(activeConversation)) : false
+  const latestOwnMessageId =
+    [...messages].reverse().find((item) => isOwnMessage(item))?.id ?? null
 
   let prevDateKey = ''
 
@@ -757,7 +920,85 @@ export function Component() {
                       : 'Không hoạt động'}
                 </div>
               </div>
+              <button
+                className={`chat-header__search-btn${
+                  messageSearchOpen ? ' chat-header__search-btn--active' : ''
+                }`}
+                type="button"
+                onClick={() => {
+                  if (messageSearchOpen) {
+                    closeMessageSearch()
+                  } else {
+                    setMessageSearchOpen(true)
+                  }
+                }}
+                aria-label={
+                  messageSearchOpen ? 'Đóng tìm kiếm tin nhắn' : 'Tìm kiếm tin nhắn'
+                }
+                title={messageSearchOpen ? 'Đóng tìm kiếm' : 'Tìm kiếm tin nhắn'}
+              >
+                {messageSearchOpen ? <CloseOutlined /> : <SearchOutlined />}
+              </button>
             </header>
+
+            {messageSearchOpen && (
+              <section className="chat-message-search" aria-label="Tìm kiếm trong cuộc trò chuyện">
+                <form className="chat-message-search__form" onSubmit={handleMessageSearch}>
+                  <SearchOutlined aria-hidden="true" />
+                  <input
+                    autoFocus
+                    type="search"
+                    value={messageSearchQuery}
+                    onChange={(event) => {
+                      setMessageSearchQuery(event.target.value)
+                      setMessageSearchError(null)
+                      setMessageSearchSubmitted(false)
+                    }}
+                    placeholder="Nhập nội dung cần tìm..."
+                    aria-label="Từ khóa tìm kiếm tin nhắn"
+                  />
+                  <button type="submit" disabled={messageSearchLoading}>
+                    Tìm
+                  </button>
+                </form>
+                {messageSearchError && (
+                  <div className="chat-message-search__status" role="alert">
+                    {messageSearchError}
+                  </div>
+                )}
+                {messageSearchLoading ? (
+                  <div className="chat-message-search__status" role="status">
+                    <Spin size="small" /> Đang tìm kiếm...
+                  </div>
+                ) : messageSearchSubmitted && !messageSearchError ? (
+                  messageSearchResults.length === 0 ? (
+                    <div className="chat-message-search__status" role="status">
+                      Không tìm thấy tin nhắn nào
+                    </div>
+                  ) : (
+                    <div
+                      className="chat-message-search__results"
+                      role="list"
+                      aria-label={`${messageSearchResults.length} kết quả tìm kiếm`}
+                    >
+                      {messageSearchResults.map((result) => (
+                        <button
+                          key={result.id}
+                          type="button"
+                          role="listitem"
+                          onClick={() => handleSearchResultClick(result)}
+                        >
+                          <span>{result.content}</span>
+                          <time dateTime={result.created_at}>
+                            {formatDate(result.created_at)} · {formatTime(result.created_at)}
+                          </time>
+                        </button>
+                      ))}
+                    </div>
+                  )
+                ) : null}
+              </section>
+            )}
 
             <div
               className="chat-messages"
@@ -791,7 +1032,18 @@ export function Component() {
                 const own = isOwnMessage(msg)
 
                 return (
-                  <div key={msg.id}>
+                  <div
+                    key={msg.id}
+                    ref={(element) => {
+                      if (element) {
+                        messageElementsRef.current.set(msg.id, element)
+                      } else {
+                        messageElementsRef.current.delete(msg.id)
+                      }
+                    }}
+                    className={highlightedMessageId === msg.id ? 'msg-block--highlighted' : undefined}
+                    data-message-id={msg.id}
+                  >
                     {showSep && (
                       <div className="chat-date-sep" aria-hidden="true">
                         <div className="chat-date-sep__line" />
@@ -820,6 +1072,12 @@ export function Component() {
                           {msg.has_violation ? '[Tin nhắn vi phạm chính sách]' : msg.content}
                         </div>
                         <span className="msg__time">{formatTime(msg.created_at)}</span>
+                        {own &&
+                          msg.id === latestOwnMessageId &&
+                          otherReadThroughId !== null &&
+                          otherReadThroughId >= msg.id && (
+                            <span className="msg__read-receipt">Đã xem</span>
+                          )}
                       </div>
                     </div>
                   </div>
