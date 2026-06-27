@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { App } from 'antd'
 import { useBid } from '@/hooks/useBid'
@@ -47,6 +47,13 @@ export function EnglishBidForm({
   const delta = auction.current_price - auction.starting_price
 
   const [bidInput, setBidInput] = useState(String(minBid))
+
+  useEffect(() => {
+    setBidInput((currentValue) => {
+      const current = parseInt(currentValue.replace(/\D/g, ''), 10)
+      return !isNaN(current) && current >= minBid ? currentValue : String(minBid)
+    })
+  }, [minBid])
 
   const isLeading = typeof auction.highest_bidder_is_self === 'boolean'
     ? auction.highest_bidder_is_self
