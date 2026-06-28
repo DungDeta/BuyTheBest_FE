@@ -22,7 +22,7 @@ export function ReviewSection({
   sellerName,
   onUpdate,
 }: ReviewSectionProps) {
-  const showReviewForm = !review && isBuyer && orderStatus === 'completed'
+  const showReviewForm = !review && isBuyer && (orderStatus === 'delivered' || orderStatus === 'completed')
   const showReplyForm = !!review && isSeller && !review.seller_reply
   const showDisplay = !!review
 
