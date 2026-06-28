@@ -548,7 +548,7 @@ export function Component() {
             size="large"
             onClick={() => setShipModalOpen(true)}
           >
-            Xác nhận đã gửi hàng
+            Đã gửi hàng
           </Button>
         )}
 
@@ -559,7 +559,7 @@ export function Component() {
             loading={actionLoading}
             onClick={handleConfirmReceipt}
           >
-            Xác nhận nhận hàng
+            Đã nhận hàng
           </Button>
         )}
 

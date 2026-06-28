@@ -37,7 +37,7 @@ export function ShipModal({ orderId, open, onClose, onSuccess }: ShipModalProps)
         carrier: values.carrier.trim(),
       }
       await privatePost(`/orders/${orderId}/ship`, body)
-      message.success('Đã đánh dấu đơn hàng đang giao')
+      message.success('Đã cập nhật đơn hàng sang trạng thái đang vận chuyển')
       form.resetFields()
       onSuccess()
     } catch {
@@ -54,7 +54,7 @@ export function ShipModal({ orderId, open, onClose, onSuccess }: ShipModalProps)
 
   return (
     <Modal
-      title="Đánh dấu đã giao hàng"
+      title="Đánh dấu đã gửi hàng"
       open={open}
       onCancel={handleCancel}
       footer={null}
@@ -84,14 +84,21 @@ export function ShipModal({ orderId, open, onClose, onSuccess }: ShipModalProps)
           label="Mã vận đơn"
           name="tracking_number"
           rules={[
-            { required: true, message: 'Vui lòng nhập mã vận đơn' },
+            {
+              required: true,
+              whitespace: true,
+              message: 'Vui lòng nhập mã vận đơn',
+            },
             { min: 4, message: 'Mã vận đơn tối thiểu 4 ký tự' },
+            { max: 100, message: 'Mã vận đơn không được vượt quá 100 ký tự' },
           ]}
         >
           <Input
             placeholder="VD: GHN123456789"
             style={{ fontFamily: 'var(--font-mono)' }}
             autoComplete="off"
+            maxLength={100}
+            showCount
           />
         </Form.Item>
 
@@ -100,7 +107,7 @@ export function ShipModal({ orderId, open, onClose, onSuccess }: ShipModalProps)
             Huỷ
           </Button>
           <Button type="primary" htmlType="submit" loading={submitting}>
-            Xác nhận giao hàng
+            Xác nhận đã gửi
           </Button>
         </div>
       </Form>
