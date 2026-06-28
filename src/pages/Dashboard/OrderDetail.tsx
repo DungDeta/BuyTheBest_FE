@@ -603,7 +603,7 @@ export function Component() {
 
       {!hasActiveDispute &&
         buyer &&
-        (order.status === 'shipped' || order.status === 'delivered') && (
+        order.status === 'delivered' && (
           <OpenDisputeForm orderId={order.id} onSuccess={fetchOrder} />
         )}
 

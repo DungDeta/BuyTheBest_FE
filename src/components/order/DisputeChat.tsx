@@ -10,6 +10,7 @@ interface DisputeChatProps {
   currentUserRole: Exclude<DisputeChatRole, 'admin'>
   buyerId?: number
   sellerId?: number
+  disputeStatus?: string
 }
 
 type MessagesResponse = DisputeMessage[] | { data: DisputeMessage[] }
@@ -63,6 +64,7 @@ export function DisputeChat({
   currentUserRole,
   buyerId,
   sellerId,
+  disputeStatus,
 }: DisputeChatProps) {
   const { message } = App.useApp()
   const [messages, setMessages] = useState<DisputeMessage[]>([])
@@ -175,16 +177,20 @@ export function DisputeChat({
           value={text}
           onChange={(e) => setText(e.target.value)}
           onKeyDown={handleKeyDown}
-          placeholder="Nhập tin nhắn… (Ctrl+Enter để gửi)"
+          placeholder={
+            disputeStatus === 'resolved' || disputeStatus === 'closed'
+              ? 'Khiếu nại đã kết thúc, không thể gửi tin nhắn.'
+              : 'Nhập tin nhắn… (Ctrl+Enter để gửi)'
+          }
           maxLength={2000}
           aria-label="Nhập tin nhắn"
-          disabled={sending}
+          disabled={sending || disputeStatus === 'resolved' || disputeStatus === 'closed'}
         />
         <Button
           type="primary"
           onClick={handleSend}
           loading={sending}
-          disabled={text.trim().length === 0}
+          disabled={text.trim().length === 0 || disputeStatus === 'resolved' || disputeStatus === 'closed'}
           aria-label="Gửi tin nhắn"
         >
           Gửi

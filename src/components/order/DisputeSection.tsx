@@ -182,6 +182,7 @@ export function DisputeSection({
           currentUserRole={isSeller ? 'seller' : 'buyer'}
           buyerId={buyerId}
           sellerId={sellerId}
+          disputeStatus={dispute.status}
         />
       </div>
 
