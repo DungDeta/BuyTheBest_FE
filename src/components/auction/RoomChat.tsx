@@ -115,7 +115,7 @@ export function RoomChat({ auctionId, isLoggedIn, subscribe, unsubscribe }: Room
 
   return (
     <div className="chat-container" aria-label="Khu vực chat">
-      <div className="tab-content chat-messages" role="log" aria-live="polite">
+      <div className="tab-content auction-chat-messages" role="log" aria-live="polite">
         {messages.length === 0 && (
           <div className="tab-content--empty">Chưa có tin nhắn nào</div>
         )}

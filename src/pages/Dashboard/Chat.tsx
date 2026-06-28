@@ -192,6 +192,7 @@ export function Component() {
   const messageElementsRef = useRef<Map<number, HTMLDivElement>>(new Map())
   const searchRequestIdRef = useRef(0)
   const highlightTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const autoScrollUntilRef = useRef(0)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const { isConnected, sendTypingStart, sendTypingStop, sendReadReceipt, subscribe, unsubscribe } =
@@ -204,6 +205,16 @@ export function Component() {
   useEffect(() => {
     messagesRef.current = messages
   }, [messages])
+
+  const scrollMessagesToEnd = useCallback((behavior: ScrollBehavior) => {
+    autoScrollUntilRef.current = Date.now() + 2000
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        const container = messagesContainerRef.current
+        container?.scrollTo({ top: container.scrollHeight, behavior })
+      })
+    })
+  }, [])
 
   const activeConversation = conversations.find((c) => c.id === activeConvId) ?? null
 
@@ -285,9 +296,7 @@ export function Component() {
           setMessages((prev) => mergeMessagesChronologically(chronological, prev))
         } else {
           setMessages(chronological)
-          setTimeout(() => {
-            messagesEndRef.current?.scrollIntoView({ behavior: 'instant' })
-          }, 0)
+          scrollMessagesToEnd('auto')
         }
 
         setHasMoreMessages(fetched.length === PAGE_LIMIT)
@@ -301,7 +310,7 @@ export function Component() {
         setMsgLoading(false)
       }
     },
-    [message],
+    [message, scrollMessagesToEnd],
   )
 
   const closeMessageSearch = useCallback(() => {
@@ -425,9 +434,7 @@ export function Component() {
 
           if (convId === activeConvIdRef.current) {
             setMessages((prev) => mergeMessagesChronologically(prev, [newMsg]))
-            setTimeout(() => {
-              messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-            }, 0)
+            scrollMessagesToEnd('smooth')
             if (!isOwnMessage(newMsg)) {
               scheduleMarkRead(convId, newMsg.id)
             }
@@ -517,7 +524,7 @@ export function Component() {
         }
       }
     },
-    [isOwnMessage, scheduleMarkRead],
+    [isOwnMessage, scheduleMarkRead, scrollMessagesToEnd],
   )
 
   useEffect(() => {
@@ -626,9 +633,7 @@ export function Component() {
           )),
         )
         setSelectedImage(null)
-        setTimeout(() => {
-          messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-        }, 0)
+        scrollMessagesToEnd('smooth')
       }
     } catch (error) {
       const apiError = error as ErrorResponse
@@ -1064,6 +1069,11 @@ export function Component() {
                             alt="Ảnh đính kèm"
                             className="msg__image"
                             loading="lazy"
+                            onLoad={() => {
+                              if (Date.now() > autoScrollUntilRef.current) return
+                              const container = messagesContainerRef.current
+                              if (container) container.scrollTop = container.scrollHeight
+                            }}
                           />
                         )}
                         <div
