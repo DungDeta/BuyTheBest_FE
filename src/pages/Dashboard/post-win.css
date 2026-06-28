@@ -44,6 +44,10 @@
 .win-banner__countdown { margin-left: auto; padding: 8px 14px; background: var(--color-surface); border: 2px solid #118c4f; border-radius: 3px; text-align: center; }
 .win-banner__countdown-label { font-family: var(--font-mono); font-size: 9px; text-transform: uppercase; letter-spacing: 1px; color: var(--color-muted); }
 .win-banner__countdown-value { font-family: var(--font-mono); font-size: 18px; font-weight: 700; color: #118c4f; }
+.win-banner--expired { background: #fbe9e7; border-color: #c7302b; }
+.win-banner--expired .win-banner__icon { background: #c7302b; }
+.win-banner--expired .win-banner__title { color: #c7302b; }
+.win-banner--expired .win-banner__countdown { border-color: #c7302b; }
 
 .checkout-panel { background: var(--color-surface); border: 2px solid var(--color-border-strong); border-radius: 3px; padding: 22px; margin-bottom: 18px; }
 .checkout-panel__title { font-family: var(--font-mono); font-size: 18px; font-weight: 700; letter-spacing: -0.3px; margin-bottom: 4px; }
@@ -54,6 +58,7 @@
 .product-line__thumb img { width: 100%; height: 100%; object-fit: cover; }
 .product-line__title { font-family: var(--font-mono); font-size: 16px; font-weight: 700; }
 .product-line__meta { font-family: var(--font-mono); font-size: 11px; color: var(--color-muted); margin-top: 4px; }
+.product-line__description { max-width: 70ch; margin: 8px 0 0; color: var(--color-muted); font-size: 13px; line-height: 1.55; }
 .product-line__price { font-family: var(--font-mono); font-size: 22px; font-weight: 700; letter-spacing: -0.5px; }
 
 /* Payment method cards */
@@ -74,6 +79,7 @@
 .summary-card__title { font-family: var(--font-mono); font-size: 18px; font-weight: 700; margin-bottom: 14px; padding-bottom: 8px; border-bottom: 2px solid var(--color-border-strong); }
 .summary-line { display: flex; justify-content: space-between; padding: 7px 0; font-size: 13px; }
 .summary-line__value { font-family: var(--font-mono); font-weight: 700; }
+.summary-line small { display: block; margin-top: 2px; color: var(--color-muted); font-size: 9px; }
 .summary-line--total { border-top: 2px solid var(--color-border-strong); margin-top: 8px; padding-top: 10px; font-size: 16px; }
 .summary-line--total .summary-line__value { font-size: 18px; }
 
@@ -89,6 +95,8 @@
 .address-card--selected { border-color: var(--color-primary); background: #e3f2fd; border-width: 2px; }
 .address-card__name { font-weight: 700; }
 .address-card__lines { font-size: 13px; color: var(--color-muted); margin-top: 4px; line-height: 1.5; }
+.field-error { margin-top: -5px; color: #c7302b; font-family: var(--font-mono); font-size: 11px; line-height: 1.4; }
+.field-hint { display: block; margin-top: 5px; color: var(--color-muted); font-family: var(--font-mono); font-size: 10px; font-weight: 400; text-align: right; }
 
 /* ── Order Detail ── */
 .order-detail { max-width: 1100px; margin: 0 auto; padding: 24px; }
@@ -97,12 +105,15 @@
 .order-detail__actions { display: flex; gap: 8px; }
 
 .detail-section { background: var(--color-surface); border: 2px solid var(--color-border-strong); border-radius: 3px; padding: 22px; margin-bottom: 18px; }
+.detail-section--danger { background: #fff7f5; border-color: #c7302b; }
 .detail-section__title { font-family: var(--font-mono); font-size: 16px; font-weight: 700; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid var(--color-border); }
 
 .shipment-info { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .shipment-info__item { font-size: 13px; }
 .shipment-info__label { font-family: var(--font-mono); font-size: 10px; color: var(--color-muted); text-transform: uppercase; letter-spacing: 0.5px; }
 .shipment-info__value { font-weight: 700; margin-top: 2px; }
+.detail-empty { color: var(--color-muted); font-weight: 400; }
+.payment-result__link { display: inline-block; padding: 10px 20px; background: #0654ba; color: #fff; border-radius: 3px; font-family: var(--font-mono); font-size: 13px; font-weight: 700; text-decoration: none; }
 
 /* ── Dispute Section (in Order Detail) ── */
 .dispute-section { background: #fff8e1; border: 2px solid #cc6d00; border-radius: 3px; padding: 22px; margin-bottom: 18px; }
@@ -213,6 +224,7 @@
   .product-line__thumb { display: none; }
   .product-line__price { font-size: 18px; }
   .shipment-info { grid-template-columns: 1fr; }
+  .order-detail__actions { flex-wrap: wrap; }
   .dispute-header { grid-template-columns: 1fr; }
   .dispute-input { grid-template-columns: 1fr; }
   .dispute-msg__bubble { max-width: 100%; }

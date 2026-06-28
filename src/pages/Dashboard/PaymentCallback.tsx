@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { Spin } from 'antd'
-import { publicGet } from '@/api/api'
+import { privateGet, publicGet } from '@/api/api'
 import type { VnpayReturnResponse } from '@/types/order'
 
-type PageState = 'loading' | 'success' | 'failed'
+type PageState = 'loading' | 'confirming' | 'success' | 'failed'
 
 interface VnpayReturnData {
   order_id: string
@@ -12,6 +12,13 @@ interface VnpayReturnData {
 }
 
 const REDIRECT_DELAY_S = 5
+const CONFIRMATION_ATTEMPTS = 8
+const CONFIRMATION_INTERVAL_MS = 1000
+
+interface PaymentConfirmation {
+  status: 'initiated' | 'success' | 'failed' | 'refunded'
+  escrow_status: string
+}
 
 export function PaymentCallbackContent() {
   const navigate = useNavigate()
@@ -22,6 +29,7 @@ export function PaymentCallbackContent() {
 
   useEffect(() => {
     const queryString = window.location.search
+    let cancelled = false
 
     async function verify() {
       try {
@@ -30,18 +38,43 @@ export function PaymentCallbackContent() {
         )
         const data = res.data as VnpayReturnData | undefined
         if (data?.success && data.order_id) {
+          if (cancelled) return
           setOrderId(data.order_id)
-          setPageState('success')
+          setPageState('confirming')
+
+          for (let attempt = 0; attempt < CONFIRMATION_ATTEMPTS; attempt += 1) {
+            if (cancelled) return
+            try {
+              const payment = await privateGet<PaymentConfirmation>(
+                `/orders/${data.order_id}/payment`,
+              )
+              if (payment.data?.status === 'success' && payment.data.escrow_status === 'held') {
+                setPageState('success')
+                return
+              }
+              if (payment.data?.status === 'failed' || payment.data?.status === 'refunded') {
+                setPageState('failed')
+                return
+              }
+            } catch {
+              // The signed VNPay return remains valid even if the login session expired.
+            }
+            await new Promise((resolve) => setTimeout(resolve, CONFIRMATION_INTERVAL_MS))
+          }
         } else {
+          if (cancelled) return
           if (data?.order_id) setOrderId(data.order_id)
           setPageState('failed')
         }
       } catch {
-        setPageState('failed')
+        if (!cancelled) setPageState('failed')
       }
     }
 
     verify()
+    return () => {
+      cancelled = true
+    }
   }, [])
 
   useEffect(() => {
@@ -73,6 +106,56 @@ export function PaymentCallbackContent() {
         <p style={{ fontFamily: 'var(--font-mono)', color: 'var(--color-muted)', margin: 0 }}>
           Đang xác thực thanh toán…
         </p>
+      </div>
+    )
+  }
+
+  if (pageState === 'confirming') {
+    return (
+      <div
+        className="payment-result"
+        style={{ maxWidth: 560, margin: '60px auto', padding: '0 24px', textAlign: 'center' }}
+        role="status"
+        aria-live="polite"
+      >
+        <div
+          style={{
+            background: '#e3f2fd',
+            border: '2px solid #0654ba',
+            borderRadius: 3,
+            padding: '32px 28px',
+          }}
+        >
+          <Spin size="large" />
+          <h1
+            style={{
+              fontFamily: 'var(--font-mono)',
+              fontSize: 22,
+              fontWeight: 700,
+              color: '#0654ba',
+              margin: '18px 0 8px',
+            }}
+          >
+            VNPay đã ghi nhận giao dịch
+          </h1>
+          <p
+            style={{
+              fontFamily: 'var(--font-mono)',
+              fontSize: 13,
+              color: 'var(--color-muted)',
+              lineHeight: 1.7,
+              margin: '0 0 20px',
+            }}
+          >
+            Hệ thống đang chờ xác nhận bảo mật từ VNPay trước khi cập nhật đơn hàng
+            và giữ tiền trong escrow.
+          </p>
+          {orderId && (
+            <Link className="payment-result__link" to={`/orders/${orderId}`}>
+              Kiểm tra trạng thái đơn hàng
+            </Link>
+          )}
+        </div>
       </div>
     )
   }
@@ -216,7 +299,8 @@ export function PaymentCallbackContent() {
         <p
           style={{ fontFamily: 'var(--font-mono)', fontSize: 13, color: 'var(--color-muted)', margin: '0 0 24px' }}
         >
-          Giao dịch chưa được hoàn tất. Vui lòng thử lại hoặc chọn phương thức thanh toán khác.
+          Giao dịch chưa được hoàn tất. Vui lòng quay lại đơn hàng và thử thanh toán
+          lại qua VNPay.
         </p>
         <div style={{ display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
           {orderId && (

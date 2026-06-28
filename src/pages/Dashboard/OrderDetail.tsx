@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { Link, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom'
+import { Link, useNavigate, useParams } from 'react-router-dom'
 import { Alert, App, Button, Modal, Select, Spin } from 'antd'
 import dayjs from 'dayjs'
 import { privateGet, privatePost } from '@/api/api'
@@ -12,20 +12,26 @@ import { OrderStatusBadge } from '@/components/order/OrderStatusBadge'
 import { ReviewSection } from '@/components/order/ReviewSection'
 import { ShipModal } from '@/components/order/ShipModal'
 import {
+  getOrderCancelReasonLabel,
+  getOrderProductConditionLabel,
   getOrderBuyerName,
   getOrderProductImageUrl,
   getOrderProductTitle,
   getOrderSellerName,
 } from '@/utils/orderDisplay'
-import type { Order, OrderDispute, OrderPayment, OrderReview, OrderShipment } from '@/types/order'
+import type {
+  EscrowStatus,
+  Order,
+  OrderDispute,
+  OrderPayment,
+  OrderReview,
+  OrderShipment,
+  PaymentStatus,
+  ShipmentStatus,
+} from '@/types/order'
 import './post-win.css'
 
 type OrderDetailResponse = Order | { order: Order }
-type RoleTab = 'buyer' | 'seller'
-
-interface RouteState {
-  role?: RoleTab
-}
 
 type PaymentStatusResponse = Omit<OrderPayment, 'id'> & {
   id?: number
@@ -45,6 +51,32 @@ const CANCEL_REASON_OPTIONS = [
   { value: 'found_alternative', label: 'Đã mua sản phẩm khác' },
   { value: 'other', label: 'Lý do khác' },
 ]
+
+const CANCEL_DETAIL_MAX_LENGTH = 160
+
+const PAYMENT_STATUS_LABELS: Record<PaymentStatus, string> = {
+  initiated: 'Chờ thanh toán',
+  success: 'Đã thanh toán',
+  failed: 'Thanh toán thất bại',
+  refunded: 'Đã hoàn tiền',
+}
+
+const ESCROW_STATUS_LABELS: Record<EscrowStatus, string> = {
+  pending: 'Chưa giữ tiền',
+  held: 'Đang giữ tiền',
+  released: 'Đã giải ngân',
+  refunded: 'Đã hoàn tiền',
+  partial_refund: 'Đã hoàn một phần',
+  disputed: 'Tạm giữ do khiếu nại',
+}
+
+const SHIPMENT_STATUS_LABELS: Record<ShipmentStatus, string> = {
+  pending: 'Chưa gửi hàng',
+  shipped: 'Đã gửi hàng',
+  in_transit: 'Đang vận chuyển',
+  delivered: 'Đã giao hàng',
+  failed: 'Giao hàng thất bại',
+}
 
 function extractOrder(data: OrderDetailResponse | undefined): Order | null {
   if (!data) return null
@@ -80,9 +112,7 @@ function normalizeShipment(data: ShipmentResponse): OrderShipment {
 
 export function Component() {
   const { id } = useParams<{ id: string }>()
-  const location = useLocation()
   const navigate = useNavigate()
-  const [searchParams] = useSearchParams()
   const { message, modal } = App.useApp()
 
   const currentUserId = useAuthStore((s) => s.user?.id ?? null)
@@ -96,17 +126,6 @@ export function Component() {
   const [cancelReasonType, setCancelReasonType] = useState<string | null>(null)
   const [cancelReason, setCancelReason] = useState('')
   const cancelReasonRef = useRef('')
-  const stateRole = (location.state as RouteState | null)?.role
-  const queryRole = searchParams.get('role')
-  const sessionRole = id ? sessionStorage.getItem(`order-role:${id}`) : null
-  const routeRole: RoleTab | null =
-    stateRole === 'buyer' || stateRole === 'seller'
-      ? stateRole
-      : queryRole === 'buyer' || queryRole === 'seller'
-        ? queryRole
-        : sessionRole === 'buyer' || sessionRole === 'seller'
-          ? sessionRole
-          : null
 
   const fetchOrder = useCallback(async () => {
     if (!id) return
@@ -154,20 +173,6 @@ export function Component() {
   useEffect(() => {
     fetchOrder()
   }, [fetchOrder])
-
-  function isBuyer() {
-    if (!order) return false
-    if (routeRole === 'buyer') return true
-    const buyerId = order.buyer?.id ?? order.buyer_id
-    return currentUserId !== null && String(buyerId) === String(currentUserId)
-  }
-
-  function isSellerRole() {
-    if (!order) return false
-    if (routeRole === 'seller') return true
-    const sellerId = order.auction?.seller?.id ?? order.seller?.id ?? order.seller_id
-    return currentUserId !== null && String(sellerId) === String(currentUserId)
-  }
 
   async function handleCancelConfirm() {
     if (!order) return
@@ -250,10 +255,20 @@ export function Component() {
   const title = getOrderProductTitle(order)
   const sellerName = getOrderSellerName(order)
   const buyerName = getOrderBuyerName(order)
+  const productDescription = order.auction?.product?.description?.trim()
+  const productCondition = getOrderProductConditionLabel(order.auction?.product?.condition)
   const shortId = order.id.slice(0, 12).toUpperCase()
-  const buyer = isBuyer()
-  const seller = isSellerRole()
+  const buyer = order.viewer_role === 'buyer'
+  const seller = order.viewer_role === 'seller'
   const hasActiveDispute = Boolean(order.dispute) || order.payment?.escrow_status === 'disputed'
+  const hasShipmentActivity = Boolean(
+    order.shipment &&
+      (
+        order.shipment.status !== 'pending' ||
+        order.shipment.tracking_number ||
+        (order.shipment.carrier && order.shipment.carrier !== 'other')
+      ),
+  )
 
   return (
     <div className="order-detail">
@@ -281,6 +296,28 @@ export function Component() {
 
       <EscrowTimeline status={order.status} />
 
+      {order.status === 'cancelled' && (
+        <div className="detail-section detail-section--danger" role="status">
+          <div className="detail-section__title">Thông tin hủy đơn</div>
+          <div className="shipment-info">
+            <div className="shipment-info__item">
+              <div className="shipment-info__label">Thời gian hủy</div>
+              <div className="shipment-info__value">
+                {order.cancelled_at
+                  ? dayjs(order.cancelled_at).format('DD/MM/YYYY HH:mm')
+                  : 'Chưa ghi nhận'}
+              </div>
+            </div>
+            <div className="shipment-info__item">
+              <div className="shipment-info__label">Lý do</div>
+              <div className="shipment-info__value">
+                {getOrderCancelReasonLabel(order.cancel_reason) || 'Không có lý do'}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="detail-section">
         <div className="detail-section__title">Sản phẩm</div>
         <div className="product-line">
@@ -295,7 +332,16 @@ export function Component() {
                   Người mua: <strong>{buyerName}</strong>
                 </>
               )}
+              {productCondition && (
+                <>
+                  {(sellerName || buyerName) ? ' · ' : ''}
+                  Tình trạng: <strong>{productCondition}</strong>
+                </>
+              )}
             </div>
+            {productDescription && (
+              <p className="product-line__description">{productDescription}</p>
+            )}
           </div>
           <div className="product-line__price">
             {order.final_price.toLocaleString('vi-VN') + ' ₫'}
@@ -303,60 +349,90 @@ export function Component() {
         </div>
       </div>
 
-      {(order.shipment || order.shipping_address) && (
-        <div className="detail-section">
-          <div className="detail-section__title">Vận chuyển</div>
-          <div className="shipment-info">
-            {order.shipment?.carrier && (
+      <div className="detail-section">
+        <div className="detail-section__title">Giao nhận</div>
+        <div className="shipment-info">
+          {hasShipmentActivity && order.shipment && (
+            <>
+              <div className="shipment-info__item">
+                <div className="shipment-info__label">Trạng thái vận chuyển</div>
+                <div className="shipment-info__value">
+                  {SHIPMENT_STATUS_LABELS[order.shipment.status]}
+                </div>
+              </div>
+              {order.shipment.carrier && order.shipment.carrier !== 'other' && (
               <div className="shipment-info__item">
                 <div className="shipment-info__label">Đơn vị vận chuyển</div>
-                <div className="shipment-info__value">{order.shipment?.carrier}</div>
+                  <div className="shipment-info__value">{order.shipment.carrier}</div>
               </div>
-            )}
-            {order.shipment?.tracking_number && (
+              )}
+              {order.shipment.tracking_number && (
               <div className="shipment-info__item">
                 <div className="shipment-info__label">Mã vận đơn</div>
                 <div className="shipment-info__value" style={{ fontFamily: 'var(--font-mono)' }}>
-                  {order.shipment?.tracking_number}
+                    {order.shipment.tracking_number}
                 </div>
               </div>
-            )}
-            {order.shipment?.shipped_at && (
+              )}
+              {order.shipment.shipped_at && (
               <div className="shipment-info__item">
                 <div className="shipment-info__label">Ngày giao</div>
                 <div className="shipment-info__value">
-                  {dayjs(order.shipment?.shipped_at).format('DD/MM/YYYY HH:mm')}
+                    {dayjs(order.shipment.shipped_at).format('DD/MM/YYYY HH:mm')}
                 </div>
               </div>
-            )}
-            {order.shipment?.delivered_at && (
+              )}
+              {order.shipment.delivered_at && (
               <div className="shipment-info__item">
                 <div className="shipment-info__label">Ngày nhận</div>
                 <div className="shipment-info__value">
-                  {dayjs(order.shipment?.delivered_at).format('DD/MM/YYYY HH:mm')}
+                    {dayjs(order.shipment.delivered_at).format('DD/MM/YYYY HH:mm')}
                 </div>
               </div>
-            )}
-            {order.shipping_address && (
-              <div className="shipment-info__item" style={{ gridColumn: '1 / -1' }}>
-                <div className="shipment-info__label">Địa chỉ giao hàng</div>
-                <div className="shipment-info__value">
+              )}
+            </>
+          )}
+          {!hasShipmentActivity && (
+            <div className="shipment-info__item">
+              <div className="shipment-info__label">Trạng thái vận chuyển</div>
+              <div className="shipment-info__value">Chưa gửi hàng</div>
+            </div>
+          )}
+          <div className="shipment-info__item" style={{ gridColumn: '1 / -1' }}>
+            <div className="shipment-info__label">Địa chỉ giao hàng</div>
+            <div className="shipment-info__value">
+              {order.shipping_address ? (
+                <>
                   {order.shipping_name && <span>{order.shipping_name} · </span>}
                   {order.shipping_phone && <span>{order.shipping_phone} · </span>}
                   {order.shipping_address}
-                </div>
-              </div>
-            )}
+                </>
+              ) : (
+                <span className="detail-empty">Chưa cập nhật địa chỉ giao hàng</span>
+              )}
+            </div>
           </div>
         </div>
-      )}
+      </div>
 
       {order.payment && (
         <div className="detail-section">
           <div className="detail-section__title">Thanh toán</div>
           <div className="shipment-info">
             <div className="shipment-info__item">
-              <div className="shipment-info__label">Tổng tiền</div>
+              <div className="shipment-info__label">Trạng thái thanh toán</div>
+              <div className="shipment-info__value">
+                {PAYMENT_STATUS_LABELS[order.payment.status]}
+              </div>
+            </div>
+            <div className="shipment-info__item">
+              <div className="shipment-info__label">Cổng thanh toán</div>
+              <div className="shipment-info__value">
+                {order.payment.provider ? order.payment.provider.toUpperCase() : 'Chưa chọn'}
+              </div>
+            </div>
+            <div className="shipment-info__item">
+              <div className="shipment-info__label">Người mua thanh toán</div>
               <div className="shipment-info__value">
                 {order.payment.amount.toLocaleString('vi-VN') + ' ₫'}
               </div>
@@ -375,11 +451,16 @@ export function Component() {
             </div>
             <div className="shipment-info__item">
               <div className="shipment-info__label">Trạng thái Escrow</div>
-              <div
-                className="shipment-info__value"
-                style={{ textTransform: 'uppercase', fontFamily: 'var(--font-mono)', fontSize: 12 }}
-              >
-                {order.payment.escrow_status}
+              <div className="shipment-info__value">
+                {ESCROW_STATUS_LABELS[order.payment.escrow_status]}
+              </div>
+            </div>
+            <div className="shipment-info__item">
+              <div className="shipment-info__label">Thời gian thanh toán</div>
+              <div className="shipment-info__value">
+                {order.paid_at
+                  ? dayjs(order.paid_at).format('DD/MM/YYYY HH:mm')
+                  : 'Chưa thanh toán'}
               </div>
             </div>
             {order.payment.auto_release_at && (
@@ -467,7 +548,7 @@ export function Component() {
             size="large"
             onClick={() => setShipModalOpen(true)}
           >
-            Đánh dấu đã giao
+            Xác nhận đã gửi hàng
           </Button>
         )}
 
@@ -608,7 +689,7 @@ export function Component() {
               cancelReasonRef.current = e.target.value
             }}
             placeholder="Nhập lý do huỷ đơn…"
-            maxLength={500}
+            maxLength={CANCEL_DETAIL_MAX_LENGTH}
             disabled={actionLoading}
             style={{
               display: 'block',
@@ -623,6 +704,9 @@ export function Component() {
               outline: 'none',
             }}
           />
+          <span className="field-hint">
+            {cancelReason.length}/{CANCEL_DETAIL_MAX_LENGTH} ký tự
+          </span>
         </label>
       </Modal>
 

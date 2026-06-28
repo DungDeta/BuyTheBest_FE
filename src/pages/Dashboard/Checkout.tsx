@@ -8,6 +8,7 @@ import { EscrowTimeline } from '@/components/order/EscrowTimeline'
 import { OrderProductThumb } from '@/components/order/OrderProductThumb'
 import { PaymentCallbackContent } from './PaymentCallback'
 import {
+  getOrderAuctionModeLabel,
   getOrderProductImageUrl,
   getOrderProductTitle,
 } from '@/utils/orderDisplay'
@@ -28,7 +29,7 @@ type PaymentStatusResponse = Omit<OrderPayment, 'id'> & {
 
 type PaymentMethod = 'vnpay' | 'stripe' | 'bank'
 
-const FALLBACK_DEADLINE = new Date(Date.now() + 86400_000).toISOString()
+const MISSING_DEADLINE = new Date(0).toISOString()
 
 function extractOrder(data: OrderDetailResponse | undefined): Order | null {
   if (!data) return null
@@ -50,16 +51,20 @@ function normalizePayment(data: PaymentStatusResponse): OrderPayment {
   }
 }
 
-function WinBanner({ deadline }: { deadline: string }) {
-  const cd = useCountdown(deadline)
-
+function WinBanner({
+  deadline,
+  countdown,
+}: {
+  deadline: string
+  countdown: ReturnType<typeof useCountdown>
+}) {
   const padded = (n: number) => String(n).padStart(2, '0')
-  const display = cd.isExpired
+  const display = countdown.isExpired
     ? 'Hết hạn'
-    : `${padded(cd.hours)}:${padded(cd.minutes)}:${padded(cd.seconds)}`
+    : `${padded(countdown.hours)}:${padded(countdown.minutes)}:${padded(countdown.seconds)}`
 
   return (
-    <div className="win-banner" role="alert">
+    <div className={`win-banner${countdown.isExpired ? ' win-banner--expired' : ''}`} role="alert">
       <div className="win-banner__icon" aria-hidden="true">✓</div>
       <div>
         <div className="win-banner__title">Bạn đã thắng phiên đấu giá!</div>
@@ -72,7 +77,13 @@ function WinBanner({ deadline }: { deadline: string }) {
         <div className="win-banner__countdown-label">Còn lại</div>
         <div
           className="win-banner__countdown-value"
-          style={{ color: cd.isUrgent ? '#c7302b' : cd.isWarning ? '#cc6d00' : '#118c4f' }}
+          style={{
+            color: countdown.isUrgent
+              ? '#c7302b'
+              : countdown.isWarning
+                ? '#cc6d00'
+                : '#118c4f',
+          }}
         >
           {display}
         </div>
@@ -97,19 +108,39 @@ function AddressSection({ order, onSaved }: AddressSectionProps) {
   const [name, setName] = useState(order.shipping_name ?? '')
   const [phone, setPhone] = useState(order.shipping_phone ?? '')
   const [address, setAddress] = useState(order.shipping_address ?? '')
+  const [errors, setErrors] = useState<{
+    name?: string
+    phone?: string
+    address?: string
+  }>({})
   const [saving, setSaving] = useState(false)
 
   async function handleSave() {
-    if (!name.trim() || !phone.trim() || !address.trim()) {
-      message.warning('Vui lòng điền đầy đủ họ tên, số điện thoại và địa chỉ.')
+    const nextErrors: typeof errors = {}
+    const trimmedName = name.trim()
+    const trimmedPhone = phone.trim()
+    const trimmedAddress = address.trim()
+    const phoneDigits = trimmedPhone.replace(/\D/g, '')
+
+    if (!trimmedName) nextErrors.name = 'Vui lòng nhập họ tên người nhận.'
+    if (!trimmedPhone) {
+      nextErrors.phone = 'Vui lòng nhập số điện thoại.'
+    } else if (!/^[+\d\s().-]+$/.test(trimmedPhone) || phoneDigits.length < 9 || phoneDigits.length > 15) {
+      nextErrors.phone = 'Số điện thoại phải có từ 9 đến 15 chữ số.'
+    }
+    if (!trimmedAddress) nextErrors.address = 'Vui lòng nhập địa chỉ giao hàng.'
+    setErrors(nextErrors)
+
+    if (Object.keys(nextErrors).length > 0) {
+      message.warning('Vui lòng kiểm tra lại thông tin giao hàng.')
       return
     }
     setSaving(true)
     try {
       const body: AddressRequest = {
-        shipping_name: name.trim(),
-        shipping_phone: phone.trim(),
-        shipping_address: address.trim(),
+        shipping_name: trimmedName,
+        shipping_phone: trimmedPhone,
+        shipping_address: trimmedAddress,
       }
       await privatePost(`/orders/${order.id}/address`, body)
       message.success('Đã lưu địa chỉ giao hàng')
@@ -149,25 +180,43 @@ function AddressSection({ order, onSaved }: AddressSectionProps) {
       <Input
         placeholder="Họ và tên người nhận"
         value={name}
-        onChange={(e) => setName(e.target.value)}
+        onChange={(e) => {
+          setName(e.target.value)
+          setErrors((current) => ({ ...current, name: undefined }))
+        }}
+        maxLength={200}
+        aria-invalid={Boolean(errors.name)}
         style={{ fontFamily: 'var(--font-mono)' }}
         aria-label="Họ và tên người nhận"
       />
+      {errors.name && <div className="field-error" role="alert">{errors.name}</div>}
       <Input
         placeholder="Số điện thoại"
         value={phone}
-        onChange={(e) => setPhone(e.target.value)}
+        onChange={(e) => {
+          setPhone(e.target.value)
+          setErrors((current) => ({ ...current, phone: undefined }))
+        }}
+        maxLength={20}
+        aria-invalid={Boolean(errors.phone)}
         style={{ fontFamily: 'var(--font-mono)' }}
         aria-label="Số điện thoại"
       />
+      {errors.phone && <div className="field-error" role="alert">{errors.phone}</div>}
       <Input.TextArea
         placeholder="Địa chỉ giao hàng (số nhà, đường, phường/xã, quận/huyện, tỉnh/thành)"
         value={address}
-        onChange={(e) => setAddress(e.target.value)}
+        onChange={(e) => {
+          setAddress(e.target.value)
+          setErrors((current) => ({ ...current, address: undefined }))
+        }}
+        maxLength={500}
+        aria-invalid={Boolean(errors.address)}
         rows={3}
         style={{ fontFamily: 'var(--font-mono)', resize: 'none' }}
         aria-label="Địa chỉ giao hàng"
       />
+      {errors.address && <div className="field-error" role="alert">{errors.address}</div>}
       <div style={{ display: 'flex', gap: 8 }}>
         <Button
           type="primary"
@@ -246,6 +295,7 @@ export function Component() {
   const [payMethod, setPayMethod] = useState<PaymentMethod>('vnpay')
   const [paying, setPaying] = useState(false)
   const isVnpayReturn = location.search.includes('vnp_')
+  const countdown = useCountdown(order?.payment_deadline ?? MISSING_DEADLINE)
 
   const fetchOrder = useCallback(async () => {
     if (!id || isVnpayReturn) return
@@ -297,6 +347,10 @@ export function Component() {
 
   async function handlePay() {
     if (!order) return
+    if (countdown.isExpired) {
+      message.error('Đơn hàng đã hết hạn thanh toán.')
+      return
+    }
     if (!order.shipping_name || !order.shipping_phone || !order.shipping_address) {
       message.warning('Vui lòng nhập địa chỉ giao hàng trước khi thanh toán.')
       return
@@ -339,11 +393,13 @@ export function Component() {
 
   const imageUrl = getOrderProductImageUrl(order)
   const title = getOrderProductTitle(order)
+  const auctionMode = getOrderAuctionModeLabel(order.auction?.mode)
   const shortId = order.id.slice(0, 12).toUpperCase()
-  const deadline = order.payment_deadline ?? FALLBACK_DEADLINE
+  const deadline = order.payment_deadline ?? MISSING_DEADLINE
   const finalPrice = order.final_price
-  const platformFee = order.payment?.platform_fee ?? Math.round(finalPrice * 0.05)
-  const total = finalPrice + platformFee
+  const platformFee = order.payment?.platform_fee || Math.round(finalPrice * 0.05)
+  const sellerAmount = order.payment?.seller_amount || finalPrice - platformFee
+  const total = finalPrice
   const hasAddress =
     Boolean(order.shipping_name) &&
     Boolean(order.shipping_phone) &&
@@ -365,7 +421,7 @@ export function Component() {
           <span aria-current="page">Thanh toán</span>
         </nav>
 
-        <WinBanner deadline={deadline} />
+        <WinBanner deadline={deadline} countdown={countdown} />
 
         <EscrowTimeline status={order.status} />
 
@@ -379,8 +435,8 @@ export function Component() {
             <div>
               <div className="product-line__title">{title}</div>
               <div className="product-line__meta">
-                {order.auction?.mode && (
-                  <span>Chế độ: <strong>{order.auction.mode}</strong></span>
+                {auctionMode && (
+                  <span>Chế độ: <strong>{auctionMode}</strong></span>
                 )}
                 {order.auction?.bid_count != null && (
                   <span> · <strong>{order.auction.bid_count}</strong> lượt đặt</span>
@@ -453,9 +509,15 @@ export function Component() {
             </span>
           </div>
           <div className="summary-line">
-            <span>Phí sàn</span>
+            <span>Phí sàn <small>(trừ từ người bán)</small></span>
             <span className="summary-line__value">
               {platformFee.toLocaleString('vi-VN') + ' ₫'}
+            </span>
+          </div>
+          <div className="summary-line">
+            <span>Người bán nhận</span>
+            <span className="summary-line__value">
+              {sellerAmount.toLocaleString('vi-VN') + ' ₫'}
             </span>
           </div>
           <div className="summary-line">
@@ -474,14 +536,14 @@ export function Component() {
             size="large"
             block
             loading={paying}
-            disabled={!hasAddress}
+            disabled={!hasAddress || countdown.isExpired}
             onClick={handlePay}
             style={{ marginTop: 18, fontFamily: 'var(--font-mono)', fontWeight: 700 }}
           >
-            Thanh toán ngay
+            {countdown.isExpired ? 'Đã hết hạn thanh toán' : 'Thanh toán ngay'}
           </Button>
 
-          {!hasAddress && (
+          {(!hasAddress || countdown.isExpired) && (
             <p
               style={{
                 fontFamily: 'var(--font-mono)',
@@ -491,7 +553,7 @@ export function Component() {
                 marginTop: 8,
               }}
             >
-              Nhập địa chỉ để tiếp tục
+              {countdown.isExpired ? 'Đơn hàng không còn trong thời hạn thanh toán' : 'Nhập địa chỉ để tiếp tục'}
             </p>
           )}
 

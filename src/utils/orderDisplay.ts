@@ -1,5 +1,25 @@
 import type { Order, OrderProductImage } from '@/types/order'
 
+const PRODUCT_CONDITION_LABELS: Record<string, string> = {
+  new: 'Mới',
+  like_new: 'Như mới',
+  good: 'Tốt',
+  fair: 'Bình thường',
+  used: 'Đã sử dụng',
+  refurbished: 'Tân trang',
+}
+
+const AUCTION_MODE_LABELS: Record<string, string> = {
+  english: 'Giá tăng dần',
+  dutch: 'Giá giảm dần',
+  sealed_bid: 'Đấu giá kín',
+  reverse: 'Đấu giá ngược',
+}
+
+const SYSTEM_CANCEL_REASON_LABELS: Record<string, string> = {
+  'payment deadline expired': 'Đã quá hạn thanh toán',
+}
+
 function isRenderableUrl(value?: string | null): value is string {
   return Boolean(value && /^(https?:|data:|blob:|\/)/i.test(value))
 }
@@ -16,6 +36,21 @@ function primaryImage(images?: OrderProductImage[]): OrderProductImage | null {
 
 export function getOrderProductTitle(order: Order): string {
   return order.auction?.product?.title ?? order.auction?.product_title ?? 'Sản phẩm đấu giá'
+}
+
+export function getOrderProductConditionLabel(condition?: string | null): string | null {
+  if (!condition) return null
+  return PRODUCT_CONDITION_LABELS[condition] ?? condition
+}
+
+export function getOrderAuctionModeLabel(mode?: string | null): string | null {
+  if (!mode) return null
+  return AUCTION_MODE_LABELS[mode] ?? mode
+}
+
+export function getOrderCancelReasonLabel(reason?: string | null): string | null {
+  if (!reason) return null
+  return SYSTEM_CANCEL_REASON_LABELS[reason] ?? reason
 }
 
 export function getOrderProductImageUrl(order: Order): string | null {
@@ -41,13 +76,12 @@ export function getOrderProductInitials(title: string): string {
   const words = title.trim().split(/\s+/).filter(Boolean)
   if (words.length === 0) return 'BTB'
 
-  if (words.length === 1) {
-    return Array.from(words[0] ?? 'BTB').slice(0, 3).join('').toUpperCase()
-  }
-
-  return words
+  const initials = words
+    .map((word) => word.match(/[\p{L}\p{N}]/u)?.[0] ?? '')
+    .filter(Boolean)
     .slice(0, 2)
-    .map((word) => Array.from(word)[0] ?? '')
     .join('')
     .toUpperCase()
+
+  return initials || 'BTB'
 }

@@ -11,7 +11,7 @@ interface Step {
   getState: (status: OrderStatus) => StepState
 }
 
-const STEPS: Step[] = [
+const ACTIVE_STEPS: Step[] = [
   {
     label: 'Thắng phiên',
     getState: () => 'done',
@@ -25,7 +25,7 @@ const STEPS: Step[] = [
     },
   },
   {
-    label: 'Seller giao',
+    label: 'Người bán giao',
     getState: (s) => {
       if (s === 'paid') return 'active'
       if (s === 'shipped' || s === 'delivered' || s === 'completed') return 'done'
@@ -51,9 +51,23 @@ const STEPS: Step[] = [
 ]
 
 export function EscrowTimeline({ status }: EscrowTimelineProps) {
+  const steps: Step[] =
+    status === 'cancelled'
+      ? [
+          { label: 'Thắng phiên', getState: () => 'done' },
+          { label: 'Đã hủy', getState: () => 'active' },
+        ]
+      : status === 'refunded'
+        ? [
+            { label: 'Thắng phiên', getState: () => 'done' },
+            { label: 'Thanh toán', getState: () => 'done' },
+            { label: 'Đã hoàn tiền', getState: () => 'active' },
+          ]
+        : ACTIVE_STEPS
+
   return (
     <div className="escrow-timeline" role="list" aria-label="Trạng thái đơn hàng">
-      {STEPS.map((step, idx) => {
+      {steps.map((step, idx) => {
         const state = step.getState(status)
         const className = [
           'escrow-step',
@@ -69,7 +83,7 @@ export function EscrowTimeline({ status }: EscrowTimelineProps) {
               {state === 'done' && <span aria-hidden="true">✓ </span>}
               {step.label}
             </span>
-            {idx < STEPS.length - 1 && (
+            {idx < steps.length - 1 && (
               <span className="escrow-step__arrow" aria-hidden="true">→</span>
             )}
           </div>

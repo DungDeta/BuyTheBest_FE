@@ -23,9 +23,19 @@ const STATUS_FILTERS: { value: OrderStatus | 'all'; label: string }[] = [
   { value: 'delivered', label: 'Đã giao' },
   { value: 'completed', label: 'Hoàn tất' },
   { value: 'cancelled', label: 'Đã huỷ' },
+  { value: 'refunded', label: 'Đã hoàn tiền' },
 ]
 
 const PAGE_SIZE = 20
+const VALID_STATUSES = new Set<OrderStatus>([
+  'pending_payment',
+  'paid',
+  'shipped',
+  'delivered',
+  'completed',
+  'cancelled',
+  'refunded',
+])
 
 export function Component() {
   useDocumentTitle('Đơn hàng')
@@ -33,19 +43,32 @@ export function Component() {
   const isSeller = useAuthStore((s) => s.isSeller)
   const [searchParams, setSearchParams] = useSearchParams()
 
-  const roleParam = searchParams.get('role') as RoleTab | null
-  const statusParam = searchParams.get('status') as OrderStatus | 'all' | null
+  const showSellerTab = isSeller()
+  const roleParam = searchParams.get('role')
+  const statusParam = searchParams.get('status')
   const pageParam = parseInt(searchParams.get('page') ?? '1', 10)
 
-  const [role, setRole] = useState<RoleTab>(roleParam === 'seller' ? 'seller' : 'buyer')
-  const [status, setStatus] = useState<OrderStatus | 'all'>(
-    statusParam && statusParam !== 'all' ? statusParam : 'all',
-  )
-  const [page, setPage] = useState(isNaN(pageParam) || pageParam < 1 ? 1 : pageParam)
+  const role: RoleTab = roleParam === 'seller' && showSellerTab ? 'seller' : 'buyer'
+  const status: OrderStatus | 'all' =
+    statusParam && VALID_STATUSES.has(statusParam as OrderStatus)
+      ? statusParam as OrderStatus
+      : 'all'
+  const page = isNaN(pageParam) || pageParam < 1 ? 1 : pageParam
 
   const [orders, setOrders] = useState<Order[]>([])
   const [total, setTotal] = useState(0)
   const [loading, setLoading] = useState(false)
+
+  useEffect(() => {
+    const canonical = { role, status, page: String(page) }
+    if (
+      searchParams.get('role') !== canonical.role ||
+      searchParams.get('status') !== canonical.status ||
+      searchParams.get('page') !== canonical.page
+    ) {
+      setSearchParams(canonical, { replace: true })
+    }
+  }, [page, role, searchParams, setSearchParams, status])
 
   useEffect(() => {
     let cancelled = false
@@ -80,24 +103,16 @@ export function Component() {
   }, [role, status, page, message])
 
   function handleRoleChange(next: RoleTab) {
-    setRole(next)
-    setStatus('all')
-    setPage(1)
     setSearchParams({ role: next, status: 'all', page: '1' })
   }
 
   function handleStatusChange(next: OrderStatus | 'all') {
-    setStatus(next)
-    setPage(1)
     setSearchParams({ role, status: next, page: '1' })
   }
 
   function handlePageChange(next: number) {
-    setPage(next)
     setSearchParams({ role, status, page: String(next) })
   }
-
-  const showSellerTab = isSeller()
 
   return (
     <div className="orders-page">
@@ -111,7 +126,7 @@ export function Component() {
             type="button"
             aria-pressed={role === 'buyer'}
           >
-            Mua
+            Đơn mua
           </button>
           {showSellerTab && (
             <button
@@ -120,7 +135,7 @@ export function Component() {
               type="button"
               aria-pressed={role === 'seller'}
             >
-              Bán
+              Đơn bán
             </button>
           )}
         </div>
@@ -154,7 +169,7 @@ export function Component() {
           }}
           role="status"
         >
-          Không có đơn hàng nào.
+          Chưa có đơn hàng nào.
         </div>
       ) : (
         <>

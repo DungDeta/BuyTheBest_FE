@@ -23,6 +23,7 @@ export interface Order {
   cancel_reason?: string | null
   created_at: string
   updated_at: string
+  viewer_role?: 'buyer' | 'seller'
   auction?: OrderAuction | null
   payment?: OrderPayment | null
   shipment?: OrderShipment | null
@@ -41,6 +42,7 @@ export interface OrderAuction {
   product?: {
     id: string | number
     title: string
+    description?: string
     slug: string
     condition: string
     images?: OrderProductImage[]

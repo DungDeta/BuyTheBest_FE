@@ -46,7 +46,9 @@ const PREF_LABELS: Record<string, string> = {
   auction_won: 'Thắng phiên đấu giá',
   auction_ended: 'Phiên đã kết thúc',
   payment_received: 'Thanh toán đã ghi nhận',
+  order_paid: 'Đơn hàng đã thanh toán',
   order_shipped: 'Đơn hàng đã gửi',
+  order_cancelled: 'Đơn hàng đã hủy',
   dispute_opened: 'Khiếu nại đã mở',
   dispute_resolved: 'Khiếu nại đã xử lý',
   escrow_released: 'Escrow đã giải ngân',
@@ -61,6 +63,8 @@ const PREF_LABELS: Record<string, string> = {
 const MANDATORY_EVENT_TYPES = new Set([
   'auction_won',
   'payment_received',
+  'order_paid',
+  'order_cancelled',
   'dispute_opened',
   'dispute_resolved',
   'escrow_released',

@@ -26,14 +26,12 @@ export function OrderCard({ order, role }: OrderCardProps) {
   const counterpartyLabel = role === 'buyer' ? 'Người bán' : 'Người mua'
 
   function handleClick() {
-    sessionStorage.setItem(`order-role:${order.id}`, role)
     navigate(`/orders/${order.id}?role=${role}`, { state: { role } })
   }
 
   function handleKeyDown(e: React.KeyboardEvent<HTMLDivElement>) {
     if (e.key === 'Enter' || e.key === ' ') {
       e.preventDefault()
-      sessionStorage.setItem(`order-role:${order.id}`, role)
       navigate(`/orders/${order.id}?role=${role}`, { state: { role } })
     }
   }
