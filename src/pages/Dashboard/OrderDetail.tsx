@@ -136,7 +136,7 @@ export function Component() {
       const fetched = extractOrder(res.data)
       if (fetched) {
         const reviewRequest =
-          fetched.status === 'completed'
+          fetched.status === 'delivered' || fetched.status === 'completed'
             ? privateGet<OrderReview>(`/orders/${fetched.id}/review`)
             : Promise.resolve(null)
         const [paymentResult, shipmentResult, disputeResult, reviewResult] = await Promise.allSettled([
@@ -261,6 +261,14 @@ export function Component() {
   const buyer = order.viewer_role === 'buyer'
   const seller = order.viewer_role === 'seller'
   const hasActiveDispute = Boolean(order.dispute) || order.payment?.escrow_status === 'disputed'
+  const deliveredAt = order.shipment?.delivered_at
+  const canOpenDispute = Boolean(
+    buyer &&
+      !hasActiveDispute &&
+      order.status === 'delivered' &&
+      deliveredAt &&
+      dayjs().diff(dayjs(deliveredAt), 'day', true) <= 30,
+  )
   const hasShipmentActivity = Boolean(
     order.shipment &&
       (
@@ -563,7 +571,7 @@ export function Component() {
           </Button>
         )}
 
-        {buyer && (order.status === 'shipped' || order.status === 'delivered') && !hasActiveDispute && (
+        {canOpenDispute && (
           <Button
             size="large"
             danger
@@ -601,11 +609,7 @@ export function Component() {
         />
       )}
 
-      {!hasActiveDispute &&
-        buyer &&
-        order.status === 'delivered' && (
-          <OpenDisputeForm orderId={order.id} onSuccess={fetchOrder} />
-        )}
+      {canOpenDispute && <OpenDisputeForm orderId={order.id} onSuccess={fetchOrder} />}
 
       <ReviewSection
         orderId={order.id}

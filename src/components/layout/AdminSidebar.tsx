@@ -4,6 +4,7 @@ import type { MenuProps } from 'antd'
 import {
   DashboardOutlined,
   AppstoreOutlined,
+  ThunderboltOutlined,
   UserOutlined,
   TagsOutlined,
   PictureOutlined,
@@ -16,6 +17,7 @@ export default function AdminSidebar() {
   const items: MenuProps['items'] = [
     { key: '/admin', icon: <DashboardOutlined />, label: <Link to="/admin">Dashboard</Link> },
     { key: '/admin/products', icon: <AppstoreOutlined />, label: <Link to="/admin/products">Sản phẩm</Link> },
+    { key: '/admin/auctions', icon: <ThunderboltOutlined />, label: <Link to="/admin/auctions">Phiên đấu giá</Link> },
     { key: '/admin/users', icon: <UserOutlined />, label: <Link to="/admin/users">Người dùng</Link> },
     { key: '/admin/categories', icon: <TagsOutlined />, label: <Link to="/admin/categories">Danh mục</Link> },
     { key: '/admin/banners', icon: <PictureOutlined />, label: <Link to="/admin/banners">Banner</Link> },

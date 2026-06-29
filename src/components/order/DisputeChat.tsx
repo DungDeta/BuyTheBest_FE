@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { App, Button, Spin } from 'antd'
 import dayjs from 'dayjs'
 import { privateGet, privatePost } from '@/api/api'
-import type { DisputeMessage } from '@/types/order'
+import type { DisputeMessage, DisputeStatus } from '@/types/order'
 
 interface DisputeChatProps {
   disputeId: string
@@ -10,7 +10,7 @@ interface DisputeChatProps {
   currentUserRole: Exclude<DisputeChatRole, 'admin'>
   buyerId?: number
   sellerId?: number
-  disputeStatus?: string
+  disputeStatus?: DisputeStatus
 }
 
 type MessagesResponse = DisputeMessage[] | { data: DisputeMessage[] }

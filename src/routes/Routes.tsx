@@ -93,6 +93,7 @@ export const router = createBrowserRouter([
         children: [
           { path: '/admin', lazy: () => import('@/pages/Admin/Dashboard') },
           { path: '/admin/products', lazy: () => import('@/pages/Admin/Products') },
+          { path: '/admin/auctions', lazy: () => import('@/pages/Admin/Auctions') },
           { path: '/admin/users', lazy: () => import('@/pages/Admin/Users') },
           { path: '/admin/categories', lazy: () => import('@/pages/Admin/Categories') },
           { path: '/admin/banners', lazy: () => import('@/pages/Admin/Banners') },
