@@ -1,8 +1,9 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { App, Button, Input, Spin } from 'antd'
-import { privatePut, privatePost } from '@/api/api'
+import { privateGet, privatePut, privatePost } from '@/api/api'
 import { useAuthStore } from '@/store/useAuthStore'
 import type { User, TokenResponse } from '@/types/user'
+import type { ErrorResponse } from '@/types/api'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import './profile.css'
 
@@ -15,6 +16,7 @@ interface PasswordChangeResponse {
 }
 
 interface SellerProfile {
+  user_id?: number
   shop_name: string
   description: string
   shipping_policy: string
@@ -23,14 +25,11 @@ interface SellerProfile {
   banner_url?: string | null
   bank_account?: string | null
   bank_name?: string | null
+  updated_at?: string
 }
 
 interface SellerUpgradeResponse {
   user: User
-  profile: SellerProfile
-}
-
-interface SellerProfileResponse {
   profile: SellerProfile
 }
 
@@ -389,7 +388,7 @@ function SellerUpgradeSection() {
               id="shop-name"
               value={shopName}
               onChange={(e) => setShopName(e.target.value)}
-              maxLength={100}
+              maxLength={80}
               placeholder="Tên cửa hàng của bạn"
               style={{ fontFamily: 'var(--font-mono)' }}
             />
@@ -429,7 +428,7 @@ function SellerUpgradeSection() {
             id="seller-description"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            maxLength={1000}
+            maxLength={2000}
             rows={3}
             placeholder="Giới thiệu về cửa hàng của bạn"
             style={{ fontFamily: 'var(--font-mono)', resize: 'none' }}
@@ -479,124 +478,176 @@ function SellerUpgradeSection() {
 }
 
 interface SellerProfileSectionProps {
-  initialProfile: SellerProfile | null
-  loading: boolean
+  profile: SellerProfile
+  onUpdated: (profile: SellerProfile) => void
 }
 
-function SellerProfileSection({ initialProfile, loading }: SellerProfileSectionProps) {
+function SellerProfileSection({ profile, onUpdated }: SellerProfileSectionProps) {
   const { message } = App.useApp()
 
+  const [editing, setEditing] = useState(false)
   const [saving, setSaving] = useState(false)
-  const [shopName, setShopName] = useState(initialProfile?.shop_name ?? '')
-  const [description, setDescription] = useState(initialProfile?.description ?? '')
-  const [shippingPolicy, setShippingPolicy] = useState(
-    initialProfile?.shipping_policy ?? '',
-  )
-  const [returnPolicy, setReturnPolicy] = useState(initialProfile?.return_policy ?? '')
+  const [shopName, setShopName] = useState(profile.shop_name)
+  const [description, setDescription] = useState(profile.description)
+  const [shippingPolicy, setShippingPolicy] = useState(profile.shipping_policy)
+  const [returnPolicy, setReturnPolicy] = useState(profile.return_policy)
+
+  function resetForm() {
+    setShopName(profile.shop_name)
+    setDescription(profile.description)
+    setShippingPolicy(profile.shipping_policy)
+    setReturnPolicy(profile.return_policy)
+  }
+
+  function handleEdit() {
+    resetForm()
+    setEditing(true)
+  }
+
+  function handleCancel() {
+    resetForm()
+    setEditing(false)
+  }
 
   async function handleSave() {
-    if (!shopName.trim()) {
-      message.error('Tên cửa hàng không được để trống')
+    const normalizedShopName = shopName.trim()
+    if (normalizedShopName.length < 2) {
+      message.error('Tên cửa hàng phải có ít nhất 2 ký tự')
       return
     }
     setSaving(true)
     try {
-      await privatePut<SellerProfileResponse>('/me/seller-profile', {
-        shop_name: shopName.trim(),
-        description: description.trim() || undefined,
-        shipping_policy: shippingPolicy.trim() || undefined,
-        return_policy: returnPolicy.trim() || undefined,
+      const res = await privatePut<SellerProfile>('/me/seller-profile', {
+        shop_name: normalizedShopName,
+        description: description.trim(),
+        shipping_policy: shippingPolicy.trim(),
+        return_policy: returnPolicy.trim(),
       })
+      onUpdated(res.data)
       message.success('Cập nhật hồ sơ cửa hàng thành công')
-    } catch {
-      message.error('Không thể cập nhật hồ sơ cửa hàng')
+      setEditing(false)
+    } catch (err) {
+      const apiError = err as ErrorResponse
+      message.error(apiError.error || 'Không thể cập nhật hồ sơ cửa hàng')
     } finally {
       setSaving(false)
     }
   }
 
-  if (loading) {
-    return (
-      <section className="profile-section" aria-label="Hồ sơ cửa hàng">
-        <div style={{ display: 'flex', justifyContent: 'center', padding: 32 }}>
-          <Spin />
-        </div>
-      </section>
-    )
-  }
-
   return (
     <section className="profile-section" aria-labelledby="seller-profile-title">
-      <div className="profile-section__title" id="seller-profile-title">
-        Hồ sơ cửa hàng
-      </div>
-      <div className="profile-seller-form" role="form" aria-label="Chỉnh sửa hồ sơ cửa hàng">
-        <div className="profile-form-group">
-          <label className="profile-form-label" htmlFor="edit-shop-name">
-            Tên cửa hàng
-          </label>
-          <Input
-            id="edit-shop-name"
-            value={shopName}
-            onChange={(e) => setShopName(e.target.value)}
-            maxLength={100}
-            placeholder="Tên cửa hàng"
-            style={{ fontFamily: 'var(--font-mono)' }}
-          />
-        </div>
-        <div className="profile-form-group">
-          <label className="profile-form-label" htmlFor="edit-description">
-            Mô tả cửa hàng
-          </label>
-          <Input.TextArea
-            id="edit-description"
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            maxLength={1000}
-            rows={3}
-            placeholder="Mô tả cửa hàng"
-            style={{ fontFamily: 'var(--font-mono)', resize: 'none' }}
-          />
-        </div>
-        <div className="profile-form-group">
-          <label className="profile-form-label" htmlFor="edit-shipping-policy">
-            Chính sách vận chuyển
-          </label>
-          <Input.TextArea
-            id="edit-shipping-policy"
-            value={shippingPolicy}
-            onChange={(e) => setShippingPolicy(e.target.value)}
-            maxLength={1000}
-            rows={3}
-            placeholder="Chính sách vận chuyển"
-            style={{ fontFamily: 'var(--font-mono)', resize: 'none' }}
-          />
-        </div>
-        <div className="profile-form-group">
-          <label className="profile-form-label" htmlFor="edit-return-policy">
-            Chính sách đổi trả
-          </label>
-          <Input.TextArea
-            id="edit-return-policy"
-            value={returnPolicy}
-            onChange={(e) => setReturnPolicy(e.target.value)}
-            maxLength={1000}
-            rows={3}
-            placeholder="Chính sách đổi trả"
-            style={{ fontFamily: 'var(--font-mono)', resize: 'none' }}
-          />
-        </div>
-        <div className="profile-form-actions">
-          <Button
-            type="primary"
-            onClick={handleSave}
-            loading={saving}
-            disabled={saving}
-          >
-            Lưu thay đổi
+      <div className="profile-section__header">
+        <h2 className="profile-section__header-title" id="seller-profile-title">
+          Hồ sơ cửa hàng
+        </h2>
+        {!editing && (
+          <Button size="small" onClick={handleEdit}>
+            Chỉnh sửa
           </Button>
-        </div>
+        )}
       </div>
+
+      {editing ? (
+        <div className="profile-seller-form" role="form" aria-label="Chỉnh sửa hồ sơ cửa hàng">
+          <div className="profile-form-group">
+            <label className="profile-form-label" htmlFor="edit-shop-name">
+              Tên cửa hàng
+            </label>
+            <Input
+              id="edit-shop-name"
+              value={shopName}
+              onChange={(e) => setShopName(e.target.value)}
+              maxLength={80}
+              showCount
+              placeholder="Tên cửa hàng"
+              style={{ fontFamily: 'var(--font-mono)' }}
+            />
+          </div>
+          <div className="profile-form-group">
+            <label className="profile-form-label" htmlFor="edit-description">
+              Mô tả cửa hàng
+            </label>
+            <Input.TextArea
+              id="edit-description"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              maxLength={2000}
+              rows={4}
+              showCount
+              placeholder="Giới thiệu ngắn gọn về cửa hàng"
+              style={{ fontFamily: 'var(--font-mono)', resize: 'vertical' }}
+            />
+          </div>
+          <div className="profile-form-group">
+            <label className="profile-form-label" htmlFor="edit-shipping-policy">
+              Chính sách vận chuyển
+            </label>
+            <Input.TextArea
+              id="edit-shipping-policy"
+              value={shippingPolicy}
+              onChange={(e) => setShippingPolicy(e.target.value)}
+              maxLength={1000}
+              rows={3}
+              showCount
+              placeholder="Phạm vi, thời gian và chi phí vận chuyển"
+              style={{ fontFamily: 'var(--font-mono)', resize: 'vertical' }}
+            />
+          </div>
+          <div className="profile-form-group">
+            <label className="profile-form-label" htmlFor="edit-return-policy">
+              Chính sách đổi trả
+            </label>
+            <Input.TextArea
+              id="edit-return-policy"
+              value={returnPolicy}
+              onChange={(e) => setReturnPolicy(e.target.value)}
+              maxLength={1000}
+              rows={3}
+              showCount
+              placeholder="Điều kiện và thời hạn đổi trả"
+              style={{ fontFamily: 'var(--font-mono)', resize: 'vertical' }}
+            />
+          </div>
+          <div className="profile-form-actions">
+            <Button
+              type="primary"
+              onClick={() => void handleSave()}
+              loading={saving}
+              disabled={saving}
+            >
+              Lưu thay đổi
+            </Button>
+            <Button onClick={handleCancel} disabled={saving}>
+              Huỷ
+            </Button>
+          </div>
+        </div>
+      ) : (
+        <div className="profile-info-grid">
+          <div className="profile-field profile-field--full">
+            <span className="profile-field__label">Tên cửa hàng</span>
+            <span className="profile-field__value">{profile.shop_name}</span>
+          </div>
+          <div className="profile-field profile-field--full">
+            <span className="profile-field__label">Mô tả</span>
+            <span className={profile.description ? 'profile-field__value' : 'profile-field__value profile-field__value--empty'}>
+              {profile.description || 'Chưa cập nhật'}
+            </span>
+          </div>
+          <div className="profile-field">
+            <span className="profile-field__label">Chính sách vận chuyển</span>
+            <span className={profile.shipping_policy ? 'profile-field__value' : 'profile-field__value profile-field__value--empty'}>
+              {profile.shipping_policy || 'Chưa cập nhật'}
+            </span>
+          </div>
+          <div className="profile-field">
+            <span className="profile-field__label">Chính sách đổi trả</span>
+            <span className={profile.return_policy ? 'profile-field__value' : 'profile-field__value profile-field__value--empty'}>
+              {profile.return_policy || 'Chưa cập nhật'}
+            </span>
+          </div>
+        </div>
+      )}
     </section>
   )
 }
@@ -604,7 +655,40 @@ function SellerProfileSection({ initialProfile, loading }: SellerProfileSectionP
 export function Component() {
   useDocumentTitle('Hồ sơ cá nhân')
   const user = useAuthStore((s) => s.user)
-  const isSeller = useAuthStore((s) => s.isSeller)
+  const seller = useAuthStore((s) => s.user?.is_seller ?? false)
+  const [sellerProfile, setSellerProfile] = useState<SellerProfile | null>(null)
+  const [loadingSellerProfile, setLoadingSellerProfile] = useState(false)
+  const [sellerProfileError, setSellerProfileError] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!seller) {
+      setSellerProfile(null)
+      setSellerProfileError(null)
+      return
+    }
+
+    let cancelled = false
+    async function loadSellerProfile() {
+      setLoadingSellerProfile(true)
+      setSellerProfileError(null)
+      try {
+        const res = await privateGet<SellerProfile>('/me/seller-profile')
+        if (!cancelled) setSellerProfile(res.data)
+      } catch (err) {
+        if (!cancelled) {
+          const apiError = err as ErrorResponse
+          setSellerProfileError(apiError.error || 'Không thể tải hồ sơ cửa hàng')
+        }
+      } finally {
+        if (!cancelled) setLoadingSellerProfile(false)
+      }
+    }
+
+    void loadSellerProfile()
+    return () => {
+      cancelled = true
+    }
+  }, [seller])
 
   if (!user) {
     return (
@@ -625,8 +709,28 @@ export function Component() {
 
       <PasswordSection />
 
-      {isSeller() ? (
-        <SellerProfileSection initialProfile={null} loading={false} />
+      {seller ? (
+        loadingSellerProfile ? (
+          <section className="profile-section" aria-label="Đang tải hồ sơ cửa hàng">
+            <div className="profile-section-loading">
+              <Spin />
+            </div>
+          </section>
+        ) : sellerProfileError || !sellerProfile ? (
+          <section className="profile-section" aria-labelledby="seller-profile-error-title">
+            <div className="profile-section__title" id="seller-profile-error-title">
+              Hồ sơ cửa hàng
+            </div>
+            <p className="profile-section-error">
+              {sellerProfileError || 'Không tìm thấy hồ sơ cửa hàng'}
+            </p>
+          </section>
+        ) : (
+          <SellerProfileSection
+            profile={sellerProfile}
+            onUpdated={setSellerProfile}
+          />
+        )
       ) : (
         <SellerUpgradeSection />
       )}

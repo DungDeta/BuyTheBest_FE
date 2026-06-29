@@ -129,6 +129,9 @@
   font-family: var(--font-mono);
   font-size: 14px;
   font-weight: 700;
+  line-height: 1.55;
+  overflow-wrap: anywhere;
+  white-space: pre-line;
 }
 
 .profile-field__value--empty {
@@ -211,6 +214,19 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 14px;
+}
+
+.profile-section-loading {
+  display: flex;
+  justify-content: center;
+  padding: 28px;
+}
+
+.profile-section-error {
+  margin: 0;
+  color: var(--color-danger, #b42318);
+  font-family: var(--font-mono);
+  font-size: 12px;
 }
 
 /* ── Responsive ── */

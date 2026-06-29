@@ -1,56 +1,43 @@
-/* =====================================================
-   Seller Profile — public page
-   Design tokens from global.css
-   ===================================================== */
-
-/* ── Loading / error states ─────────────────────────── */
-
 .sp-loading,
 .sp-error {
+  min-height: 360px;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-height: 320px;
   gap: 16px;
+  padding: 24px;
 }
 
 .sp-error-msg {
+  color: var(--danger);
   font-family: var(--font-mono);
   font-size: 13px;
-  color: var(--danger);
 }
 
 .sp-back-link {
+  color: var(--accent);
   font-family: var(--font-mono);
   font-size: 12px;
-  color: var(--accent);
   text-decoration: underline;
 }
 
-.sp-back-link:hover {
-  color: var(--accent-hover);
-}
-
-/* ── Breadcrumb ─────────────────────────────────────── */
-
 .sp-breadcrumb {
-  font-family: var(--font-mono);
-  font-size: 11px;
-  color: var(--muted);
-  padding: 10px 24px;
-  max-width: 1100px;
+  max-width: 1120px;
   margin: 0 auto;
+  padding: 12px 24px;
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 4px;
+  gap: 5px;
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 11px;
 }
 
 .sp-breadcrumb a {
-  color: var(--muted);
+  color: inherit;
   text-decoration: none;
-  transition: color 0.12s;
 }
 
 .sp-breadcrumb a:hover {
@@ -59,178 +46,213 @@
 }
 
 .sp-bc-sep {
-  color: var(--border);
-  margin: 0 2px;
-}
-
-.sp-bc-label {
-  color: var(--muted);
+  color: var(--border-strong);
 }
 
 .sp-bc-current {
-  color: var(--accent);
-  font-weight: 600;
-  white-space: nowrap;
+  max-width: 280px;
   overflow: hidden;
+  color: var(--fg);
+  font-weight: 700;
   text-overflow: ellipsis;
-  max-width: 260px;
+  white-space: nowrap;
 }
-
-/* ── Page shell ─────────────────────────────────────── */
 
 .sp-shell {
-  max-width: 1100px;
-  margin: 0 auto 40px;
+  max-width: 1120px;
+  margin: 0 auto 48px;
   padding: 0 24px;
-  display: flex;
-  flex-direction: column;
-  gap: 0;
 }
 
-/* ── Seller info card ───────────────────────────────── */
-
 .sp-info-card {
+  margin-bottom: 24px;
+  overflow: hidden;
   background: var(--surface);
   border: 2px solid var(--border-strong);
-  border-radius: var(--radius);
+  border-radius: 4px;
+}
+
+.sp-banner {
+  width: 100%;
+  max-height: 220px;
+  aspect-ratio: 4 / 1;
+  display: block;
+  object-fit: cover;
+  border-bottom: 1px solid var(--border);
+}
+
+.sp-info-inner {
   padding: 24px 28px;
-  margin-bottom: 20px;
 }
 
 .sp-info-top {
   display: flex;
   align-items: flex-start;
   gap: 18px;
-  margin-bottom: 20px;
 }
 
 .sp-avatar {
-  width: 64px;
-  height: 64px;
-  background: var(--border-strong);
-  color: var(--surface);
-  border-radius: 2px;
+  width: 72px;
+  height: 72px;
   display: flex;
+  flex: 0 0 auto;
   align-items: center;
   justify-content: center;
+  overflow: hidden;
+  background: var(--border-strong);
+  border: 2px solid var(--border-strong);
+  border-radius: 50%;
+  color: var(--surface);
   font-family: var(--font-mono);
-  font-size: 18px;
+  font-size: 19px;
   font-weight: 700;
-  flex-shrink: 0;
-  letter-spacing: -0.5px;
+}
+
+.sp-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .sp-info-body {
-  flex: 1;
   min-width: 0;
+  flex: 1;
+}
+
+.sp-title-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
 }
 
 .sp-shop-name {
+  margin: 0 0 5px;
   font-family: var(--font-display);
-  font-size: clamp(22px, 3vw, 32px);
+  font-size: 30px;
   font-weight: 700;
-  letter-spacing: -0.8px;
-  line-height: 1.1;
-  margin-bottom: 8px;
+  line-height: 1.15;
+}
+
+.sp-member-since {
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 11px;
 }
 
 .sp-description {
-  font-size: 13px;
+  max-width: 720px;
+  margin: 12px 0 0;
   color: var(--ink-soft);
+  font-size: 13px;
   line-height: 1.65;
-  max-width: 600px;
+  white-space: pre-line;
 }
 
-/* ── Stats row ──────────────────────────────────────── */
-
 .sp-stats-row {
-  display: flex;
+  margin-top: 22px;
+  padding-top: 18px;
+  display: grid;
+  grid-template-columns: max-content 1px max-content 1px minmax(190px, max-content) 1px max-content;
   align-items: center;
-  flex-wrap: wrap;
-  gap: 0;
-  padding-top: 16px;
+  gap: 0 24px;
   border-top: 1px solid var(--border);
 }
 
 .sp-stat {
+  min-width: 0;
   display: flex;
   flex-direction: column;
-  gap: 3px;
-  padding: 0 24px;
-}
-
-.sp-stat:first-child {
-  padding-left: 0;
+  gap: 4px;
 }
 
 .sp-stat-divider {
   width: 1px;
-  height: 36px;
+  height: 38px;
   background: var(--border);
-  flex-shrink: 0;
 }
 
 .sp-stat-val {
+  color: var(--fg);
   font-family: var(--font-mono);
   font-size: 18px;
   font-weight: 700;
-  letter-spacing: -0.4px;
   line-height: 1.2;
-  color: var(--fg);
 }
 
 .sp-stat-label {
-  font-family: var(--font-mono);
-  font-size: 10px;
   color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
 }
 
 .sp-stars {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 7px;
   color: var(--accent);
-  font-size: 16px;
+  font-size: 15px;
   letter-spacing: 1px;
 }
 
 .sp-rating-num {
-  font-family: var(--font-mono);
-  font-size: 14px;
-  font-weight: 700;
   color: var(--fg);
-  letter-spacing: -0.3px;
-}
-
-.sp-join-date {
   font-size: 14px;
+  letter-spacing: 0;
 }
 
-/* ── Tabs ───────────────────────────────────────────── */
+.sp-policies {
+  margin-top: 20px;
+  padding-top: 18px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px;
+  border-top: 1px solid var(--border);
+}
+
+.sp-policies h2 {
+  margin: 0 0 7px;
+  color: var(--fg);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.sp-policies p {
+  margin: 0;
+  color: var(--ink-soft);
+  font-size: 12px;
+  line-height: 1.6;
+  white-space: pre-line;
+}
 
 .sp-tabs {
-  display: flex;
-  gap: 0;
-  border-bottom: 2px solid var(--border-strong);
   margin-bottom: 20px;
+  display: flex;
+  border-bottom: 2px solid var(--border-strong);
 }
 
 .sp-tab {
-  background: none;
-  border: none;
-  border-bottom: 3px solid transparent;
   margin-bottom: -2px;
-  padding: 10px 20px;
-  font-family: var(--font-mono);
-  font-size: 12px;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.8px;
+  padding: 11px 18px;
+  background: none;
+  border: 0;
+  border-bottom: 3px solid transparent;
   color: var(--muted);
   cursor: pointer;
-  transition: color 0.12s, border-color 0.12s;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.sp-tab span {
+  margin-left: 5px;
+  color: inherit;
+  font-size: 10px;
 }
 
 .sp-tab:hover {
@@ -238,151 +260,292 @@
 }
 
 .sp-tab-active {
-  color: var(--fg);
   border-bottom-color: var(--fg);
-}
-
-/* ── Tab content states ─────────────────────────────── */
-
-.sp-tab-loading {
-  display: flex;
-  justify-content: center;
-  padding: 40px 0;
+  color: var(--fg);
 }
 
 .sp-tab-empty {
-  text-align: center;
-  padding: 40px 0;
+  padding: 48px 20px;
+  border: 1px dashed var(--border-strong);
   color: var(--muted);
-  font-size: 13px;
   font-family: var(--font-mono);
+  font-size: 12px;
+  text-align: center;
 }
 
-/* ── Listings grid (reuses home.css .listing cards) ── */
-/* .listings and .listing are defined in home.css.
-   They are available on every public route via
-   the shared PublicLayout. */
+.sp-auction-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 16px;
+}
 
-/* ── Reviews list ───────────────────────────────────── */
+.sp-auction-card {
+  min-width: 0;
+  overflow: hidden;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: 4px;
+  color: inherit;
+  text-decoration: none;
+  transition: border-color 120ms ease, transform 120ms ease;
+}
+
+.sp-auction-card:hover {
+  border-color: var(--border-strong);
+  transform: translateY(-2px);
+}
+
+.sp-auction-media {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+  background: var(--surface-alt, #f1f1ee);
+  border-bottom: 1px solid var(--border);
+}
+
+.sp-auction-media img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+  transition: transform 180ms ease;
+}
+
+.sp-auction-card:hover .sp-auction-media img {
+  transform: scale(1.02);
+}
+
+.sp-auction-media-empty {
+  width: 100%;
+  height: 100%;
+  display: grid;
+  place-items: center;
+  color: var(--muted);
+  font-size: 28px;
+}
+
+.sp-mode-badge,
+.sp-status-badge {
+  position: absolute;
+  top: 10px;
+  padding: 4px 7px;
+  border: 1px solid rgb(0 0 0 / 16%);
+  border-radius: 2px;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.sp-mode-badge {
+  left: 10px;
+  background: var(--surface);
+  color: var(--fg);
+}
+
+.sp-status-badge {
+  right: 10px;
+  background: #e8f5e9;
+  color: #11683f;
+}
+
+.sp-status-badge--scheduled {
+  background: #fff4d6;
+  color: #805d00;
+}
+
+.sp-auction-content {
+  padding: 14px;
+}
+
+.sp-auction-content h3 {
+  min-height: 42px;
+  margin: 0 0 10px;
+  display: -webkit-box;
+  overflow: hidden;
+  color: var(--fg);
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.45;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+}
+
+.sp-auction-price {
+  display: block;
+  margin-bottom: 10px;
+  color: var(--accent);
+  font-family: var(--font-mono);
+  font-size: 15px;
+}
+
+.sp-auction-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 9px;
+}
 
 .sp-reviews-list {
   display: flex;
   flex-direction: column;
-  gap: 0;
 }
 
 .sp-review-item {
+  padding: 17px 18px;
   background: var(--surface);
   border: 1.5px solid var(--border);
-  border-top: none;
-  padding: 16px 18px;
+  border-bottom: 0;
 }
 
 .sp-review-item:first-child {
-  border-top: 1.5px solid var(--border);
-  border-radius: var(--radius) var(--radius) 0 0;
+  border-radius: 4px 4px 0 0;
 }
 
 .sp-review-item:last-child {
-  border-radius: 0 0 var(--radius) var(--radius);
+  border-bottom: 1.5px solid var(--border);
+  border-radius: 0 0 4px 4px;
 }
 
 .sp-review-item:only-child {
-  border-radius: var(--radius);
-  border-top: 1.5px solid var(--border);
+  border-bottom: 1.5px solid var(--border);
+  border-radius: 4px;
 }
 
 .sp-review-header {
   display: flex;
   align-items: center;
-  gap: 12px;
-  margin-bottom: 6px;
   flex-wrap: wrap;
+  gap: 11px;
 }
 
 .sp-review-stars {
-  font-size: 15px;
   color: var(--accent);
+  font-size: 14px;
   letter-spacing: 1px;
-  flex-shrink: 0;
 }
 
 .sp-review-reviewer {
-  font-family: var(--font-mono);
-  font-size: 12px;
-  font-weight: 700;
   color: var(--fg);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
 }
 
 .sp-review-date {
-  font-family: var(--font-mono);
-  font-size: 11px;
-  color: var(--muted);
   margin-left: auto;
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 10px;
 }
 
 .sp-review-comment {
-  font-size: 13px;
+  margin: 8px 0 0;
   color: var(--ink-soft);
-  line-height: 1.65;
-  padding-left: 2px;
+  font-size: 13px;
+  line-height: 1.6;
 }
 
-/* ── Responsive ─────────────────────────────────────── */
-
-@media (max-width: 768px) {
-  .sp-shell {
-    padding: 0 16px;
-  }
-
-  .sp-info-card {
-    padding: 18px 16px;
-  }
-
+@media (max-width: 900px) {
   .sp-stats-row {
-    gap: 12px 0;
-  }
-
-  .sp-stat {
-    padding: 0 14px;
-  }
-
-  .sp-stat-divider {
-    height: 28px;
-  }
-
-  .sp-shop-name {
-    font-size: 22px;
-  }
-}
-
-@media (max-width: 480px) {
-  .sp-stats-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 14px 0;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 18px 24px;
   }
 
   .sp-stat-divider {
     display: none;
   }
+}
 
-  .sp-stat {
-    padding: 0;
+@media (max-width: 640px) {
+  .sp-breadcrumb,
+  .sp-shell {
+    padding-right: 16px;
+    padding-left: 16px;
+  }
+
+  .sp-info-inner {
+    padding: 18px 16px;
   }
 
   .sp-info-top {
+    gap: 13px;
+  }
+
+  .sp-avatar {
+    width: 58px;
+    height: 58px;
+    font-size: 16px;
+  }
+
+  .sp-title-row {
+    align-items: stretch;
     flex-direction: column;
-    gap: 12px;
+    gap: 13px;
+  }
+
+  .sp-title-row .ant-btn {
+    align-self: flex-start;
+  }
+
+  .sp-shop-name {
+    font-size: 23px;
+  }
+
+  .sp-policies {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .sp-auction-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .sp-auction-content {
+    padding: 11px;
+  }
+
+  .sp-auction-meta {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 4px;
+  }
+}
+
+@media (max-width: 420px) {
+  .sp-info-top {
+    flex-direction: column;
+  }
+
+  .sp-stats-row {
+    gap: 16px;
+  }
+
+  .sp-stat-val {
+    font-size: 16px;
+  }
+
+  .sp-stars {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 2px;
   }
 
   .sp-tab {
-    padding: 10px 14px;
-    font-size: 11px;
+    flex: 1;
+    padding: 10px 8px;
+    font-size: 10px;
+  }
+
+  .sp-auction-grid {
+    grid-template-columns: 1fr;
   }
 
   .sp-review-date {
-    margin-left: 0;
     width: 100%;
+    margin-left: 0;
   }
 }
