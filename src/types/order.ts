@@ -18,6 +18,8 @@ export interface Order {
   status: OrderStatus
   payment_deadline?: string | null
   paid_at?: string | null
+  shipped_at?: string | null
+  delivered_at?: string | null
   completed_at?: string | null
   cancelled_at?: string | null
   cancel_reason?: string | null
@@ -69,6 +71,7 @@ export interface OrderPayment {
   provider: string
   amount: number
   platform_fee: number
+  refund_amount: number
   seller_amount: number
   status: PaymentStatus
   escrow_status: EscrowStatus

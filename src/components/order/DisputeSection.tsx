@@ -3,7 +3,7 @@ import { DisputeActions } from './DisputeActions'
 import { DisputeChat } from './DisputeChat'
 import { DisputeTimeline } from './DisputeTimeline'
 import { EvidenceGrid } from './EvidenceGrid'
-import type { OrderDispute } from '@/types/order'
+import type { OrderDispute, OrderPayment } from '@/types/order'
 
 interface DisputeSectionProps {
   dispute: OrderDispute
@@ -12,6 +12,7 @@ interface DisputeSectionProps {
   sellerId?: number
   isBuyer: boolean
   isSeller: boolean
+  payment?: OrderPayment | null
   onUpdate: () => void
 }
 
@@ -73,6 +74,7 @@ export function DisputeSection({
   sellerId,
   isBuyer,
   isSeller,
+  payment,
   onUpdate,
 }: DisputeSectionProps) {
   const statusColors = getStatusColors(dispute.status)
@@ -191,6 +193,7 @@ export function DisputeSection({
         disputeId={dispute.id}
         isBuyer={isBuyer}
         isSeller={isSeller}
+        payment={payment}
         onUpdate={onUpdate}
       />
     </section>

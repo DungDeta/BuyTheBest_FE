@@ -90,6 +90,7 @@ function normalizePayment(data: PaymentStatusResponse): OrderPayment {
     provider: data.provider,
     amount: data.amount,
     platform_fee: data.platform_fee,
+    refund_amount: data.refund_amount ?? 0,
     seller_amount: data.seller_amount,
     status: data.status,
     escrow_status: data.escrow_status,
@@ -261,13 +262,18 @@ export function Component() {
   const buyer = order.viewer_role === 'buyer'
   const seller = order.viewer_role === 'seller'
   const hasActiveDispute = Boolean(order.dispute) || order.payment?.escrow_status === 'disputed'
-  const deliveredAt = order.shipment?.delivered_at
+  const disputeReferenceAt =
+    order.shipment?.delivered_at ??
+    order.delivered_at ??
+    order.shipment?.shipped_at ??
+    order.shipped_at
   const canOpenDispute = Boolean(
     buyer &&
       !hasActiveDispute &&
-      order.status === 'delivered' &&
-      deliveredAt &&
-      dayjs().diff(dayjs(deliveredAt), 'day', true) <= 30,
+      order.payment?.escrow_status === 'held' &&
+      (order.status === 'shipped' || order.status === 'delivered') &&
+      disputeReferenceAt &&
+      dayjs().diff(dayjs(disputeReferenceAt), 'day', true) <= 30,
   )
   const hasShipmentActivity = Boolean(
     order.shipment &&
@@ -457,6 +463,14 @@ export function Component() {
                 {order.payment.seller_amount.toLocaleString('vi-VN') + ' ₫'}
               </div>
             </div>
+            {order.payment.refund_amount > 0 && (
+              <div className="shipment-info__item">
+                <div className="shipment-info__label">Hoàn cho người mua</div>
+                <div className="shipment-info__value">
+                  {order.payment.refund_amount.toLocaleString('vi-VN') + ' ₫'}
+                </div>
+              </div>
+            )}
             <div className="shipment-info__item">
               <div className="shipment-info__label">Trạng thái Escrow</div>
               <div className="shipment-info__value">
@@ -605,6 +619,7 @@ export function Component() {
           sellerId={order.seller_id}
           isBuyer={buyer}
           isSeller={seller}
+          payment={order.payment}
           onUpdate={fetchOrder}
         />
       )}

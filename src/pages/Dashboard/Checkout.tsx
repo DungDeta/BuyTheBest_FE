@@ -43,6 +43,7 @@ function normalizePayment(data: PaymentStatusResponse): OrderPayment {
     provider: data.provider,
     amount: data.amount,
     platform_fee: data.platform_fee,
+    refund_amount: data.refund_amount ?? 0,
     seller_amount: data.seller_amount,
     status: data.status,
     escrow_status: data.escrow_status,

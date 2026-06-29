@@ -1,13 +1,14 @@
 import { useState } from 'react'
 import { App, Button, InputNumber } from 'antd'
 import { privatePost } from '@/api/api'
-import type { OrderDispute } from '@/types/order'
+import type { OrderDispute, OrderPayment } from '@/types/order'
 
 interface DisputeActionsProps {
   dispute: OrderDispute
   disputeId: string
   isBuyer: boolean
   isSeller: boolean
+  payment?: OrderPayment | null
   onUpdate: () => void
 }
 
@@ -32,7 +33,11 @@ const RESPONSE_OPTIONS: { value: ResponseOption; label: string }[] = [
   { value: 'reject', label: 'Từ chối khiếu nại' },
 ]
 
-export function DisputeActions({ dispute, disputeId, isBuyer, isSeller, onUpdate }: DisputeActionsProps) {
+function formatMoney(value: number): string {
+  return value.toLocaleString('vi-VN') + ' ₫'
+}
+
+export function DisputeActions({ dispute, disputeId, isBuyer, isSeller, payment, onUpdate }: DisputeActionsProps) {
   const { message, modal } = App.useApp()
   const [respondText, setRespondText] = useState('')
   const [responseOption, setResponseOption] = useState<ResponseOption>('accept_refund')
@@ -40,6 +45,9 @@ export function DisputeActions({ dispute, disputeId, isBuyer, isSeller, onUpdate
   const [loading, setLoading] = useState(false)
 
   const { status, resolution } = dispute
+  const partialProposalAmount = payment?.refund_amount ?? 0
+  const partialSellerAmount = payment?.seller_amount ?? 0
+  const hasPartialProposal = partialProposalAmount > 0 && partialSellerAmount > 0
 
   function buildMessage(): string {
     const note = respondText.trim()
@@ -70,6 +78,15 @@ export function DisputeActions({ dispute, disputeId, isBuyer, isSeller, onUpdate
       message.warning('Vui lòng nhập số tiền hoàn hợp lệ.')
       return
     }
+    if (
+      responseOption === 'propose_partial' &&
+      payment?.amount &&
+      partialAmount != null &&
+      partialAmount >= payment.amount
+    ) {
+      message.warning('Số tiền hoàn một phần phải nhỏ hơn tổng giá trị đơn hàng.')
+      return
+    }
     setLoading(true)
     try {
       const body: RespondBody = {
@@ -91,9 +108,12 @@ export function DisputeActions({ dispute, disputeId, isBuyer, isSeller, onUpdate
   }
 
   function handleBuyerAccept() {
+    const content = hasPartialProposal
+      ? `Bạn đồng ý nhận ${formatMoney(partialProposalAmount)} và giải ngân ${formatMoney(partialSellerAmount)} cho Seller? Hành động này không thể hoàn tác.`
+      : 'Bạn đồng ý với giải pháp mà Seller đề xuất? Hành động này không thể hoàn tác.'
     modal.confirm({
       title: 'Chấp nhận giải pháp của Seller',
-      content: 'Bạn đồng ý với giải pháp mà Seller đề xuất? Hành động này không thể hoàn tác.',
+      content,
       okText: 'Chấp nhận',
       cancelText: 'Chưa',
       onOk: async () => {
@@ -199,6 +219,23 @@ export function DisputeActions({ dispute, disputeId, isBuyer, isSeller, onUpdate
                 placeholder="Nhập số tiền đề xuất hoàn"
               />
             </label>
+            {partialAmount && payment?.amount && partialAmount > 0 && partialAmount < payment.amount && (
+              <div
+                style={{
+                  marginTop: 8,
+                  padding: '9px 12px',
+                  border: '1px solid #d9ead3',
+                  background: '#f6fbf4',
+                  borderRadius: 3,
+                  fontFamily: 'var(--font-mono)',
+                  fontSize: 12,
+                  color: '#245b2d',
+                  lineHeight: 1.6,
+                }}
+              >
+                Buyer nhận {formatMoney(partialAmount)} · Seller nhận {formatMoney(payment.amount - partialAmount)}
+              </div>
+            )}
           </div>
         )}
 
@@ -258,22 +295,42 @@ export function DisputeActions({ dispute, disputeId, isBuyer, isSeller, onUpdate
 
   if (status === 'awaiting_buyer' && isBuyer) {
     return (
-      <div style={{ display: 'flex', gap: 10, marginTop: 16, flexWrap: 'wrap' }}>
-        <Button
-          type="primary"
-          style={{ background: '#118c4f', borderColor: '#118c4f' }}
-          onClick={handleBuyerAccept}
-          loading={loading}
-        >
-          Chấp nhận giải pháp của Seller
-        </Button>
-        <Button
-          danger
-          onClick={handleBuyerEscalate}
-          loading={loading}
-        >
-          Leo thang lên Admin
-        </Button>
+      <div style={{ marginTop: 16 }}>
+        {hasPartialProposal && (
+          <div
+            style={{
+              marginBottom: 12,
+              padding: '12px 14px',
+              background: '#f6fbf4',
+              border: '1.5px solid #118c4f',
+              borderRadius: 3,
+              fontFamily: 'var(--font-mono)',
+              fontSize: 13,
+              color: '#245b2d',
+              lineHeight: 1.6,
+            }}
+            role="status"
+          >
+            Seller đề xuất hoàn {formatMoney(partialProposalAmount)} cho Buyer và giải ngân {formatMoney(partialSellerAmount)} cho Seller.
+          </div>
+        )}
+        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+          <Button
+            type="primary"
+            style={{ background: '#118c4f', borderColor: '#118c4f' }}
+            onClick={handleBuyerAccept}
+            loading={loading}
+          >
+            Chấp nhận giải pháp của Seller
+          </Button>
+          <Button
+            danger
+            onClick={handleBuyerEscalate}
+            loading={loading}
+          >
+            Leo thang lên Admin
+          </Button>
+        </div>
       </div>
     )
   }
