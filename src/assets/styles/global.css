@@ -132,13 +132,14 @@ em {
 .header-search-history {
   position: absolute;
   top: calc(100% + 8px);
-  left: 0;
+  left: 50%;
   width: min(360px, calc(100vw - 32px));
   padding: 8px;
   background: var(--color-surface);
   border: 1px solid var(--color-border);
   border-radius: 6px;
   box-shadow: 0 14px 34px rgba(24, 32, 44, 0.14);
+  transform: translateX(-50%);
   z-index: 20;
 }
 
@@ -322,6 +323,26 @@ em {
   .header-nav {
     display: none;
   }
+
+  .header-search {
+    margin: 0 8px;
+    padding-inline: 8px;
+  }
+
+  .header-right {
+    gap: 8px;
+  }
+
+  .header-right .ant-btn {
+    width: 32px;
+    min-width: 32px;
+    height: 32px;
+    padding: 0;
+  }
+
+  .header-right .ant-btn > span:not(.anticon) {
+    display: none;
+  }
 }
 
 @media (max-width: 420px) {
@@ -338,7 +359,7 @@ em {
   }
 
   .header-right .ant-btn {
-    max-width: 150px;
+    max-width: 32px;
   }
 }
 
