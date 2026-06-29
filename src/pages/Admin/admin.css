@@ -229,6 +229,117 @@
   margin-bottom: 4px;
 }
 
+.product-review-drawer {
+  gap: 18px;
+}
+
+.review-product-hero {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--paper-2, #fafafa);
+}
+
+.review-product-hero .ant-tag {
+  flex-shrink: 0;
+  margin-inline-end: 0;
+}
+
+.review-product-hero__copy {
+  min-width: 0;
+}
+
+.review-product-hero__slug {
+  display: block;
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.review-product-facts {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.review-product-fact,
+.review-seller-card {
+  min-width: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+
+.review-product-fact {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 13px 14px 12px;
+}
+
+.review-product-fact span,
+.review-seller-card__body span {
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.55px;
+  text-transform: uppercase;
+}
+
+.review-product-fact strong,
+.review-seller-card__body strong {
+  min-width: 0;
+  color: var(--fg);
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.review-description {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+
+.review-description p {
+  margin: 0;
+  color: var(--fg);
+  font-size: 13px;
+  line-height: 1.65;
+  white-space: pre-wrap;
+}
+
+.review-seller-card {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 14px 16px;
+}
+
+.review-seller-card__body {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.review-seller-card__body > div {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
 /* ─── Review gallery ──────────────────────────────────────────── */
 
 .review-gallery {
@@ -276,6 +387,12 @@
   font-size: 13px;
   font-weight: 600;
   color: var(--warn);
+}
+
+.review-reject-form__actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 
 /* ─── User filters ────────────────────────────────────────────── */
@@ -854,6 +971,95 @@
   margin-bottom: 4px;
 }
 
+.dispute-summary-card {
+  display: flex;
+  flex-direction: column;
+  gap: 13px;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+
+.dispute-summary-card__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.dispute-summary-card__tags {
+  display: flex;
+  justify-content: flex-end;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.dispute-summary-card__tags .ant-tag {
+  margin-inline-end: 0;
+}
+
+.dispute-summary-card__id {
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.dispute-summary-card__description {
+  margin: 0;
+  padding: 12px 13px;
+  border-radius: var(--radius);
+  background: var(--paper-2, #fafafa);
+  color: var(--fg);
+  font-size: 13px;
+  line-height: 1.65;
+  white-space: pre-wrap;
+}
+
+.dispute-summary-card__meta {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.dispute-summary-card__meta > div {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+
+.dispute-summary-card__meta span,
+.resolve-notes-field label,
+.resolve-partial__hint {
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.55px;
+  text-transform: uppercase;
+}
+
+.dispute-summary-card__meta strong {
+  min-width: 0;
+  color: var(--fg);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+.dispute-summary-card__notes {
+  grid-column: 1 / -1;
+}
+
 /* ─── Dispute evidence grid ───────────────────────────────────── */
 
 .dispute-evidence-mini {
@@ -1012,6 +1218,315 @@
   color: var(--fg);
 }
 
+.resolve-partial__hint {
+  grid-column: 1 / -1;
+  margin: 0;
+  line-height: 1.45;
+  text-transform: none;
+  letter-spacing: 0;
+  font-weight: 500;
+}
+
+.resolve-notes-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 12px;
+}
+
+.resolve-notes-field label {
+  color: var(--fg);
+  font-size: 12px;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.resolve-notes-field__required {
+  color: var(--warn, #ff4d4f);
+}
+
+.resolve-notes-field__hint {
+  color: var(--muted);
+  font-weight: 400;
+}
+
+.resolve-notes-field textarea {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  outline: none;
+  resize: vertical;
+  background: var(--surface);
+  color: var(--fg);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.resolve-notes-field textarea:focus {
+  border-color: var(--accent, #1677ff);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent, #1677ff) 14%, transparent);
+}
+
+.resolve-notes-field__count {
+  color: var(--muted);
+  font-size: 11px;
+  text-align: right;
+}
+
+.resolve-submit-row {
+  margin-top: 16px;
+}
+
+.dispute-current-state {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.dispute-current-state .ant-tag {
+  width: fit-content;
+}
+
+.dispute-current-state p {
+  margin: 0;
+  color: var(--fg);
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.dispute-current-state__notes {
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--paper-2, #fafafa);
+  white-space: pre-wrap;
+}
+
+/* Auction detail drawer */
+.auction-detail-drawer {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding-bottom: 24px;
+}
+
+.auction-detail-hero {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--paper-2, #fafafa);
+}
+
+.auction-detail-hero .ant-tag {
+  flex-shrink: 0;
+  margin-inline-end: 0;
+}
+
+.auction-detail-hero__copy {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.auction-detail-eyebrow {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.7px;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.auction-detail-hero h2 {
+  margin: 0;
+  color: var(--fg);
+  font-size: 17px;
+  font-weight: 750;
+  letter-spacing: -0.25px;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
+.auction-detail-id {
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.auction-metric-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.auction-metric {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 13px 14px 12px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+
+.auction-metric--primary {
+  grid-column: 1 / -1;
+  border-color: color-mix(in srgb, var(--accent, #1677ff) 32%, var(--border));
+  background: color-mix(in srgb, var(--accent, #1677ff) 7%, var(--surface));
+}
+
+.auction-metric span,
+.auction-detail-row span,
+.auction-timeline-item span,
+.auction-cancel-field > span {
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.55px;
+  text-transform: uppercase;
+}
+
+.auction-metric strong {
+  color: var(--fg);
+  font-family: var(--font-mono);
+  font-size: 16px;
+  font-weight: 750;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+
+.auction-metric--primary strong {
+  color: var(--accent, #1677ff);
+  font-size: 23px;
+  letter-spacing: -0.4px;
+}
+
+.auction-detail-section {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.auction-detail-section h3 {
+  margin: 0;
+  color: var(--fg);
+  font-size: 13px;
+  font-weight: 750;
+  letter-spacing: -0.1px;
+}
+
+.auction-detail-table {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: var(--surface);
+}
+
+.auction-detail-row {
+  display: grid;
+  grid-template-columns: 126px minmax(0, 1fr);
+  gap: 14px;
+  align-items: start;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--border);
+}
+
+.auction-detail-row:last-child {
+  border-bottom: 0;
+}
+
+.auction-detail-row strong {
+  min-width: 0;
+  color: var(--fg);
+  font-size: 13px;
+  font-weight: 650;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
+.auction-timeline-list {
+  display: grid;
+  gap: 8px;
+}
+
+.auction-timeline-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 11px 13px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+
+.auction-timeline-item strong {
+  color: var(--fg);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 700;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.auction-danger-zone {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 16px;
+  border: 1px solid color-mix(in srgb, var(--warn, #faad14) 44%, var(--border));
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--warn-light, #fff7e6) 72%, var(--surface));
+}
+
+.auction-danger-zone__header {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.auction-danger-zone__header span {
+  color: var(--warn, #d46b08);
+  font-size: 12px;
+  font-weight: 750;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.auction-danger-zone__header p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.auction-cancel-field {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.auction-cancel-field textarea {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  line-height: 1.55;
+}
+
+.auction-cancel-button {
+  align-self: flex-start;
+  min-width: 128px;
+}
+
 /* Auction list */
 .auction-mobile-list {
   display: none;
@@ -1133,5 +1648,33 @@
   .auction-mobile-list {
     display: grid;
     gap: 10px;
+  }
+
+  .review-product-hero,
+  .dispute-summary-card__header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .review-product-facts,
+  .review-seller-card__body,
+  .dispute-summary-card__meta {
+    grid-template-columns: 1fr;
+  }
+
+  .auction-detail-hero,
+  .auction-timeline-item {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .auction-detail-row {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+
+  .auction-timeline-item strong {
+    text-align: left;
+    white-space: normal;
   }
 }

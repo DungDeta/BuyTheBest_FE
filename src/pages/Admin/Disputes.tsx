@@ -350,51 +350,39 @@ export function Component() {
     return (
       <div className="dispute-drawer">
         {/* Header */}
-        <div className="dispute-drawer__section">
-          <div className="dispute-drawer__section-title">Thông tin khiếu nại</div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-            <span
-              style={{
-                fontFamily: 'var(--font-mono)',
-                fontSize: 12,
-                color: 'var(--muted)',
-              }}
-            >
-              {selected.id}
-            </span>
-            {cfg && <Tag color={cfg.color}>{cfg.label}</Tag>}
-            <Tag>{REASON_LABELS[selected.reason] ?? selected.reason}</Tag>
+        <section className="dispute-summary-card">
+          <div className="dispute-summary-card__header">
+            <div>
+              <span className="dispute-drawer__section-title">Thông tin khiếu nại</span>
+              <p className="dispute-summary-card__id">{selected.id}</p>
+            </div>
+            <div className="dispute-summary-card__tags">
+              {cfg && <Tag color={cfg.color}>{cfg.label}</Tag>}
+              <Tag>{REASON_LABELS[selected.reason] ?? selected.reason}</Tag>
+            </div>
           </div>
-          <p
-            style={{
-              marginTop: 12,
-              fontSize: 14,
-              color: 'var(--fg)',
-              whiteSpace: 'pre-wrap',
-              lineHeight: 1.6,
-            }}
-          >
-            {selected.description}
-          </p>
-          <div
-            style={{
-              display: 'flex',
-              gap: 16,
-              marginTop: 8,
-              fontSize: 12,
-              color: 'var(--muted)',
-              flexWrap: 'wrap',
-            }}
-          >
-            <span>Tạo: {dayjs(selected.created_at).format('DD/MM/YYYY HH:mm')}</span>
+
+          <p className="dispute-summary-card__description">{selected.description}</p>
+
+          <div className="dispute-summary-card__meta">
+            <div>
+              <span>Tạo lúc</span>
+              <strong>{dayjs(selected.created_at).format('DD/MM/YYYY HH:mm')}</strong>
+            </div>
             {selected.resolved_at && (
-              <span>Giải quyết: {dayjs(selected.resolved_at).format('DD/MM/YYYY HH:mm')}</span>
+              <div>
+                <span>Giải quyết</span>
+                <strong>{dayjs(selected.resolved_at).format('DD/MM/YYYY HH:mm')}</strong>
+              </div>
             )}
             {selected.admin_notes && (
-              <span>Ghi chú: {selected.admin_notes}</span>
+              <div className="dispute-summary-card__notes">
+                <span>Ghi chú admin</span>
+                <strong>{selected.admin_notes}</strong>
+              </div>
             )}
           </div>
-        </div>
+        </section>
 
         {/* Evidence */}
         <div className="dispute-drawer__section">
@@ -512,32 +500,17 @@ export function Component() {
                     placeholder="0"
                   />
                 </div>
-                <p
-                  style={{
-                    gridColumn: '1 / -1',
-                    fontSize: 11,
-                    color: 'var(--muted)',
-                    margin: 0,
-                  }}
-                >
+                <p className="resolve-partial__hint">
                   Tổng hai giá trị nên bằng số tiền thanh toán của đơn hàng.
                 </p>
               </div>
             )}
 
-            <div style={{ marginTop: 12 }}>
-              <label
-                style={{
-                  display: 'block',
-                  fontSize: 12,
-                  fontWeight: 600,
-                  color: 'var(--fg)',
-                  marginBottom: 6,
-                }}
-              >
+            <div className="resolve-notes-field">
+              <label>
                 Ghi chú admin{' '}
-                <span style={{ color: 'var(--warn, #ff4d4f)' }}>*</span>{' '}
-                <span style={{ fontWeight: 400, color: 'var(--muted)' }}>(50–2000 ký tự)</span>
+                <span className="resolve-notes-field__required">*</span>{' '}
+                <span className="resolve-notes-field__hint">(50–2000 ký tự)</span>
               </label>
               <textarea
                 value={adminNotes}
@@ -545,34 +518,14 @@ export function Component() {
                 rows={4}
                 maxLength={2000}
                 placeholder="Nhập lý do / ghi chú quyết định phân xử..."
-                style={{
-                  width: '100%',
-                  fontFamily: 'var(--font-mono)',
-                  fontSize: 13,
-                  padding: '8px 10px',
-                  border: '1px solid var(--border)',
-                  borderRadius: 'var(--radius)',
-                  resize: 'vertical',
-                  boxSizing: 'border-box',
-                  background: 'var(--surface)',
-                  color: 'var(--fg)',
-                  outline: 'none',
-                }}
                 aria-label="Ghi chú admin"
               />
-              <div
-                style={{
-                  textAlign: 'right',
-                  fontSize: 11,
-                  color: 'var(--muted)',
-                  marginTop: 2,
-                }}
-              >
+              <div className="resolve-notes-field__count">
                 {adminNotes.length} / 2000
               </div>
             </div>
 
-            <div style={{ marginTop: 16 }}>
+            <div className="resolve-submit-row">
               <Popconfirm
                 title="Xác nhận phân xử"
                 description="Hành động này không thể hoàn tác. Tiếp tục?"
@@ -599,24 +552,17 @@ export function Component() {
         ) : (
           <div className="dispute-drawer__section">
             <div className="dispute-drawer__section-title">Trạng thái hiện tại</div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-              {cfg && <Tag color={cfg.color} style={{ width: 'fit-content' }}>{cfg.label}</Tag>}
+            <div className="dispute-current-state">
+              {cfg && <Tag color={cfg.color}>{cfg.label}</Tag>}
               {selected.resolution && selected.resolution !== 'pending' && (
-                <p style={{ fontSize: 13, color: 'var(--fg)', margin: 0 }}>
+                <p>
                   Quyết định:{' '}
                   {RESOLUTION_OPTIONS.find((o) => o.value === selected.resolution)?.label ??
                     selected.resolution}
                 </p>
               )}
               {selected.admin_notes && (
-                <p
-                  style={{
-                    fontSize: 13,
-                    color: 'var(--fg)',
-                    margin: 0,
-                    whiteSpace: 'pre-wrap',
-                  }}
-                >
+                <p className="dispute-current-state__notes">
                   Ghi chú: {selected.admin_notes}
                 </p>
               )}
@@ -693,7 +639,7 @@ export function Component() {
         }
         open={drawerOpen}
         onClose={closeDrawer}
-        width={600}
+        width="min(600px, 100vw)"
         placement="right"
         destroyOnHidden
       >

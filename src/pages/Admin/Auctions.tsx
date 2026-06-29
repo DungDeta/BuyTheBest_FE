@@ -76,6 +76,16 @@ function auctionTitle(auction: AuctionListItem) {
   return auction.product?.title ?? 'Phiên không có sản phẩm'
 }
 
+function formatCurrency(value?: number) {
+  return typeof value === 'number' && Number.isFinite(value)
+    ? `${value.toLocaleString('vi-VN')} ₫`
+    : '--'
+}
+
+function formatDateTime(value?: string) {
+  return value ? dayjs(value).format('DD/MM/YYYY HH:mm') : '--'
+}
+
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export function Component() {
@@ -322,67 +332,94 @@ export function Component() {
         open={drawerOpen}
         onClose={() => setDrawerOpen(false)}
         title={selected ? auctionTitle(selected) : 'Chi tiết phiên'}
-        width={480}
+        width="min(480px, 100vw)"
         destroyOnClose
       >
         {selected && (
-          <div className="admin-drawer-detail">
-            <dl className="admin-dl">
-              <dt>Trạng thái</dt>
-              <dd>
-                <Tag color={STATUS_CONFIG[selected.status]?.color}>
-                  {STATUS_CONFIG[selected.status]?.label ?? selected.status}
-                </Tag>
-              </dd>
+          <div className="auction-detail-drawer">
+            <section className="auction-detail-hero">
+              <div className="auction-detail-hero__copy">
+                <span className="auction-detail-eyebrow">Phiên đấu giá</span>
+                <h2>{auctionTitle(selected)}</h2>
+                <span className="auction-detail-id">ID: {selected.id}</span>
+              </div>
+              <Tag color={STATUS_CONFIG[selected.status]?.color}>
+                {STATUS_CONFIG[selected.status]?.label ?? selected.status}
+              </Tag>
+            </section>
 
-              <dt>Chế độ</dt>
-              <dd>{MODE_LABELS[selected.mode] ?? selected.mode}</dd>
+            <section className="auction-metric-grid" aria-label="Chỉ số phiên đấu giá">
+              <div className="auction-metric auction-metric--primary">
+                <span>Giá hiện tại</span>
+                <strong>{formatCurrency(selected.current_price)}</strong>
+              </div>
+              <div className="auction-metric">
+                <span>Giá khởi điểm</span>
+                <strong>{formatCurrency(selected.starting_price)}</strong>
+              </div>
+              <div className="auction-metric">
+                <span>Lượt đặt</span>
+                <strong>{selected.bid_count}</strong>
+              </div>
+            </section>
 
-              <dt>Giá khởi điểm</dt>
-              <dd>{selected.starting_price?.toLocaleString('vi-VN')} ₫</dd>
+            <section className="auction-detail-section">
+              <h3>Thông tin phiên</h3>
+              <div className="auction-detail-table">
+                <div className="auction-detail-row">
+                  <span>Chế độ</span>
+                  <strong>{MODE_LABELS[selected.mode] ?? selected.mode}</strong>
+                </div>
+                <div className="auction-detail-row">
+                  <span>Người bán</span>
+                  <strong>{selected.seller?.display_name ?? '--'}</strong>
+                </div>
+                <div className="auction-detail-row">
+                  <span>Sản phẩm</span>
+                  <strong>{auctionTitle(selected)}</strong>
+                </div>
+              </div>
+            </section>
 
-              <dt>Giá hiện tại</dt>
-              <dd>{selected.current_price?.toLocaleString('vi-VN')} ₫</dd>
-
-              <dt>Số lượt đặt</dt>
-              <dd>{selected.bid_count}</dd>
-
-              <dt>Bắt đầu</dt>
-              <dd>{dayjs(selected.starts_at).format('DD/MM/YYYY HH:mm')}</dd>
-
-              <dt>Kết thúc</dt>
-              <dd>{dayjs(selected.ends_at).format('DD/MM/YYYY HH:mm')}</dd>
-
-              <dt>Người bán</dt>
-              <dd>{selected.seller?.display_name ?? '—'}</dd>
-
-              <dt>Tạo lúc</dt>
-              <dd>{dayjs(selected.created_at).format('DD/MM/YYYY HH:mm')}</dd>
-            </dl>
+            <section className="auction-detail-section">
+              <h3>Mốc thời gian</h3>
+              <div className="auction-timeline-list">
+                <div className="auction-timeline-item">
+                  <span>Tạo lúc</span>
+                  <strong>{formatDateTime(selected.created_at)}</strong>
+                </div>
+                <div className="auction-timeline-item">
+                  <span>Bắt đầu</span>
+                  <strong>{formatDateTime(selected.starts_at)}</strong>
+                </div>
+                <div className="auction-timeline-item">
+                  <span>Kết thúc</span>
+                  <strong>{formatDateTime(selected.ends_at)}</strong>
+                </div>
+              </div>
+            </section>
 
             {canCancel && (
-              <div style={{ marginTop: 24, borderTop: '1px solid var(--color-border)', paddingTop: 16 }}>
-                <div
-                  style={{
-                    fontFamily: 'var(--font-mono)',
-                    fontSize: 12,
-                    fontWeight: 700,
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.5px',
-                    marginBottom: 8,
-                  }}
-                >
-                  Hủy phiên đấu giá
+              <section className="auction-danger-zone">
+                <div className="auction-danger-zone__header">
+                  <span>Hủy phiên đấu giá</span>
+                  <p>
+                    Phiên sẽ bị dừng, người bán và người tham gia sẽ nhận thông báo.
+                    Hành động này được ghi lại trong nhật ký quản trị.
+                  </p>
                 </div>
-                <Input.TextArea
-                  rows={3}
-                  value={cancelReason}
-                  onChange={(e) => setCancelReason(e.target.value)}
-                  placeholder="Nhập lý do hủy phiên…"
-                  maxLength={500}
-                  disabled={cancelLoading}
-                  style={{ marginBottom: 10, fontFamily: 'var(--font-mono)', fontSize: 13 }}
-                />
+                <label className="auction-cancel-field">
+                  <span>Lý do hủy</span>
+                  <Input.TextArea
+                    rows={4}
+                    value={cancelReason}
+                    onChange={(e) => setCancelReason(e.target.value)}
+                    placeholder="Ví dụ: Sản phẩm vi phạm quy định hoặc người bán yêu cầu hủy."
+                    maxLength={500}
+                    disabled={cancelLoading}
+                    showCount
+                  />
+                </label>
                 <Button
                   danger
                   type="primary"
@@ -390,10 +427,11 @@ export function Component() {
                   onClick={handleCancelAuction}
                   loading={cancelLoading}
                   disabled={!cancelReason.trim()}
+                  className="auction-cancel-button"
                 >
                   Hủy phiên
                 </Button>
-              </div>
+              </section>
             )}
           </div>
         )}

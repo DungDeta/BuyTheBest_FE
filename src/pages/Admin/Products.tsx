@@ -322,12 +322,12 @@ export function Component() {
         title={selected?.title ?? 'Chi tiết sản phẩm'}
         open={drawerOpen}
         onClose={closeDrawer}
-        width={600}
+        width="min(600px, 100vw)"
         placement="right"
         loading={detailLoading}
       >
         {selected && (
-          <div className="review-drawer">
+          <div className="review-drawer product-review-drawer">
             {/* Gallery */}
             {selected.images && selected.images.length > 0 && (
               <div>
@@ -349,65 +349,62 @@ export function Component() {
             )}
 
             {/* Info */}
-            <div>
-              <p className="review-drawer__section-title">Thông tin sản phẩm</p>
-              <h2 className="review-drawer__title">{selected.title}</h2>
-
-              <div className="review-drawer__field">
-                <p className="review-drawer__field-label">Tình trạng</p>
-                <p className="review-drawer__field-value">
-                  {CONDITION_LABELS[selected.condition] ?? selected.condition}
-                </p>
+            <section className="review-product-hero">
+              <div className="review-product-hero__copy">
+                <span className="review-drawer__section-title">Thông tin sản phẩm</span>
+                <h2 className="review-drawer__title">{selected.title}</h2>
+                <span className="review-product-hero__slug">{selected.slug}</span>
               </div>
+              <Tag color={STATUS_CONFIG[selected.status]?.color}>
+                {STATUS_CONFIG[selected.status]?.label ?? selected.status}
+              </Tag>
+            </section>
 
-              <div className="review-drawer__field">
-                <p className="review-drawer__field-label">Danh mục</p>
-                <p className="review-drawer__field-value">
-                  ID: {selected.category_id}
-                </p>
+            <section className="review-product-facts" aria-label="Thuộc tính sản phẩm">
+              <div className="review-product-fact">
+                <span>Tình trạng</span>
+                <strong>{CONDITION_LABELS[selected.condition] ?? selected.condition}</strong>
               </div>
-
-              {selected.description && (
-                <div className="review-drawer__field">
-                  <p className="review-drawer__field-label">Mô tả</p>
-                  <p className="review-drawer__field-value" style={{ whiteSpace: 'pre-wrap' }}>
-                    {selected.description}
-                  </p>
-                </div>
-              )}
-
-              <div className="review-drawer__field">
-                <p className="review-drawer__field-label">Ngày tạo</p>
-                <p className="review-drawer__field-value">
-                  {dayjs(selected.created_at).format('DD/MM/YYYY HH:mm')}
-                </p>
+              <div className="review-product-fact">
+                <span>Danh mục</span>
+                <strong>ID: {selected.category_id}</strong>
               </div>
-            </div>
+              <div className="review-product-fact">
+                <span>Ngày tạo</span>
+                <strong>{dayjs(selected.created_at).format('DD/MM/YYYY HH:mm')}</strong>
+              </div>
+            </section>
+
+            {selected.description && (
+              <section className="review-description">
+                <span className="review-drawer__section-title">Mô tả</span>
+                <p>{selected.description}</p>
+              </section>
+            )}
 
             {/* Seller */}
-            <div>
-              <p className="review-drawer__section-title">Người bán</p>
+            <section className="review-seller-card">
+              <span className="review-drawer__section-title">Người bán</span>
               {selected.seller ? (
-                <>
-                  <div className="review-drawer__field">
-                    <p className="review-drawer__field-label">Username</p>
-                    <p className="review-drawer__field-value">
-                      {selected.seller.username}
-                    </p>
+                <div className="review-seller-card__body">
+                  <div>
+                    <span>Username</span>
+                    <strong>{selected.seller.username}</strong>
                   </div>
-                  <div className="review-drawer__field">
-                    <p className="review-drawer__field-label">Email</p>
-                    <p className="review-drawer__field-value">
-                      {selected.seller.email}
-                    </p>
+                  <div>
+                    <span>Email</span>
+                    <strong>{selected.seller.email}</strong>
                   </div>
-                </>
+                </div>
               ) : (
-                <p className="review-drawer__field-value">
-                  Seller ID: {selected.seller_id}
-                </p>
+                <div className="review-seller-card__body">
+                  <div>
+                    <span>Seller ID</span>
+                    <strong>{selected.seller_id}</strong>
+                  </div>
+                </div>
               )}
-            </div>
+            </section>
 
             {/* Reject reason form */}
             {rejecting && (
@@ -423,7 +420,7 @@ export function Component() {
                   showCount
                   placeholder="Nhập lý do từ chối sản phẩm này..."
                 />
-                <div style={{ display: 'flex', gap: 8 }}>
+                <div className="review-reject-form__actions">
                   <Button
                     danger
                     type="primary"
@@ -457,7 +454,7 @@ export function Component() {
                   onClick={handleApprove}
                   style={{ background: 'var(--success)', borderColor: 'var(--success)' }}
                 >
-                  Duyệt ✓
+                  Duyệt
                 </Button>
                 <Button
                   danger
@@ -465,7 +462,7 @@ export function Component() {
                   onClick={() => setRejecting(true)}
                   disabled={actionLoading}
                 >
-                  Từ chối ✗
+                  Từ chối
                 </Button>
               </div>
             )}
