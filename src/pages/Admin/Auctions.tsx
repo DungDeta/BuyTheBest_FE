@@ -20,11 +20,10 @@ import './admin.css'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type AuctionStatus = 'active' | 'scheduled' | 'ended' | 'cancelled' | 'all'
+type AuctionStatus = 'active' | 'scheduled' | 'ended' | 'closed_bin' | 'cancelled' | 'all'
 
 interface AuctionListItem {
   id: string
-  title: string
   mode: string
   status: string
   starting_price: number
@@ -33,7 +32,8 @@ interface AuctionListItem {
   starts_at: string
   ends_at: string
   created_at: string
-  seller?: { id: number; display_name: string }
+  product?: { id: string; title: string }
+  seller?: { id: string; display_name: string }
 }
 
 interface AuctionsPage {
@@ -50,7 +50,7 @@ const PAGE_SIZE = 20
 const MODE_LABELS: Record<string, string> = {
   english: 'Tiếng Anh',
   dutch: 'Hà Lan',
-  sealed: 'Kín',
+  sealed_bid: 'Kín',
   reverse: 'Ngược',
 }
 
@@ -58,6 +58,7 @@ const STATUS_CONFIG: Record<string, { color: string; label: string }> = {
   scheduled: { color: 'blue', label: 'Chờ bắt đầu' },
   active: { color: 'green', label: 'Đang diễn ra' },
   ended: { color: 'default', label: 'Đã kết thúc' },
+  closed_bin: { color: 'purple', label: 'Đã mua ngay' },
   cancelled: { color: 'red', label: 'Đã hủy' },
 }
 
@@ -65,9 +66,14 @@ const TAB_ITEMS = [
   { key: 'active', label: 'Đang diễn ra' },
   { key: 'scheduled', label: 'Chờ bắt đầu' },
   { key: 'ended', label: 'Đã kết thúc' },
+  { key: 'closed_bin', label: 'Đã mua ngay' },
   { key: 'cancelled', label: 'Đã hủy' },
   { key: 'all', label: 'Tất cả' },
 ]
+
+function auctionTitle(auction: AuctionListItem) {
+  return auction.product?.title ?? 'Phiên không có sản phẩm'
+}
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
@@ -132,7 +138,7 @@ export function Component() {
 
     modal.confirm({
       title: 'Xác nhận hủy phiên đấu giá',
-      content: `Bạn chắc chắn muốn hủy phiên "${selected.title}"? Hành động này không thể hoàn tác.`,
+      content: `Bạn chắc chắn muốn hủy phiên "${auctionTitle(selected)}"? Hành động này không thể hoàn tác.`,
       okText: 'Hủy phiên',
       okType: 'danger',
       cancelText: 'Quay lại',
@@ -161,15 +167,14 @@ export function Component() {
   const columns: ColumnsType<AuctionListItem> = [
     {
       title: 'Tiêu đề',
-      dataIndex: 'title',
       ellipsis: true,
-      render: (text, record) => (
+      render: (_: unknown, record) => (
         <button
           type="button"
           className="admin-link-btn"
           onClick={() => openDrawer(record)}
         >
-          {text}
+          {auctionTitle(record)}
         </button>
       ),
     },
@@ -235,6 +240,7 @@ export function Component() {
         loading={loading}
         pagination={false}
         size="small"
+        scroll={{ x: 860 }}
         locale={{ emptyText: <Empty description="Không có phiên nào" /> }}
       />
 
@@ -254,7 +260,7 @@ export function Component() {
       <Drawer
         open={drawerOpen}
         onClose={() => setDrawerOpen(false)}
-        title={selected?.title ?? 'Chi tiết phiên'}
+        title={selected ? auctionTitle(selected) : 'Chi tiết phiên'}
         width={480}
         destroyOnClose
       >
