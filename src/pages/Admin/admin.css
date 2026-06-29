@@ -984,3 +984,127 @@
   font-weight: 600;
   color: var(--fg);
 }
+
+/* Auction list */
+.auction-mobile-list {
+  display: none;
+}
+
+.auction-mobile-card {
+  width: 100%;
+  padding: 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--fg);
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+}
+
+.auction-mobile-card:hover {
+  border-color: var(--accent);
+}
+
+.auction-mobile-card:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.auction-mobile-card__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.auction-mobile-card__header .ant-tag {
+  flex-shrink: 0;
+  margin-inline-end: 0;
+}
+
+.auction-mobile-card__title {
+  min-width: 0;
+  font-weight: 700;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.auction-mobile-card__meta {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px 16px;
+  margin-top: 14px;
+}
+
+.auction-mobile-card__meta > span {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.auction-mobile-card__meta small {
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+}
+
+.auction-mobile-card__meta strong {
+  min-width: 0;
+  font-size: 12px;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.auction-mobile-card__seller {
+  display: block;
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+  color: var(--muted);
+  font-size: 12px;
+}
+
+.auction-mobile-card--loading {
+  cursor: default;
+}
+
+.auction-mobile-empty {
+  padding: 28px 12px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+}
+
+@media (max-width: 640px) {
+  .admin-page {
+    padding: 0;
+  }
+
+  .admin-page__header {
+    margin-bottom: 16px;
+  }
+
+  .admin-page .ant-tabs-nav {
+    margin-bottom: 12px;
+  }
+
+  .admin-page .ant-tabs-nav-wrap {
+    scrollbar-width: none;
+  }
+
+  .admin-page .ant-tabs-nav-wrap::-webkit-scrollbar {
+    display: none;
+  }
+
+  .auction-desktop-table {
+    display: none;
+  }
+
+  .auction-mobile-list {
+    display: grid;
+    gap: 10px;
+  }
+}

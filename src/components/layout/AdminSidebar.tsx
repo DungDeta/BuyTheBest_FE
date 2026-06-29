@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { Menu } from 'antd'
 import type { MenuProps } from 'antd'
@@ -13,6 +14,19 @@ import {
 
 export default function AdminSidebar() {
   const location = useLocation()
+  const sidebarRef = useRef<HTMLElement>(null)
+
+  useEffect(() => {
+    if (!window.matchMedia('(max-width: 768px)').matches) return
+
+    const frame = window.requestAnimationFrame(() => {
+      sidebarRef.current
+        ?.querySelector('.ant-menu-item-selected')
+        ?.scrollIntoView({ behavior: 'auto', block: 'nearest', inline: 'center' })
+    })
+
+    return () => window.cancelAnimationFrame(frame)
+  }, [location.pathname])
 
   const items: MenuProps['items'] = [
     { key: '/admin', icon: <DashboardOutlined />, label: <Link to="/admin">Dashboard</Link> },
@@ -25,7 +39,7 @@ export default function AdminSidebar() {
   ]
 
   return (
-    <aside className="admin-sidebar">
+    <aside ref={sidebarRef} className="admin-sidebar">
       <div className="admin-brand">
         <Link to="/admin">BTB Admin</Link>
       </div>

@@ -6,6 +6,7 @@ import {
   Empty,
   Input,
   Pagination,
+  Skeleton,
   Table,
   Tabs,
   Tag,
@@ -233,16 +234,76 @@ export function Component() {
         style={{ marginBottom: 16 }}
       />
 
-      <Table<AuctionListItem>
-        columns={columns}
-        dataSource={data?.items ?? []}
-        rowKey="id"
-        loading={loading}
-        pagination={false}
-        size="small"
-        scroll={{ x: 860 }}
-        locale={{ emptyText: <Empty description="Không có phiên nào" /> }}
-      />
+      <div className="auction-desktop-table">
+        <Table<AuctionListItem>
+          columns={columns}
+          dataSource={data?.items ?? []}
+          rowKey="id"
+          loading={loading}
+          pagination={false}
+          size="small"
+          scroll={{ x: 860 }}
+          locale={{ emptyText: <Empty description="Không có phiên nào" /> }}
+        />
+      </div>
+
+      <div className="auction-mobile-list" aria-label="Danh sách phiên đấu giá">
+        {loading ? (
+          <div className="auction-mobile-card auction-mobile-card--loading">
+            <Skeleton active title paragraph={{ rows: 3 }} />
+          </div>
+        ) : data?.items.length ? (
+          data.items.map((auction) => {
+            const statusConfig = STATUS_CONFIG[auction.status]
+
+            return (
+              <button
+                key={auction.id}
+                type="button"
+                className="auction-mobile-card"
+                onClick={() => openDrawer(auction)}
+                aria-label={`Xem chi tiết ${auctionTitle(auction)}`}
+              >
+                <span className="auction-mobile-card__header">
+                  <span className="auction-mobile-card__title">
+                    {auctionTitle(auction)}
+                  </span>
+                  <Tag color={statusConfig?.color}>
+                    {statusConfig?.label ?? auction.status}
+                  </Tag>
+                </span>
+
+                <span className="auction-mobile-card__meta">
+                  <span>
+                    <small>Chế độ</small>
+                    <strong>{MODE_LABELS[auction.mode] ?? auction.mode}</strong>
+                  </span>
+                  <span>
+                    <small>Giá hiện tại</small>
+                    <strong>{auction.current_price?.toLocaleString('vi-VN')} ₫</strong>
+                  </span>
+                  <span>
+                    <small>Lượt đặt</small>
+                    <strong>{auction.bid_count}</strong>
+                  </span>
+                  <span>
+                    <small>Kết thúc</small>
+                    <strong>{dayjs(auction.ends_at).format('DD/MM/YYYY HH:mm')}</strong>
+                  </span>
+                </span>
+
+                <span className="auction-mobile-card__seller">
+                  Người bán: {auction.seller?.display_name ?? '—'}
+                </span>
+              </button>
+            )
+          })
+        ) : (
+          <div className="auction-mobile-empty">
+            <Empty description="Không có phiên nào" />
+          </div>
+        )}
+      </div>
 
       {data && data.total > PAGE_SIZE && (
         <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 16 }}>
