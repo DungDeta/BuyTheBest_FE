@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useCallback, useRef, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { useAuthStore } from '@/store/useAuthStore'
 import { BellOutlined, SearchOutlined, UserOutlined } from '@ant-design/icons'
@@ -6,6 +6,8 @@ import { Badge, Button, Dropdown, Modal } from 'antd'
 import type { MenuProps } from 'antd'
 import { AuthPanel, type AuthMode } from '@/pages/Auth/AuthPanel'
 import { useNotifications } from '@/hooks/useNotifications'
+import { privateGet } from '@/api/api'
+import type { SearchHistoryItem, SearchHistoryResponse } from '@/types/searchHistory'
 
 export default function Header() {
   const user = useAuthStore((s) => s.user)
@@ -17,6 +19,8 @@ export default function Header() {
   const [authMode, setAuthMode] = useState<AuthMode | null>(null)
   const { unreadCount, isConnected } = useNotifications()
   const searchRef = useRef<HTMLInputElement>(null)
+  const [searchHistory, setSearchHistory] = useState<SearchHistoryItem[]>([])
+  const [historyOpen, setHistoryOpen] = useState(false)
 
   const isLoggedIn = !!accessToken && !!user && !!expiresAt && Date.now() < expiresAt
 
@@ -25,11 +29,43 @@ export default function Header() {
     navigate('/')
   }
 
+  const loadSearchHistory = useCallback(async () => {
+    if (!isLoggedIn) return
+    try {
+      const res = await privateGet<SearchHistoryResponse>('/me/search-history')
+      setSearchHistory(res.data?.items?.slice(0, 20) ?? [])
+    } catch {
+      setSearchHistory([])
+    }
+  }, [isLoggedIn])
+
+  function openSearchHistory() {
+    if (!isLoggedIn) return
+    setHistoryOpen(true)
+    void loadSearchHistory()
+  }
+
+  function closeSearchHistory(e: React.FocusEvent<HTMLFormElement>) {
+    if (e.currentTarget.contains(e.relatedTarget as Node | null)) return
+    setHistoryOpen(false)
+  }
+
+  function navigateToSearch(keyword: string) {
+    const normalized = keyword.trim()
+    if (!normalized) return
+    if (searchRef.current) searchRef.current.value = normalized
+    setSearchHistory((current) => [
+      { keyword: normalized, searched_at: new Date().toISOString() },
+      ...current.filter((item) => item.keyword !== normalized),
+    ].slice(0, 20))
+    setHistoryOpen(false)
+    navigate(`/auctions?q=${encodeURIComponent(normalized)}`)
+  }
+
   function handleSearch(e: React.FormEvent) {
     e.preventDefault()
     const q = searchRef.current?.value.trim() ?? ''
-    if (!q) return
-    navigate(`/auctions?q=${encodeURIComponent(q)}`)
+    navigateToSearch(q)
   }
 
   const userMenuItems: MenuProps['items'] = [
@@ -52,7 +88,7 @@ export default function Header() {
           </nav>
         </div>
 
-        <form className="header-search" onSubmit={handleSearch}>
+        <form className="header-search" onSubmit={handleSearch} onBlur={closeSearchHistory}>
           <SearchOutlined className="header-search__icon" />
           <input
             ref={searchRef}
@@ -60,7 +96,39 @@ export default function Header() {
             placeholder="Tìm phiên đấu giá..."
             defaultValue={searchParams.get('q') ?? ''}
             aria-label="Tìm kiếm phiên đấu giá"
+            aria-autocomplete="list"
+            aria-controls="header-search-history"
+            aria-expanded={historyOpen && searchHistory.length > 0}
+            onFocus={openSearchHistory}
           />
+          {historyOpen && searchHistory.length > 0 && (
+            <div
+              id="header-search-history"
+              className="header-search-history"
+              role="listbox"
+              aria-label="Lịch sử tìm kiếm gần đây"
+            >
+              <div className="header-search-history__heading">Tìm kiếm gần đây</div>
+              <div className="header-search-history__list">
+                {searchHistory.map((item) => (
+                  <button
+                    key={item.keyword}
+                    type="button"
+                    role="option"
+                    aria-selected="false"
+                    className="header-search-history__item"
+                    onClick={() => navigateToSearch(item.keyword)}
+                  >
+                    <SearchOutlined />
+                    <span>{item.keyword}</span>
+                  </button>
+                ))}
+              </div>
+              <Link className="header-search-history__manage" to="/search-history">
+                Quản lý lịch sử tìm kiếm
+              </Link>
+            </div>
+          )}
         </form>
 
         <div className="header-right">

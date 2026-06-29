@@ -1,15 +1,11 @@
 import { useCallback, useEffect, useState } from 'react'
-import { App, Button, Empty, Spin, Tag } from 'antd'
+import { Alert, App, Button, Empty, Spin, Tag } from 'antd'
 import { DeleteOutlined, SearchOutlined } from '@ant-design/icons'
 import { useNavigate } from 'react-router-dom'
 import { privateDelete, privateGet } from '@/api/api'
 import type { ErrorResponse } from '@/types/api'
+import type { SearchHistoryItem, SearchHistoryResponse } from '@/types/searchHistory'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
-
-interface SearchHistoryItem {
-  keyword: string
-  searched_at: string
-}
 
 export function Component() {
   useDocumentTitle('Lịch sử tìm kiếm')
@@ -18,14 +14,18 @@ export function Component() {
 
   const [items, setItems] = useState<SearchHistoryItem[]>([])
   const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState('')
 
   const fetchHistory = useCallback(async () => {
     setLoading(true)
+    setLoadError('')
     try {
-      const res = await privateGet<SearchHistoryItem[]>('/me/search-history')
-      setItems(Array.isArray(res.data) ? res.data : [])
-    } catch {
+      const res = await privateGet<SearchHistoryResponse>('/me/search-history')
+      setItems(res.data?.items ?? [])
+    } catch (err) {
       setItems([])
+      const e = err as ErrorResponse
+      setLoadError(e?.error ?? 'Không thể tải lịch sử tìm kiếm')
     } finally {
       setLoading(false)
     }
@@ -90,7 +90,19 @@ export function Component() {
         )}
       </div>
 
-      {items.length === 0 ? (
+      {loadError ? (
+        <Alert
+          type="error"
+          showIcon
+          message="Không thể tải lịch sử tìm kiếm"
+          description={loadError}
+          action={
+            <Button size="small" onClick={fetchHistory}>
+              Thử lại
+            </Button>
+          }
+        />
+      ) : items.length === 0 ? (
         <Empty description="Chưa có lịch sử tìm kiếm" />
       ) : (
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
