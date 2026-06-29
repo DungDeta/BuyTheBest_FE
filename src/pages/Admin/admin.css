@@ -135,6 +135,33 @@
   background: var(--accent-light);
 }
 
+.admin-link-btn {
+  display: inline-block;
+  max-width: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--accent, #1677ff);
+  cursor: pointer;
+  font: inherit;
+  font-weight: 600;
+  line-height: 1.4;
+  text-align: left;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.admin-link-btn:hover {
+  text-decoration: underline;
+}
+
+.admin-link-btn:focus-visible {
+  outline: 2px solid var(--accent, #1677ff);
+  outline-offset: 2px;
+  border-radius: 3px;
+}
+
 .product-cover {
   width: 56px;
   height: 56px;
