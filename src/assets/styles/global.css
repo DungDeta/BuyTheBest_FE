@@ -342,7 +342,7 @@ em {
     padding: 0;
   }
 
-  .header-right .ant-btn > span:not(.anticon) {
+  .header-right .ant-btn > span:not(.ant-btn-icon):not(.anticon) {
     display: none;
   }
 }
