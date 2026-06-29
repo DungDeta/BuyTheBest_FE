@@ -390,12 +390,16 @@ export default function AuctionList() {
             ? `/categories/${routeCategorySlug}/auctions`
             : '/auctions'
 
+      const query = (searchParams.get('q') ?? '').trim()
+      const params: Record<string, unknown> = {
+        limit: FACET_LIMIT,
+        offset: 0,
+        sort: 'ending_soon',
+      }
+      if (query) params.query = query
+
       const [auctionResult, homeResult] = await Promise.allSettled([
-        publicGet<PageResponse<AuctionItem>>(auctionPath, {
-          limit: FACET_LIMIT,
-          offset: 0,
-          sort: 'ending_soon',
-        }),
+        publicGet<PageResponse<AuctionItem>>(auctionPath, params),
         publicGet<HomeData>('/home'),
       ])
 
@@ -416,7 +420,7 @@ export default function AuctionList() {
     } finally {
       setLoading(false)
     }
-  }, [isEndingSoonRoute, isHotRoute, routeCategorySlug])
+  }, [isEndingSoonRoute, isHotRoute, routeCategorySlug, searchParams])
 
   useEffect(() => {
     fetchAuctions()
