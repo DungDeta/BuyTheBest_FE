@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState, useCallback } from 'react'
-import { Spin } from 'antd'
+import { App, Spin } from 'antd'
 import dayjs from 'dayjs'
 import { publicGet, privatePost } from '@/api/api'
 import type { ChatMessage, WsEventType } from '@/types/auction'
+import type { ErrorResponse } from '@/types/api'
 
 interface ChatMessagePayload {
   id: number
@@ -16,6 +17,7 @@ interface ChatMessagePayload {
 
 interface RoomChatProps {
   auctionId: string
+  auctionStatus: string
   isLoggedIn: boolean
   subscribe: (eventType: WsEventType, callback: (payload: unknown) => void) => void
   unsubscribe: (eventType: WsEventType, callback: (payload: unknown) => void) => void
@@ -25,13 +27,16 @@ function isSystem(msg: ChatMessage): boolean {
   return msg.message_type !== 'user'
 }
 
-export function RoomChat({ auctionId, isLoggedIn, subscribe, unsubscribe }: RoomChatProps) {
+export function RoomChat({ auctionId, auctionStatus, isLoggedIn, subscribe, unsubscribe }: RoomChatProps) {
+  const { message } = App.useApp()
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [loading, setLoading] = useState(true)
   const [inputValue, setInputValue] = useState('')
   const [sending, setSending] = useState(false)
   const bottomRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLInputElement>(null)
+
+  const isChatActive = auctionStatus === 'active'
 
   useEffect(() => {
     let cancelled = false
@@ -46,14 +51,19 @@ export function RoomChat({ auctionId, isLoggedIn, subscribe, unsubscribe }: Room
           setMessages(res.data.items)
         }
       } catch {
+        // Chat not available yet — not an error for the user
       } finally {
         if (!cancelled) setLoading(false)
       }
     }
 
-    fetchMessages()
+    if (isChatActive) {
+      fetchMessages()
+    } else {
+      setLoading(false)
+    }
     return () => { cancelled = true }
-  }, [auctionId])
+  }, [auctionId, isChatActive])
 
   const handleChatMessage = useCallback((payload: unknown) => {
     const p = payload as ChatMessagePayload
@@ -92,7 +102,10 @@ export function RoomChat({ auctionId, isLoggedIn, subscribe, unsubscribe }: Room
       await privatePost(`/auctions/${auctionId}/chat`, { content })
       setInputValue('')
       inputRef.current?.focus()
-    } catch {
+    } catch (err) {
+      const e = err as ErrorResponse
+      const errorMsg = e?.error ?? 'Không thể gửi tin nhắn. Vui lòng thử lại.'
+      message.error(errorMsg)
     } finally {
       setSending(false)
     }
@@ -109,6 +122,46 @@ export function RoomChat({ auctionId, isLoggedIn, subscribe, unsubscribe }: Room
     return (
       <div className="tab-content tab-content--center" aria-label="Đang tải chat">
         <Spin size="small" />
+      </div>
+    )
+  }
+
+  if (!isChatActive) {
+    const statusMsg = auctionStatus === 'scheduled'
+      ? 'Phòng chat sẽ mở khi phiên đấu giá bắt đầu.'
+      : 'Phiên đấu giá đã kết thúc, không thể gửi tin nhắn.'
+
+    return (
+      <div className="chat-container" aria-label="Khu vực chat">
+        <div className="tab-content auction-chat-messages" role="log" aria-live="polite">
+          {messages.length > 0 ? (
+            messages.map((msg) => {
+              const sys = isSystem(msg)
+              const time = dayjs(msg.sent_at).format('HH:mm')
+              const label = msg.sender_label ?? 'system'
+              if (sys) {
+                return (
+                  <div key={msg.id} className="chat-msg chat-msg--system">
+                    <span className="chat-msg__content">{msg.content}</span>
+                  </div>
+                )
+              }
+              return (
+                <div key={msg.id} className="chat-msg">
+                  <span className="chat-msg__sender">{label}</span>
+                  <span className="chat-msg__content">{msg.content}</span>
+                  <span className="chat-msg__time">{time}</span>
+                </div>
+              )
+            })
+          ) : (
+            <div className="tab-content--empty">Chưa có tin nhắn nào</div>
+          )}
+          <div ref={bottomRef} />
+        </div>
+        <div className="chat-footer">
+          <div className="chat-gate">{statusMsg}</div>
+        </div>
       </div>
     )
   }

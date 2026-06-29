@@ -126,6 +126,7 @@ export function RoomTabs({
         {activeTab === 'chat' && (
           <RoomChat
             auctionId={auction.id}
+            auctionStatus={auction.status}
             isLoggedIn={isLoggedIn}
             subscribe={subscribe}
             unsubscribe={unsubscribe}
