@@ -6,7 +6,7 @@ import { Badge, Button, Dropdown, Modal } from 'antd'
 import type { MenuProps } from 'antd'
 import { AuthPanel, type AuthMode } from '@/pages/Auth/AuthPanel'
 import { useNotifications } from '@/hooks/useNotifications'
-import { privateGet } from '@/api/api'
+import { privateGet, privatePost } from '@/api/api'
 import type { SearchHistoryItem, SearchHistoryResponse } from '@/types/searchHistory'
 
 export default function Header() {
@@ -39,6 +39,15 @@ export default function Header() {
     }
   }, [isLoggedIn])
 
+  const recordSearchKeyword = useCallback(async (keyword: string) => {
+    if (!isLoggedIn) return
+    try {
+      await privatePost('/me/search-history', { keyword })
+    } catch {
+      // Search should still proceed even if history persistence is unavailable.
+    }
+  }, [isLoggedIn])
+
   function openSearchHistory() {
     if (!isLoggedIn) return
     setHistoryOpen(true)
@@ -59,6 +68,7 @@ export default function Header() {
       ...current.filter((item) => item.keyword !== normalized),
     ].slice(0, 20))
     setHistoryOpen(false)
+    void recordSearchKeyword(normalized)
     navigate(`/auctions?q=${encodeURIComponent(normalized)}`)
   }
 
