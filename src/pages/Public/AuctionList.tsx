@@ -396,7 +396,7 @@ export default function AuctionList() {
         offset: 0,
         sort: 'ending_soon',
       }
-      if (query) params.query = query
+      if (query) params.q = query
 
       const [auctionResult, homeResult] = await Promise.allSettled([
         publicGet<PageResponse<AuctionItem>>(auctionPath, params),
