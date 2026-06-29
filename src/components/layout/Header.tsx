@@ -148,7 +148,12 @@ export default function Header() {
                 </Badge>
               </Link>
               <Dropdown menu={{ items: userMenuItems }} placement="bottomRight">
-                <Button type="text" icon={<UserOutlined />}>
+                <Button
+                  type="text"
+                  icon={<UserOutlined />}
+                  aria-label="Mở menu tài khoản"
+                  title="Tài khoản"
+                >
                   {user.display_name}
                 </Button>
               </Dropdown>
