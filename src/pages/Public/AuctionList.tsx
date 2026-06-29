@@ -3,8 +3,9 @@ import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import type { CSSProperties } from 'react'
 import { Link, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { Spin } from 'antd'
-import { publicGet } from '@/api/api'
+import { publicGet, privateGet } from '@/api/api'
 import type { PageResponse } from '@/types/api'
+import { useAuthStore } from '@/store/useAuthStore'
 import { getDemoProductImage } from '@/utils/demoProductImages'
 import './home.css'
 import './auction-list.css'
@@ -357,6 +358,7 @@ export default function AuctionList() {
   const navigate = useNavigate()
   const { slug } = useParams<{ slug?: string }>()
   const [searchParams, setSearchParams] = useSearchParams()
+  const accessToken = useAuthStore((s) => s.accessToken)
 
   const currentPage    = parseInt(searchParams.get('page') ?? '1', 10)
   const currentSort    = (searchParams.get('sort') ?? 'ending_soon') as SortValue
@@ -398,8 +400,9 @@ export default function AuctionList() {
       }
       if (query) params.q = query
 
+      const fetchFn = accessToken ? privateGet : publicGet
       const [auctionResult, homeResult] = await Promise.allSettled([
-        publicGet<PageResponse<AuctionItem>>(auctionPath, params),
+        fetchFn<PageResponse<AuctionItem>>(auctionPath, params),
         publicGet<HomeData>('/home'),
       ])
 
@@ -420,7 +423,7 @@ export default function AuctionList() {
     } finally {
       setLoading(false)
     }
-  }, [isEndingSoonRoute, isHotRoute, routeCategorySlug, searchParams])
+  }, [isEndingSoonRoute, isHotRoute, routeCategorySlug, searchParams, accessToken])
 
   useEffect(() => {
     fetchAuctions()
