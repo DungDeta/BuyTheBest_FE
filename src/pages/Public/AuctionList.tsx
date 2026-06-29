@@ -3,7 +3,7 @@ import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import type { CSSProperties } from 'react'
 import { Link, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { Spin } from 'antd'
-import { publicGet, privateGet } from '@/api/api'
+import { publicGet, privateGet, privatePost } from '@/api/api'
 import type { PageResponse } from '@/types/api'
 import { useAuthStore } from '@/store/useAuthStore'
 import { getDemoProductImage } from '@/utils/demoProductImages'
@@ -408,6 +408,13 @@ export default function AuctionList() {
 
       if (auctionResult.status === 'fulfilled' && auctionResult.value.data?.items) {
         setAllItems(auctionResult.value.data.items)
+        if (query && accessToken) {
+          try {
+            await privatePost('/me/search-history', { keyword: query })
+          } catch {
+            // Search results must stay usable even when history persistence fails.
+          }
+        }
       } else {
         setAllItems([])
       }

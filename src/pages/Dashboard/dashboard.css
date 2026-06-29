@@ -619,7 +619,130 @@
   padding: 32px 0;
 }
 
+.search-history-loading {
+  display: flex;
+  justify-content: center;
+  padding: 48px;
+}
+
+.search-history-page {
+  max-width: 760px;
+}
+
+.search-history-hero {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 20px;
+  border-bottom: 1px solid var(--color-border, #e5e7eb);
+  padding-bottom: 16px;
+}
+
+.search-history-hero h1 {
+  margin: 0;
+  font-family: var(--font-mono, 'JetBrains Mono', monospace);
+  font-size: 1.15rem;
+  font-weight: 800;
+}
+
+.search-history-hero p {
+  margin: 6px 0 0;
+  color: var(--color-muted, #6b7280);
+  font-size: 0.88rem;
+  line-height: 1.55;
+}
+
+.search-history-list {
+  display: grid;
+  gap: 8px;
+}
+
+.search-history-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--color-border, #e5e7eb);
+  border-radius: 8px;
+  background: #fff;
+  padding: 8px;
+}
+
+.search-history-row__main {
+  min-width: 0;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 6px;
+}
+
+.search-history-row__main:hover,
+.search-history-row__main:focus-visible {
+  background: rgba(22, 119, 255, 0.06);
+  outline: none;
+}
+
+.search-history-row__icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(22, 119, 255, 0.1);
+  color: var(--color-primary, #1677ff);
+  flex-shrink: 0;
+}
+
+.search-history-row__content {
+  min-width: 0;
+  display: grid;
+  gap: 3px;
+}
+
+.search-history-row__keyword {
+  font-family: var(--font-mono, 'JetBrains Mono', monospace);
+  font-size: 0.92rem;
+  font-weight: 700;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.search-history-row__time {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--color-muted, #6b7280);
+  font-size: 0.78rem;
+}
+
 @media (max-width: 640px) {
+  .search-history-page {
+    max-width: none;
+  }
+
+  .search-history-hero {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .search-history-row {
+    align-items: flex-start;
+  }
+
+  .search-history-row__keyword {
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
   .seller-auction-groups .ant-segmented-group {
     flex-direction: column;
   }

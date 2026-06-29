@@ -1,11 +1,18 @@
 import { useCallback, useEffect, useState } from 'react'
-import { Alert, App, Button, Empty, Spin, Tag } from 'antd'
-import { DeleteOutlined, SearchOutlined } from '@ant-design/icons'
+import { Alert, App, Button, Empty, Spin } from 'antd'
+import { ClockCircleOutlined, DeleteOutlined, SearchOutlined } from '@ant-design/icons'
 import { useNavigate } from 'react-router-dom'
+import dayjs from 'dayjs'
 import { privateDelete, privateGet } from '@/api/api'
 import type { ErrorResponse } from '@/types/api'
 import type { SearchHistoryItem, SearchHistoryResponse } from '@/types/searchHistory'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
+import './dashboard.css'
+
+function formatSearchTime(value: string) {
+  const parsed = dayjs(value)
+  return parsed.isValid() ? parsed.format('DD/MM/YYYY HH:mm') : 'Không rõ thời điểm'
+}
 
 export function Component() {
   useDocumentTitle('Lịch sử tìm kiếm')
@@ -71,18 +78,19 @@ export function Component() {
 
   if (loading) {
     return (
-      <div style={{ display: 'flex', justifyContent: 'center', padding: 48 }}>
+      <div className="search-history-loading">
         <Spin />
       </div>
     )
   }
 
   return (
-    <div className="dashboard-page">
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
-        <h1 style={{ fontFamily: 'var(--font-mono)', fontSize: 18, fontWeight: 700, margin: 0 }}>
-          Lịch sử tìm kiếm
-        </h1>
+    <div className="dashboard-page search-history-page">
+      <div className="search-history-hero">
+        <div>
+          <h1>Lịch sử tìm kiếm</h1>
+          <p>Danh sách 20 từ khóa gần nhất. Bấm vào một từ khóa để tìm lại phiên đấu giá.</p>
+        </div>
         {items.length > 0 && (
           <Button danger size="small" icon={<DeleteOutlined />} onClick={handleClearAll}>
             Xóa tất cả
@@ -105,26 +113,33 @@ export function Component() {
       ) : items.length === 0 ? (
         <Empty description="Chưa có lịch sử tìm kiếm" />
       ) : (
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+        <div className="search-history-list" role="list">
           {items.map((item) => (
-            <Tag
-              key={item.keyword}
-              closable
-              onClose={(e) => {
-                e.preventDefault()
-                handleDeleteKeyword(item.keyword)
-              }}
-              style={{
-                cursor: 'pointer',
-                padding: '4px 10px',
-                fontSize: 13,
-                fontFamily: 'var(--font-mono)',
-              }}
-              icon={<SearchOutlined />}
-              onClick={() => handleSearch(item.keyword)}
-            >
-              {item.keyword}
-            </Tag>
+            <article className="search-history-row" key={item.keyword} role="listitem">
+              <button
+                type="button"
+                className="search-history-row__main"
+                onClick={() => handleSearch(item.keyword)}
+              >
+                <span className="search-history-row__icon" aria-hidden="true">
+                  <SearchOutlined />
+                </span>
+                <span className="search-history-row__content">
+                  <span className="search-history-row__keyword">{item.keyword}</span>
+                  <span className="search-history-row__time">
+                    <ClockCircleOutlined />
+                    {formatSearchTime(item.searched_at)}
+                  </span>
+                </span>
+              </button>
+              <Button
+                type="text"
+                danger
+                icon={<DeleteOutlined />}
+                aria-label={`Xóa từ khóa ${item.keyword}`}
+                onClick={() => handleDeleteKeyword(item.keyword)}
+              />
+            </article>
           ))}
         </div>
       )}
