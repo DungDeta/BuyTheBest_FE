@@ -4,6 +4,7 @@ import {
   Avatar,
   Button,
   DatePicker,
+  Empty,
   Input,
   Modal,
   Pagination,
@@ -415,6 +416,74 @@ export function Component() {
         className="user-table"
       />
 
+      <div className="user-mobile-list" aria-label="Danh sách người dùng">
+        {loading ? (
+          <div className="user-mobile-card user-mobile-card--loading">
+            Đang tải người dùng...
+          </div>
+        ) : users.length ? (
+          users.map((item) => (
+            <div key={item.id} className="user-mobile-card">
+              <div className="user-mobile-card__header">
+                <Avatar
+                  src={item.avatar_url || undefined}
+                  icon={!item.avatar_url ? <UserOutlined /> : undefined}
+                  size={44}
+                />
+                <div className="user-mobile-card__identity">
+                  <strong>{item.display_name}</strong>
+                  <span>{item.email}</span>
+                </div>
+              </div>
+
+              <div className="user-mobile-card__badges">
+                {roleBadge(item)}
+                {statusBadge(item.status)}
+              </div>
+
+              <div className="user-mobile-card__facts">
+                <span>
+                  <small>Rating</small>
+                  <strong>{item.avg_rating > 0 ? item.avg_rating.toFixed(1) : '—'}</strong>
+                </span>
+                <span>
+                  <small>Tham gia</small>
+                  <strong>{formatDate(item.created_at)}</strong>
+                </span>
+                <span>
+                  <small>Đã bán</small>
+                  <strong>{item.total_sales.toLocaleString('vi-VN')}</strong>
+                </span>
+              </div>
+
+              <div className="user-mobile-card__actions">
+                <Button size="small" onClick={() => openDetail(item.id)}>
+                  Chi tiết
+                </Button>
+                {item.status === 'active' ? (
+                  <Button size="small" danger onClick={() => openBan(item)}>
+                    Khoá
+                  </Button>
+                ) : (
+                  <Popconfirm
+                    title="Mở khoá user này?"
+                    onConfirm={() => handleUnban(item)}
+                    okText="Xác nhận"
+                    cancelText="Huỷ"
+                  >
+                    <Button size="small">Mở khoá</Button>
+                  </Popconfirm>
+                )}
+              </div>
+            </div>
+          ))
+        ) : (
+          <div className="user-mobile-empty">
+            <Empty description="Không có người dùng nào" />
+          </div>
+        )}
+      </div>
+
       {/* Pagination */}
       <div className="user-pagination">
         <Pagination
@@ -447,7 +516,7 @@ export function Component() {
       <Modal
         open={banOpen}
         onCancel={closeBan}
-        title={`Khoá tài khoản: ${banTarget?.display_name ?? ''}`}
+        title="Khoá tài khoản"
         onOk={submitBan}
         okText="Xác nhận khoá"
         okButtonProps={{ danger: true, loading: banSubmitting }}
@@ -455,6 +524,13 @@ export function Component() {
         width={480}
       >
         <div className="ban-modal">
+          {banTarget && (
+            <div className="ban-modal__target">
+              <span>Tài khoản</span>
+              <strong>{banTarget.display_name}</strong>
+              <small>{banTarget.email}</small>
+            </div>
+          )}
           <div className="ban-modal__row">
             <span className="ban-modal__label">Loại khoá</span>
             <Radio.Group

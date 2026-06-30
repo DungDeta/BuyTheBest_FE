@@ -331,7 +331,7 @@ export function Component() {
       <Drawer
         open={drawerOpen}
         onClose={() => setDrawerOpen(false)}
-        title={selected ? auctionTitle(selected) : 'Chi tiết phiên'}
+        title="Chi tiết phiên đấu giá"
         width="min(520px, 100vw)"
         destroyOnClose
       >

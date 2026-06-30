@@ -7,6 +7,7 @@ import {
   Empty,
   Input,
   Pagination,
+  Skeleton,
   Table,
   Tabs,
   Tag,
@@ -305,6 +306,76 @@ export function Component() {
         />
       </div>
 
+      <div className="product-mobile-list" aria-label="Danh sách sản phẩm chờ duyệt">
+        {loading ? (
+          <div className="product-mobile-card product-mobile-card--loading">
+            <Skeleton active avatar title paragraph={{ rows: 3 }} />
+          </div>
+        ) : data?.items.length ? (
+          data.items.map((product) => {
+            const statusConfig = STATUS_CONFIG[product.status]
+
+            return (
+              <button
+                key={product.id}
+                type="button"
+                className="product-mobile-card"
+                onClick={() => openDrawer(product)}
+                aria-label={`Xem chi tiết sản phẩm ${product.title}`}
+              >
+                <span className="product-mobile-card__header">
+                  {product.cover?.url ? (
+                    <img
+                      src={product.cover.url}
+                      alt=""
+                      className="product-mobile-card__cover"
+                    />
+                  ) : (
+                    <span className="product-mobile-card__cover product-mobile-card__cover--empty">
+                      <PictureOutlined />
+                    </span>
+                  )}
+                  <span className="product-mobile-card__main">
+                    <span className="product-mobile-card__title">{product.title}</span>
+                    <span className="product-mobile-card__meta-line">
+                      Seller ID: {product.seller_id}
+                    </span>
+                  </span>
+                  <Tag color={statusConfig?.color}>
+                    {statusConfig?.label ?? product.status}
+                  </Tag>
+                </span>
+
+                <span className="product-mobile-card__facts">
+                  <span>
+                    <small>Tình trạng</small>
+                    <strong>{CONDITION_LABELS[product.condition] ?? product.condition}</strong>
+                  </span>
+                  <span>
+                    <small>Ngày tạo</small>
+                    <strong>{dayjs(product.created_at).format('DD/MM/YYYY HH:mm')}</strong>
+                  </span>
+                </span>
+              </button>
+            )
+          })
+        ) : (
+          <div className="product-mobile-empty">
+            <Empty
+              description={
+                status === 'pending_review'
+                  ? 'Không có sản phẩm chờ duyệt'
+                  : status === 'approved'
+                    ? 'Chưa có sản phẩm được duyệt'
+                    : status === 'rejected'
+                      ? 'Chưa có sản phẩm bị từ chối'
+                      : 'Không có sản phẩm nào'
+              }
+            />
+          </div>
+        )}
+      </div>
+
       {data && data.total > PAGE_SIZE && (
         <div style={{ marginTop: 16, textAlign: 'right' }}>
           <Pagination
@@ -319,7 +390,7 @@ export function Component() {
       )}
 
       <Drawer
-        title={selected?.title ?? 'Chi tiết sản phẩm'}
+        title="Chi tiết sản phẩm"
         open={drawerOpen}
         onClose={closeDrawer}
         width="min(600px, 100vw)"

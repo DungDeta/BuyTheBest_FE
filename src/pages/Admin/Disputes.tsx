@@ -605,6 +605,47 @@ export function Component() {
         />
       </div>
 
+      <div className="dispute-mobile-list" aria-label="Danh sách khiếu nại">
+        {loading ? (
+          <div className="dispute-mobile-card dispute-mobile-card--loading">
+            <Spin size="small" />
+            <span>Đang tải khiếu nại...</span>
+          </div>
+        ) : data?.disputes.length ? (
+          data.disputes.map((dispute) => {
+            const cfg = STATUS_CONFIG[dispute.status]
+
+            return (
+              <button
+                key={dispute.id}
+                type="button"
+                className="dispute-mobile-card"
+                onClick={() => openDrawer(dispute)}
+                aria-label={`Xem chi tiết khiếu nại ${dispute.id.slice(0, 8)}`}
+              >
+                <span className="dispute-mobile-card__header">
+                  <span className="dispute-mobile-card__id">{dispute.id.slice(0, 8)}...</span>
+                  <span className="dispute-mobile-card__tags">
+                    {cfg && <Tag color={cfg.color}>{cfg.label}</Tag>}
+                    <Tag>{REASON_LABELS[dispute.reason] ?? dispute.reason}</Tag>
+                  </span>
+                </span>
+                <span className="dispute-mobile-card__description">
+                  {dispute.description}
+                </span>
+                <span className="dispute-mobile-card__date">
+                  Tạo lúc {dayjs(dispute.created_at).format('DD/MM/YYYY HH:mm')}
+                </span>
+              </button>
+            )
+          })
+        ) : (
+          <div className="dispute-mobile-empty">
+            <Empty description="Không có khiếu nại nào" />
+          </div>
+        )}
+      </div>
+
       {data && data.total > PAGE_SIZE && (
         <div style={{ marginTop: 16, textAlign: 'right' }}>
           <Pagination
