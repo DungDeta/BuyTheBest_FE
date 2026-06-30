@@ -547,11 +547,12 @@
 
 .user-stat__value {
   font-family: var(--font-mono);
-  font-size: 22px;
+  font-size: clamp(15px, 4.1vw, 22px);
   font-weight: 700;
   letter-spacing: -0.4px;
   line-height: 1.1;
   color: var(--fg);
+  white-space: nowrap;
 }
 
 .user-stat__label {

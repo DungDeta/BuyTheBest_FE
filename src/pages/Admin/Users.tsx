@@ -12,7 +12,6 @@ import {
   Select,
   Table,
   Tag,
-  Tooltip,
 } from 'antd'
 import type { ColumnsType } from 'antd/es/table'
 import { SearchOutlined, UserOutlined } from '@ant-design/icons'
@@ -576,11 +575,9 @@ interface StatCardProps {
 
 function StatCard({ label, value }: StatCardProps) {
   return (
-    <Tooltip title={label}>
-      <div className="user-stat">
-        <span className="user-stat__value">{value}</span>
-        <span className="user-stat__label">{label}</span>
-      </div>
-    </Tooltip>
+    <div className="user-stat" aria-label={`${label}: ${value}`}>
+      <span className="user-stat__value">{value}</span>
+      <span className="user-stat__label">{label}</span>
+    </div>
   )
 }
