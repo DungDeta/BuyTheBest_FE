@@ -415,6 +415,7 @@ em {
     border-bottom: 1px solid var(--color-border);
     padding-top: 0;
     overflow-x: auto;
+    scroll-behavior: smooth;
     scrollbar-width: none;
   }
 
@@ -422,9 +423,8 @@ em {
     display: flex;
     width: max-content;
     min-width: 100%;
-    overflow-x: auto;
+    overflow: visible;
     white-space: nowrap;
-    scrollbar-width: none;
   }
 
   .sidebar::-webkit-scrollbar,
@@ -483,17 +483,18 @@ em {
     border-right: none;
     border-bottom: 2px solid var(--color-border-strong);
     padding-top: 0;
-    overflow-x: hidden;
+    overflow-x: auto;
+    scrollbar-width: none;
+    scroll-behavior: smooth;
   }
   .admin-sidebar .ant-menu {
     display: flex;
     width: max-content;
     min-width: 100%;
-    overflow-x: auto;
+    overflow: visible;
     white-space: nowrap;
-    scrollbar-width: none;
-    scroll-behavior: smooth;
   }
+  .admin-sidebar::-webkit-scrollbar,
   .admin-sidebar .ant-menu::-webkit-scrollbar {
     display: none;
   }

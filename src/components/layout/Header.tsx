@@ -157,7 +157,11 @@ export default function Header() {
                   <BellOutlined style={{ fontSize: 18 }} />
                 </Badge>
               </Link>
-              <Dropdown menu={{ items: userMenuItems }} placement="bottomRight">
+              <Dropdown
+                menu={{ items: userMenuItems }}
+                placement="bottomRight"
+                trigger={['click']}
+              >
                 <Button
                   type="text"
                   icon={<UserOutlined />}

@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { useAuthStore } from '@/store/useAuthStore'
 import {
@@ -16,6 +17,24 @@ import type { MenuProps } from 'antd'
 export default function Sidebar() {
   const location = useLocation()
   const { isSeller } = useAuthStore()
+  const sidebarRef = useRef<HTMLElement>(null)
+
+  useEffect(() => {
+    if (!window.matchMedia('(max-width: 768px)').matches) return
+
+    const frame = window.requestAnimationFrame(() => {
+      const sidebar = sidebarRef.current
+      const selected = sidebarRef.current?.querySelector<HTMLElement>(
+        '.ant-menu-item-selected',
+      )
+
+      if (sidebar && selected) {
+        sidebar.scrollLeft = Math.max(0, selected.offsetLeft - 12)
+      }
+    })
+
+    return () => window.cancelAnimationFrame(frame)
+  }, [location.pathname])
 
   const items: MenuProps['items'] = [
     { key: '/dashboard', icon: <DashboardOutlined />, label: <Link to="/dashboard">Tổng quan</Link> },
@@ -32,7 +51,7 @@ export default function Sidebar() {
   ]
 
   return (
-    <aside className="sidebar">
+    <aside ref={sidebarRef} className="sidebar">
       <Menu
         mode="inline"
         selectedKeys={[location.pathname]}
