@@ -39,6 +39,13 @@ const FILTER_TABS: { value: StatusFilter; label: string }[] = [
   { value: 'ended', label: 'Đã kết thúc' },
 ]
 
+const EMPTY_MESSAGES: Record<StatusFilter, string> = {
+  all: 'Bạn chưa theo dõi phiên nào',
+  active: 'Không có phiên đang diễn ra trong danh sách theo dõi',
+  scheduled: 'Không có phiên sắp diễn ra trong danh sách theo dõi',
+  ended: 'Không có phiên đã kết thúc trong danh sách theo dõi',
+}
+
 const PAGE_SIZE = 24
 
 function WatchlistCountdown({ endTime, status }: { endTime: string; status: string }) {
@@ -247,7 +254,7 @@ export function Component() {
       ) : items.length === 0 ? (
         <div className="watchlist-empty" role="status">
           <span className="watchlist-empty__icon" aria-hidden="true">WCH</span>
-          Bạn chưa theo dõi phiên nào
+          {EMPTY_MESSAGES[filter]}
         </div>
       ) : (
         <>
