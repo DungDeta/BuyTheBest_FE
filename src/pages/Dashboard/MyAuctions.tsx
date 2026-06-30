@@ -85,6 +85,15 @@ function auctionModeLabel(mode: Auction['mode']): string {
   return map[mode]
 }
 
+function AuctionListFact({ label, value }: { label: string; value: string }) {
+  return (
+    <span className="my-auctions-item__fact">
+      <span className="my-auctions-item__fact-label">{label}</span>
+      <strong className="my-auctions-item__fact-value">{value}</strong>
+    </span>
+  )
+}
+
 function WatchingTab() {
   const { message } = App.useApp()
   const navigate = useNavigate()
@@ -170,13 +179,15 @@ function WatchingTab() {
               <div className="my-auctions-item__info">
                 <div className="my-auctions-item__title">{item.title}</div>
                 <div className="my-auctions-item__meta">
-                  {auctionStatusLabel(item.status)} · {item.bid_count} lượt đặt
+                  {auctionStatusLabel(item.status)}
                 </div>
               </div>
               <div className="my-auctions-item__right">
-                <span className="my-auctions-item__price">
-                  {item.current_price.toLocaleString('vi-VN')} ₫
-                </span>
+                <AuctionListFact
+                  label="Giá hiện tại"
+                  value={`${item.current_price.toLocaleString('vi-VN')} ₫`}
+                />
+                <AuctionListFact label="Lượt đặt" value={item.bid_count.toLocaleString('vi-VN')} />
               </div>
             </button>
           )
@@ -278,9 +289,10 @@ function BoughtTab() {
                 </div>
               </div>
               <div className="my-auctions-item__right">
-                <span className="my-auctions-item__price">
-                  {order.final_price.toLocaleString('vi-VN')} ₫
-                </span>
+                <AuctionListFact
+                  label="Giá trị"
+                  value={`${order.final_price.toLocaleString('vi-VN')} ₫`}
+                />
               </div>
             </button>
           )
@@ -447,10 +459,14 @@ function CreatedTab() {
                       <div className="my-auctions-item__meta">{timeLabel}</div>
                     </div>
                     <div className="my-auctions-item__right">
-                      <span className="my-auctions-item__price">
-                        {auction.current_price.toLocaleString('vi-VN')} ₫
-                      </span>
-                      <span className="my-auctions-item__bids">{auction.bid_count} lượt đặt</span>
+                      <AuctionListFact
+                        label="Giá hiện tại"
+                        value={`${auction.current_price.toLocaleString('vi-VN')} ₫`}
+                      />
+                      <AuctionListFact
+                        label="Lượt đặt"
+                        value={auction.bid_count.toLocaleString('vi-VN')}
+                      />
                     </div>
                   </button>
                 )

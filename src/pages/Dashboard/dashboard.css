@@ -569,21 +569,41 @@
   display: flex;
   flex-direction: column;
   align-items: flex-end;
-  gap: 4px;
+  gap: 6px;
   flex-shrink: 0;
+  min-width: 124px;
 }
 
-.my-auctions-item__price {
-  font-size: 0.9rem;
-  font-weight: 700;
-  color: var(--color-primary, #1677ff);
-  font-family: var(--font-mono, 'JetBrains Mono', monospace);
+.my-auctions-item__fact {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  min-width: 0;
 }
 
-.my-auctions-item__bids {
-  font-size: 0.72rem;
+.my-auctions-item__fact-label {
   color: var(--color-muted, #8c8c8c);
   font-family: var(--font-mono, 'JetBrains Mono', monospace);
+  font-size: 0.64rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  line-height: 1.2;
+  text-transform: uppercase;
+}
+
+.my-auctions-item__fact-value {
+  color: var(--color-primary, #1677ff);
+  font-size: 0.9rem;
+  font-weight: 700;
+  font-family: var(--font-mono, 'JetBrains Mono', monospace);
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.my-auctions-item__fact + .my-auctions-item__fact .my-auctions-item__fact-value {
+  color: var(--color-fg, #111827);
+  font-size: 0.82rem;
 }
 
 /* ---------- seller auctions tab ---------- */
@@ -756,13 +776,20 @@
   .my-auctions-item__right {
     grid-column: 2;
     width: 100%;
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(104px, 1fr));
+    gap: 8px;
+    min-width: 0;
   }
 
   .my-auctions-item__meta {
     line-height: 1.5;
+  }
+
+  .my-auctions-item__fact {
+    align-items: flex-start;
+    padding-top: 8px;
+    border-top: 1px solid var(--color-border, #e8e8e8);
   }
 
   .my-auctions-item__title {
