@@ -12,6 +12,7 @@ import './chat.css'
 
 const PAGE_LIMIT = 30
 const MAX_CHAT_IMAGE_BYTES = 5 * 1024 * 1024
+const MAX_CHAT_MESSAGE_CHARS = 2000
 const CHAT_IMAGE_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp'])
 
 function mergeMessagesChronologically(...groups: PrivateMessage[][]): PrivateMessage[] {
@@ -1154,6 +1155,7 @@ export function Component() {
                 onChange={handleInputChange}
                 onKeyDown={handleInputKeyDown}
                 disabled={sending}
+                maxLength={MAX_CHAT_MESSAGE_CHARS}
                 rows={1}
                 aria-label="Nhập tin nhắn"
               />
