@@ -660,24 +660,7 @@ export function Component() {
       )}
 
       <Drawer
-        title={
-          selected ? (
-            <span>
-              Khiếu nại{' '}
-              <span
-                style={{
-                  fontFamily: 'var(--font-mono)',
-                  fontSize: 12,
-                  color: 'var(--muted)',
-                }}
-              >
-                {selected.id.slice(0, 8)}…
-              </span>
-            </span>
-          ) : (
-            'Chi tiết khiếu nại'
-          )
-        }
+        title="Chi tiết khiếu nại"
         open={drawerOpen}
         onClose={closeDrawer}
         width="min(600px, 100vw)"
