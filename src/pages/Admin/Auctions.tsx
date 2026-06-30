@@ -332,7 +332,7 @@ export function Component() {
         open={drawerOpen}
         onClose={() => setDrawerOpen(false)}
         title={selected ? auctionTitle(selected) : 'Chi tiết phiên'}
-        width="min(480px, 100vw)"
+        width="min(520px, 100vw)"
         destroyOnClose
       >
         {selected && (

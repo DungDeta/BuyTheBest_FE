@@ -1662,19 +1662,43 @@
     grid-template-columns: 1fr;
   }
 
-  .auction-detail-hero,
-  .auction-timeline-item {
+  .auction-detail-hero {
     align-items: flex-start;
     flex-direction: column;
   }
 
   .auction-detail-row {
-    grid-template-columns: 1fr;
-    gap: 4px;
+    grid-template-columns: minmax(92px, 36%) minmax(0, 1fr);
+    gap: 10px;
+    align-items: center;
+    padding: 10px 12px;
   }
 
   .auction-timeline-item strong {
-    text-align: left;
+    max-width: 58%;
     white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
+  .user-detail-modal__header {
+    gap: 14px;
+    padding: 20px 18px 0;
+  }
+
+  .user-stats-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    padding: 0 18px 20px;
+  }
+
+  .user-stats-grid--small {
+    padding: 0;
+  }
+
+  .user-stat {
+    padding: 12px 12px 10px;
+  }
+
+  .user-stat__value {
+    font-size: 18px;
   }
 }
