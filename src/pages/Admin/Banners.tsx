@@ -28,8 +28,9 @@ import './admin.css'
 
 interface BannerResponse {
   id: number
+  title: string
   image_url: string
-  link_url: string
+  link_url?: string | null
   sort_order: number
   is_active: boolean
   start_at: string | null
@@ -46,6 +47,7 @@ interface UploadUrlResponse {
 }
 
 interface BannerFormValues {
+  title: string
   link_url: string
   sort_order: number
   is_active: boolean
@@ -109,7 +111,7 @@ export function Component() {
     setImageUrl(null)
     setImageObjectKey(null)
     form.resetFields()
-    form.setFieldsValue({ sort_order: 0, is_active: true })
+    form.setFieldsValue({ title: '', sort_order: 0, is_active: true })
     setModalOpen(true)
   }
 
@@ -120,7 +122,8 @@ export function Component() {
     setImageUrl(banner.image_url)
     setImageObjectKey(null) // no re-upload needed unless user picks new file
     form.setFieldsValue({
-      link_url: banner.link_url,
+      title: banner.title,
+      link_url: banner.link_url ?? '',
       sort_order: banner.sort_order,
       is_active: banner.is_active,
       start_at: banner.start_at ? dayjs(banner.start_at) : null,
@@ -202,8 +205,9 @@ export function Component() {
     setSubmitting(true)
     try {
       const payload: Record<string, unknown> = {
+        title: values.title.trim(),
         image_url: imageUrl,
-        link_url: values.link_url,
+        link_url: values.link_url?.trim() || undefined,
         sort_order: values.sort_order ?? 0,
         is_active: values.is_active,
         start_at: values.start_at ? values.start_at.toISOString() : undefined,
@@ -250,6 +254,7 @@ export function Component() {
     setToggling(banner.id)
     try {
       await privatePut(`/admin/banners/${banner.id}`, {
+        title: banner.title,
         image_url: banner.image_url,
         link_url: banner.link_url,
         sort_order: banner.sort_order,
@@ -273,6 +278,10 @@ export function Component() {
       : '∞'
     const end = banner.end_at ? dayjs(banner.end_at).format('DD/MM/YY') : '∞'
     return `${start} → ${end}`
+  }
+
+  function bannerTitle(banner: BannerResponse): string {
+    return banner.title?.trim() || `Banner #${banner.id}`
   }
 
   return (
@@ -302,11 +311,12 @@ export function Component() {
               <div className="banner-card__image">
                 <img
                   src={banner.image_url}
-                  alt={`Banner ${banner.id}`}
+                  alt={bannerTitle(banner)}
                   className="banner-card__img"
                 />
               </div>
               <div className="banner-card__info">
+                <h2 className="banner-card__title">{bannerTitle(banner)}</h2>
                 <div className="banner-card__meta">
                   <span className="banner-card__order">
                     #{banner.sort_order}
@@ -317,15 +327,21 @@ export function Component() {
                     <Tag color="default">Ẩn</Tag>
                   )}
                 </div>
-                <a
-                  href={banner.link_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="banner-card__link"
-                >
-                  <LinkOutlined style={{ marginRight: 4 }} />
-                  {banner.link_url}
-                </a>
+                {banner.link_url ? (
+                  <a
+                    href={banner.link_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="banner-card__link"
+                  >
+                    <LinkOutlined style={{ marginRight: 4 }} />
+                    {banner.link_url}
+                  </a>
+                ) : (
+                  <span className="banner-card__link banner-card__link--empty">
+                    Chưa gắn đường dẫn
+                  </span>
+                )}
                 <div className="banner-card__schedule">
                   {formatSchedule(banner)}
                 </div>
@@ -426,8 +442,23 @@ export function Component() {
             form={form}
             layout="vertical"
             onFinish={handleSubmit}
-            initialValues={{ sort_order: 0, is_active: true }}
+            initialValues={{ title: '', sort_order: 0, is_active: true }}
           >
+            <Form.Item
+              label="Tiêu đề"
+              name="title"
+              rules={[
+                { required: true, whitespace: true, message: 'Nhập tiêu đề banner' },
+                { max: 120, message: 'Tiêu đề tối đa 120 ký tự' },
+              ]}
+            >
+              <Input
+                maxLength={120}
+                showCount
+                placeholder="Ví dụ: Tuần lễ đấu giá máy ảnh film"
+              />
+            </Form.Item>
+
             <Form.Item
               label="Link URL"
               name="link_url"

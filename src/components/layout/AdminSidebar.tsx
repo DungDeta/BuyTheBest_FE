@@ -20,9 +20,14 @@ export default function AdminSidebar() {
     if (!window.matchMedia('(max-width: 768px)').matches) return
 
     const frame = window.requestAnimationFrame(() => {
-      sidebarRef.current
-        ?.querySelector('.ant-menu-item-selected')
-        ?.scrollIntoView({ behavior: 'auto', block: 'nearest', inline: 'center' })
+      const menu = sidebarRef.current?.querySelector<HTMLElement>('.ant-menu')
+      const selected = sidebarRef.current?.querySelector<HTMLElement>(
+        '.ant-menu-item-selected',
+      )
+
+      if (menu && selected) {
+        menu.scrollLeft = Math.max(0, selected.offsetLeft - 12)
+      }
     })
 
     return () => window.cancelAnimationFrame(frame)

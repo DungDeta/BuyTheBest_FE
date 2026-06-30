@@ -42,6 +42,7 @@ interface HomeData {
 
 interface Banner {
   id: number
+  title?: string
   image_url: string
   link_url?: string
   sort_order: number
@@ -164,6 +165,10 @@ function productImageUrl(product: Auction['product'] | undefined, title?: string
   const images = product?.images ?? []
   const primary = images.find((img) => img.is_primary) ?? images[0]
   return primary?.thumbnail_url || primary?.url || getDemoProductImage(title ?? product?.title)
+}
+
+function bannerTitle(banner: Banner): string {
+  return banner.title?.trim() || `Banner #${banner.id}`
 }
 
 function remainingMs(endsAt: string): number {
@@ -327,7 +332,14 @@ export default function Home() {
               target={banner.link_url ? '_blank' : undefined}
               rel="noopener noreferrer"
             >
-              <img src={banner.image_url} alt="" loading="eager" />
+              <img src={banner.image_url} alt={bannerTitle(banner)} loading="eager" />
+              <span className="banner-slide__copy">
+                <span className="banner-slide__eyebrow">Banner nổi bật</span>
+                <span className="banner-slide__title">{bannerTitle(banner)}</span>
+                {banner.link_url && (
+                  <span className="banner-slide__cta">Xem ngay</span>
+                )}
+              </span>
             </a>
           ))}
         </section>

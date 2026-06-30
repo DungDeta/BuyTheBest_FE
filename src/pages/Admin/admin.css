@@ -803,6 +803,15 @@
   gap: 6px;
 }
 
+.banner-card__title {
+  margin: 0;
+  color: var(--fg);
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
+}
+
 .banner-card__meta {
   display: flex;
   align-items: center;
@@ -818,14 +827,18 @@
 .banner-card__link {
   font-size: 12px;
   color: var(--accent, #1677ff);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  line-height: 1.35;
+  overflow-wrap: anywhere;
   text-decoration: none;
 }
 
 .banner-card__link:hover {
   text-decoration: underline;
+}
+
+.banner-card__link--empty {
+  color: var(--muted);
+  font-style: italic;
 }
 
 .banner-card__schedule {

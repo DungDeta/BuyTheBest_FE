@@ -7,21 +7,80 @@
 .home-banners {
   display: flex;
   gap: 12px;
-  padding: 16px 24px;
+  max-width: 1100px;
+  margin: 16px auto 0;
+  padding: 0 24px;
   overflow-x: auto;
   scroll-snap-type: x mandatory;
 }
+
 .home-banners .banner-slide {
+  position: relative;
   flex: 0 0 100%;
+  min-height: 180px;
+  aspect-ratio: 5 / 1;
   scroll-snap-align: start;
-  border-radius: 12px;
+  border: 2px solid var(--border-strong);
+  border-radius: var(--radius);
   overflow: hidden;
   display: block;
+  color: #fff;
+  background: var(--surface);
+  text-decoration: none;
 }
+
+.home-banners .banner-slide::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, rgba(15, 23, 42, 0.72), rgba(15, 23, 42, 0.18) 58%, rgba(15, 23, 42, 0.04));
+  pointer-events: none;
+}
+
 .home-banners .banner-slide img {
   width: 100%;
-  height: auto;
+  height: 100%;
+  object-fit: cover;
   display: block;
+}
+
+.banner-slide__copy {
+  position: absolute;
+  z-index: 1;
+  left: 24px;
+  bottom: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-width: min(520px, calc(100% - 48px));
+}
+
+.banner-slide__eyebrow {
+  color: rgba(255, 255, 255, 0.78);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.75px;
+  text-transform: uppercase;
+}
+
+.banner-slide__title {
+  display: block;
+  font-family: var(--font-display);
+  font-size: clamp(20px, 3vw, 30px);
+  font-weight: 700;
+  line-height: 1.18;
+}
+
+.banner-slide__cta {
+  width: fit-content;
+  margin-top: 4px;
+  padding: 6px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  border-radius: 2px;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
 }
 
 /* ---------- CATEGORY BAR ---------- */
@@ -576,6 +635,19 @@
   }
 }
 @media (max-width: 480px) {
+  .home-banners {
+    padding: 0 16px;
+  }
+  .home-banners .banner-slide {
+    min-height: 170px;
+    aspect-ratio: 1.85 / 1;
+  }
+  .banner-slide__copy {
+    left: 16px;
+    right: 16px;
+    bottom: 16px;
+    max-width: none;
+  }
   .trust-bar {
     flex-direction: column;
     align-items: flex-start;
