@@ -35,7 +35,7 @@ type StatusFilter = 'all' | 'active' | 'scheduled' | 'ended'
 const FILTER_TABS: { value: StatusFilter; label: string }[] = [
   { value: 'all', label: 'Tất cả' },
   { value: 'active', label: 'Đang diễn ra' },
-  { value: 'scheduled', label: 'Sắp kết thúc' },
+  { value: 'scheduled', label: 'Sắp diễn ra' },
   { value: 'ended', label: 'Đã kết thúc' },
 ]
 

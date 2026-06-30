@@ -136,14 +136,17 @@ export function Component() {
     async function fetchDashboard() {
       setLoading(true)
       try {
-        const [ordersRes, watchlistRes, notifRes] = await Promise.allSettled([
-          privateGet<OrdersResponse>('/orders', { role: 'buyer', limit: 5 }),
-          privateGet<WatchlistResponse>('/watchlist', {
-            limit: 4,
-            sort: 'ending_soon',
-          }),
-          privateGet<UnreadCountResponse>('/notifications/unread-count'),
-        ])
+        const [ordersRes, watchlistTotalRes, endingSoonRes, notifRes] =
+          await Promise.allSettled([
+            privateGet<OrdersResponse>('/orders', { role: 'buyer', limit: 5 }),
+            privateGet<WatchlistResponse>('/watchlist', { limit: 1 }),
+            privateGet<WatchlistResponse>('/watchlist', {
+              limit: 4,
+              sort: 'ending_soon',
+              status: 'active',
+            }),
+            privateGet<UnreadCountResponse>('/notifications/unread-count'),
+          ])
 
         if (cancelled) return
 
@@ -153,12 +156,12 @@ export function Component() {
           ordersRes.status === 'fulfilled' ? (ordersRes.value.data?.total ?? 0) : 0
 
         const watchItems =
-          watchlistRes.status === 'fulfilled'
-            ? (watchlistRes.value.data?.items ?? [])
+          endingSoonRes.status === 'fulfilled'
+            ? (endingSoonRes.value.data?.items ?? [])
             : []
         const watchTotal =
-          watchlistRes.status === 'fulfilled'
-            ? (watchlistRes.value.data?.total ?? 0)
+          watchlistTotalRes.status === 'fulfilled'
+            ? (watchlistTotalRes.value.data?.total ?? 0)
             : 0
 
         const notifCount =
@@ -252,7 +255,7 @@ export function Component() {
 
         {data.endingSoon.length === 0 ? (
           <p style={{ color: 'var(--color-muted)', fontSize: '0.85rem' }}>
-            Chưa có phiên nào đang theo dõi.{' '}
+            Không có phiên đang theo dõi nào sắp kết thúc.{' '}
             <Link to="/auctions">Khám phá ngay →</Link>
           </p>
         ) : (
