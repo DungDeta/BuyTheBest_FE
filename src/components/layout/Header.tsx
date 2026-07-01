@@ -12,6 +12,7 @@ import type { SearchHistoryItem, SearchHistoryResponse } from '@/types/searchHis
 export default function Header() {
   const user = useAuthStore((s) => s.user)
   const accessToken = useAuthStore((s) => s.accessToken)
+  const refreshToken = useAuthStore((s) => s.refreshToken)
   const expiresAt = useAuthStore((s) => s.expiresAt)
   const logout = useAuthStore((s) => s.logout)
   const navigate = useNavigate()
@@ -24,9 +25,17 @@ export default function Header() {
 
   const isLoggedIn = !!accessToken && !!user && !!expiresAt && Date.now() < expiresAt
 
-  const handleLogout = () => {
-    logout()
-    navigate('/')
+  const handleLogout = async () => {
+    try {
+      if (refreshToken) {
+        await privatePost('/auth/logout', { refresh_token: refreshToken })
+      }
+    } catch {
+      // Local logout must still succeed when the server session is already unavailable.
+    } finally {
+      logout()
+      navigate('/login', { replace: true })
+    }
   }
 
   const loadSearchHistory = useCallback(async () => {
