@@ -930,9 +930,11 @@
   align-items: center;
   gap: 8px;
   min-width: 0;
+  overflow: hidden;
 }
 
 .category-node__name {
+  min-width: 0;
   font-size: 13px;
   font-weight: 600;
   color: var(--fg);
@@ -942,6 +944,8 @@
 }
 
 .category-node__slug {
+  min-width: 0;
+  flex: 1 1 0;
   font-family: var(--font-mono);
   font-size: 11px;
   color: var(--muted);
@@ -1400,10 +1404,6 @@
   overflow-wrap: anywhere;
 }
 
-.dispute-summary-card__notes {
-  grid-column: 1 / -1;
-}
-
 /* ─── Dispute evidence grid ───────────────────────────────────── */
 
 .dispute-evidence-mini {
@@ -1625,27 +1625,48 @@
 }
 
 .dispute-current-state {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
 }
 
 .dispute-current-state .ant-tag {
   width: fit-content;
+  margin-inline-end: 0;
 }
 
-.dispute-current-state p {
-  margin: 0;
+.dispute-current-state__row {
+  display: grid;
+  grid-template-columns: 126px minmax(0, 1fr);
+  gap: 14px;
+  align-items: start;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--border);
+}
+
+.dispute-current-state__row:last-child {
+  border-bottom: 0;
+}
+
+.dispute-current-state__row > span {
+  color: var(--muted);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.55px;
+  text-transform: uppercase;
+}
+
+.dispute-current-state__row strong {
+  min-width: 0;
   color: var(--fg);
   font-size: 13px;
+  font-weight: 650;
   line-height: 1.55;
+  overflow-wrap: anywhere;
 }
 
 .dispute-current-state__notes {
-  padding: 10px 12px;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  background: var(--paper-2, #fafafa);
   white-space: pre-wrap;
 }
 
@@ -1872,6 +1893,15 @@
 }
 
 /* Auction list */
+.auction-row {
+  cursor: pointer;
+}
+
+.auction-row:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+
 .auction-mobile-list {
   display: none;
 }
@@ -2039,6 +2069,49 @@
     grid-template-columns: 1fr;
   }
 
+  .category-node {
+    min-width: 0;
+    align-items: flex-start;
+    gap: 8px;
+    padding-right: 8px;
+  }
+
+  .category-node__info {
+    display: grid;
+    grid-template-areas:
+      "name order"
+      "slug slug";
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 3px 6px;
+    align-items: center;
+  }
+
+  .category-node__name {
+    grid-area: name;
+  }
+
+  .category-node__slug {
+    grid-area: slug;
+    width: 100%;
+  }
+
+  .category-node__order {
+    grid-area: order;
+  }
+
+  .category-node__actions {
+    gap: 4px;
+  }
+
+  .category-node__actions .ant-btn {
+    width: 28px;
+    padding-inline: 0;
+  }
+
+  .category-node__children {
+    margin-left: 12px;
+  }
+
   .auction-detail-hero {
     align-items: flex-start;
     flex-direction: column;
@@ -2048,6 +2121,12 @@
     grid-template-columns: minmax(92px, 36%) minmax(0, 1fr);
     gap: 10px;
     align-items: center;
+    padding: 10px 12px;
+  }
+
+  .dispute-current-state__row {
+    grid-template-columns: minmax(92px, 36%) minmax(0, 1fr);
+    gap: 10px;
     padding: 10px 12px;
   }
 

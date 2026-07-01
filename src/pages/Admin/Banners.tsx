@@ -10,6 +10,7 @@ import {
   Popconfirm,
   Switch,
   Tag,
+  Tooltip,
 } from 'antd'
 import {
   DeleteOutlined,
@@ -352,12 +353,16 @@ export function Component() {
                   checked={banner.is_active}
                   loading={toggling === banner.id}
                   onChange={() => handleToggleActive(banner)}
+                  aria-label={`${banner.is_active ? 'Ẩn' : 'Hiển thị'} ${bannerTitle(banner)}`}
                 />
-                <Button
-                  size="small"
-                  icon={<EditOutlined />}
-                  onClick={() => openEdit(banner)}
-                />
+                <Tooltip title="Sửa banner">
+                  <Button
+                    size="small"
+                    icon={<EditOutlined />}
+                    aria-label={`Sửa ${bannerTitle(banner)}`}
+                    onClick={() => openEdit(banner)}
+                  />
+                </Tooltip>
                 <Popconfirm
                   title="Xoá banner này?"
                   onConfirm={() => handleDelete(banner.id)}
@@ -365,12 +370,15 @@ export function Component() {
                   cancelText="Huỷ"
                   okButtonProps={{ danger: true }}
                 >
-                  <Button
-                    size="small"
-                    danger
-                    icon={<DeleteOutlined />}
-                    loading={deleting === banner.id}
-                  />
+                  <Tooltip title="Xoá banner">
+                    <Button
+                      size="small"
+                      danger
+                      icon={<DeleteOutlined />}
+                      aria-label={`Xoá ${bannerTitle(banner)}`}
+                      loading={deleting === banner.id}
+                    />
+                  </Tooltip>
                 </Popconfirm>
               </div>
             </div>

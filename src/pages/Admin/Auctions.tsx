@@ -253,6 +253,19 @@ export function Component() {
           pagination={false}
           size="small"
           scroll={{ x: 860 }}
+          onRow={(record) => ({
+            onClick: () => openDrawer(record),
+            onKeyDown: (event) => {
+              if (event.key === 'Enter' || event.key === ' ') {
+                event.preventDefault()
+                openDrawer(record)
+              }
+            },
+            tabIndex: 0,
+            role: 'button',
+            'aria-label': `Xem chi tiết ${auctionTitle(record)}`,
+            className: 'auction-row',
+          })}
           locale={{ emptyText: <Empty description="Không có phiên nào" /> }}
         />
       </div>

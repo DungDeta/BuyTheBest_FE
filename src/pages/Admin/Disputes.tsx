@@ -375,12 +375,6 @@ export function Component() {
                 <strong>{dayjs(selected.resolved_at).format('DD/MM/YYYY HH:mm')}</strong>
               </div>
             )}
-            {selected.admin_notes && (
-              <div className="dispute-summary-card__notes">
-                <span>Ghi chú admin</span>
-                <strong>{selected.admin_notes}</strong>
-              </div>
-            )}
           </div>
         </section>
 
@@ -553,18 +547,26 @@ export function Component() {
           <div className="dispute-drawer__section">
             <div className="dispute-drawer__section-title">Trạng thái hiện tại</div>
             <div className="dispute-current-state">
-              {cfg && <Tag color={cfg.color}>{cfg.label}</Tag>}
+              <div className="dispute-current-state__row">
+                <span>Trạng thái</span>
+                <div>{cfg && <Tag color={cfg.color}>{cfg.label}</Tag>}</div>
+              </div>
               {selected.resolution && selected.resolution !== 'pending' && (
-                <p>
-                  Quyết định:{' '}
-                  {RESOLUTION_OPTIONS.find((o) => o.value === selected.resolution)?.label ??
-                    selected.resolution}
-                </p>
+                <div className="dispute-current-state__row">
+                  <span>Quyết định</span>
+                  <strong>
+                    {RESOLUTION_OPTIONS.find((o) => o.value === selected.resolution)?.label ??
+                      selected.resolution}
+                  </strong>
+                </div>
               )}
               {selected.admin_notes && (
-                <p className="dispute-current-state__notes">
-                  Ghi chú: {selected.admin_notes}
-                </p>
+                <div className="dispute-current-state__row">
+                  <span>Ghi chú admin</span>
+                  <strong className="dispute-current-state__notes">
+                    {selected.admin_notes}
+                  </strong>
+                </div>
               )}
             </div>
           </div>

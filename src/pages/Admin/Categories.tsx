@@ -145,6 +145,7 @@ function CategoryTreeNode({
             <Button
               size="small"
               icon={<EditOutlined />}
+              aria-label={`Sửa danh mục ${node.name}`}
               onClick={() => onEdit(node)}
             />
           </Tooltip>
@@ -161,6 +162,7 @@ function CategoryTreeNode({
                 size="small"
                 danger
                 icon={<DeleteOutlined />}
+                aria-label={`Xoá danh mục ${node.name}`}
                 loading={deleting === node.id}
               />
             </Tooltip>
