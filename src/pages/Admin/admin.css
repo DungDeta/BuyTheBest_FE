@@ -13,6 +13,32 @@
   color: var(--fg);
 }
 
+.auction-detail-drawer,
+.review-drawer,
+.dispute-drawer,
+.user-detail-modal__body,
+.ban-modal {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-variant-numeric: tabular-nums;
+}
+
+.auction-detail-drawer :is(input, textarea, button, .ant-btn, .ant-input, .ant-input-number, .ant-tag),
+.review-drawer :is(input, textarea, button, .ant-btn, .ant-input, .ant-input-number, .ant-tag),
+.dispute-drawer :is(input, textarea, button, .ant-btn, .ant-input, .ant-input-number, .ant-tag),
+.user-detail-modal__body :is(button, .ant-btn, .ant-tag),
+.ban-modal :is(input, textarea, button, .ant-btn, .ant-input, .ant-radio-wrapper, .ant-picker) {
+  font-family: inherit;
+}
+
+.ant-drawer .ant-drawer-title,
+.user-detail-modal .ant-modal-title {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-size: 20px;
+  font-weight: 760;
+  letter-spacing: -0.25px;
+  line-height: 1.25;
+}
+
 /* ─── Date range picker ───────────────────────────────────────── */
 
 .date-range {
@@ -373,7 +399,7 @@
   font-family: var(--font-mono);
   font-size: 11px;
   line-height: 1.4;
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
 }
 
 .review-product-facts {
@@ -413,7 +439,7 @@
   font-size: 13px;
   font-weight: 700;
   line-height: 1.35;
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
 }
 
 .review-description {
@@ -1663,7 +1689,7 @@
   font-size: 13px;
   font-weight: 650;
   line-height: 1.55;
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
 }
 
 .dispute-current-state__notes {
@@ -1716,7 +1742,7 @@
   font-weight: 750;
   letter-spacing: -0.25px;
   line-height: 1.35;
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
 }
 
 .auction-detail-id {
@@ -1724,7 +1750,7 @@
   font-family: var(--font-mono);
   font-size: 11px;
   line-height: 1.4;
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
 }
 
 .auction-metric-grid {
@@ -1767,7 +1793,7 @@
   font-size: 16px;
   font-weight: 750;
   line-height: 1.2;
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
 }
 
 .auction-metric--primary strong {
@@ -1816,7 +1842,7 @@
   font-size: 13px;
   font-weight: 650;
   line-height: 1.45;
-  overflow-wrap: anywhere;
+  overflow-wrap: break-word;
 }
 
 .auction-timeline-list {
@@ -1825,9 +1851,9 @@
 }
 
 .auction-timeline-item {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: minmax(112px, 34%) minmax(0, 1fr);
+  align-items: start;
   gap: 12px;
   padding: 11px 13px;
   border: 1px solid var(--border);
@@ -1840,8 +1866,10 @@
   font-family: var(--font-mono);
   font-size: 12px;
   font-weight: 700;
-  text-align: right;
-  white-space: nowrap;
+  line-height: 1.45;
+  text-align: left;
+  white-space: normal;
+  overflow-wrap: break-word;
 }
 
 .auction-danger-zone {
@@ -2069,6 +2097,57 @@
     grid-template-columns: 1fr;
   }
 
+  .review-product-facts {
+    gap: 0;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--surface);
+  }
+
+  .review-product-fact {
+    display: grid;
+    grid-template-columns: minmax(88px, 34%) minmax(0, 1fr);
+    gap: 10px;
+    align-items: start;
+    border: 0;
+    border-bottom: 1px solid var(--border);
+    border-radius: 0;
+    padding: 12px 14px;
+  }
+
+  .review-product-fact:last-child {
+    border-bottom: 0;
+  }
+
+  .review-seller-card__body {
+    gap: 0;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+  }
+
+  .review-seller-card__body > div {
+    display: grid;
+    grid-template-columns: minmax(88px, 34%) minmax(0, 1fr);
+    gap: 10px;
+    align-items: start;
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .review-seller-card__body > div:last-child {
+    border-bottom: 0;
+  }
+
+  .review-product-fact,
+  .review-seller-card,
+  .dispute-summary-card,
+  .auction-detail-hero,
+  .auction-danger-zone {
+    padding: 14px;
+  }
+
   .category-node {
     min-width: 0;
     align-items: flex-start;
@@ -2118,22 +2197,17 @@
   }
 
   .auction-detail-row {
-    grid-template-columns: minmax(92px, 36%) minmax(0, 1fr);
+    grid-template-columns: minmax(88px, 34%) minmax(0, 1fr);
     gap: 10px;
-    align-items: center;
+    align-items: start;
     padding: 10px 12px;
   }
 
-  .dispute-current-state__row {
-    grid-template-columns: minmax(92px, 36%) minmax(0, 1fr);
+  .dispute-current-state__row,
+  .auction-timeline-item {
+    grid-template-columns: minmax(88px, 34%) minmax(0, 1fr);
     gap: 10px;
     padding: 10px 12px;
-  }
-
-  .auction-timeline-item strong {
-    max-width: 58%;
-    white-space: normal;
-    overflow-wrap: anywhere;
   }
 
   .user-detail-modal__header {
