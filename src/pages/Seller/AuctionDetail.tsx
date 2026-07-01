@@ -19,6 +19,7 @@ import type { ErrorResponse } from '@/types/api'
 import type { Auction } from '@/types/auction'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import { getDemoProductImage } from '@/utils/demoProductImages'
+import { getProductConditionLabel } from '@/utils/productDisplay'
 import './seller.css'
 
 const STATUS_INFO: Record<
@@ -190,10 +191,15 @@ export function Component() {
           ) : (
             <div className="seller-auction-detail__image-placeholder">Không có ảnh</div>
           )}
-          <div>
+          <div className="seller-auction-detail__product-copy">
             <span className="seller-auction-detail__section-label">Sản phẩm</span>
             <h2>{title}</h2>
-            {auction.product?.condition && <p>Tình trạng: {auction.product.condition}</p>}
+            {auction.product?.condition && (
+              <div className="seller-auction-detail__product-fact">
+                <span>Tình trạng</span>
+                <strong>{getProductConditionLabel(auction.product.condition)}</strong>
+              </div>
+            )}
           </div>
         </section>
 

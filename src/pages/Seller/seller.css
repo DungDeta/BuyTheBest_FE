@@ -634,9 +634,32 @@
   line-height: 1.35;
 }
 
-.seller-auction-detail__product p {
-  margin: 0;
+.seller-auction-detail__product-copy {
+  min-width: 0;
+}
+
+.seller-auction-detail__product-fact {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding-top: 10px;
+  border-top: 1px solid var(--color-border, #e8e8e8);
+  font-family: var(--font-mono, 'JetBrains Mono', monospace);
+}
+
+.seller-auction-detail__product-fact span {
   color: var(--color-muted, #8c8c8c);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.seller-auction-detail__product-fact strong {
+  font-size: 13px;
+  overflow-wrap: anywhere;
+  text-align: right;
 }
 
 .seller-auction-detail__section-label {

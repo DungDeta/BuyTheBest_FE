@@ -1,4 +1,5 @@
 import type { Auction } from '@/types/auction'
+import { getProductConditionLabel } from '@/utils/productDisplay'
 
 interface DescriptionTabProps {
   auction: Auction
@@ -97,7 +98,8 @@ export function DescriptionTab({ auction }: DescriptionTabProps) {
           <div className="desc-product__title">{description}</div>
           {auction.product?.condition && (
             <div className="desc-product__condition">
-              Tình trạng: <strong>{auction.product.condition}</strong>
+              <span>Tình trạng</span>
+              <strong>{getProductConditionLabel(auction.product.condition)}</strong>
             </div>
           )}
         </div>

@@ -1,13 +1,5 @@
 import type { Order, OrderProductImage } from '@/types/order'
-
-const PRODUCT_CONDITION_LABELS: Record<string, string> = {
-  new: 'Mới',
-  like_new: 'Như mới',
-  good: 'Tốt',
-  fair: 'Bình thường',
-  used: 'Đã sử dụng',
-  refurbished: 'Tân trang',
-}
+import { getProductConditionLabel } from '@/utils/productDisplay'
 
 const AUCTION_MODE_LABELS: Record<string, string> = {
   english: 'Giá tăng dần',
@@ -40,7 +32,7 @@ export function getOrderProductTitle(order: Order): string {
 
 export function getOrderProductConditionLabel(condition?: string | null): string | null {
   if (!condition) return null
-  return PRODUCT_CONDITION_LABELS[condition] ?? condition
+  return getProductConditionLabel(condition)
 }
 
 export function getOrderAuctionModeLabel(mode?: string | null): string | null {

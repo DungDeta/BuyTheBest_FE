@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom'
 import dayjs from 'dayjs'
 import type { Auction } from '@/types/auction'
 import { getDemoProductImage } from '@/utils/demoProductImages'
+import { getProductConditionLabel } from '@/utils/productDisplay'
 
 interface ProductHeroProps {
   auction: Auction
@@ -23,16 +24,6 @@ function modeBadgeLabel(mode: Auction['mode']): string {
     case 'dutch':      return 'D · Dutch'
     case 'sealed_bid': return 'S · Sealed'
     case 'reverse':    return 'R · Reverse'
-  }
-}
-
-function conditionLabel(condition: string): string {
-  switch (condition) {
-    case 'new':      return 'Mới'
-    case 'like_new': return 'Như mới'
-    case 'good':     return 'Tốt'
-    case 'fair':     return 'Bình thường'
-    default:         return condition
   }
 }
 
@@ -76,7 +67,7 @@ export function ProductHero({ auction }: ProductHeroProps) {
               <div className="gallery__placeholder">
                 <span className="gallery__placeholder-title">{title}</span>
                 <span className="gallery__placeholder-sub">
-                  {conditionLabel(product?.condition ?? '')}
+                  {getProductConditionLabel(product?.condition, '')}
                 </span>
               </div>
             )}
@@ -111,7 +102,7 @@ export function ProductHero({ auction }: ProductHeroProps) {
           <div className="product-info__meta">
             {product?.condition && (
               <span className="condition-badge">
-                {conditionLabel(product.condition)}
+                {getProductConditionLabel(product.condition)}
               </span>
             )}
             {(auction.view_count ?? 0) > 0 && (
@@ -136,7 +127,7 @@ export function ProductHero({ auction }: ProductHeroProps) {
             <div className="product-spec">
               <span className="product-spec__label">Tình trạng</span>
               <span className="product-spec__value">
-                {conditionLabel(product?.condition ?? '—')}
+                {getProductConditionLabel(product?.condition)}
               </span>
             </div>
             <div className="product-spec">

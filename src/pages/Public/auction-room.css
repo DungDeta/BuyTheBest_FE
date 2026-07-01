@@ -1742,6 +1742,12 @@
 }
 
 .desc-product__condition {
+  display: grid;
+  grid-template-columns: minmax(88px, 0.35fr) minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  padding-top: 6px;
+  border-top: 1px solid var(--border);
   font-family: var(--font-mono);
   font-size: 11px;
   color: var(--muted);
@@ -1749,6 +1755,8 @@
 
 .desc-product__condition strong {
   color: var(--fg);
+  overflow-wrap: anywhere;
+  text-align: right;
 }
 
 .desc-rules {
