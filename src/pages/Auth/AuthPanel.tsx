@@ -172,7 +172,7 @@ export function AuthPanel({ initialTab = 'login', variant = 'page', onSuccess }:
                   <input
                     type="email"
                     className="auth-form-input"
-                    placeholder="ban@example.com"
+                    placeholder="you@example.com"
                     value={loginEmail}
                     onChange={(e) => setLoginEmail(e.target.value)}
                   />
@@ -188,7 +188,7 @@ export function AuthPanel({ initialTab = 'login', variant = 'page', onSuccess }:
                   <input
                     type="password"
                     className="auth-form-input"
-                    placeholder="••••••••"
+                    placeholder="Nhập mật khẩu"
                     value={loginPassword}
                     onChange={(e) => setLoginPassword(e.target.value)}
                   />
@@ -226,7 +226,7 @@ export function AuthPanel({ initialTab = 'login', variant = 'page', onSuccess }:
                   <input
                     type="email"
                     className="auth-form-input"
-                    placeholder="ban@example.com"
+                    placeholder="you@example.com"
                     value={regEmail}
                     onChange={(e) => setRegEmail(e.target.value)}
                   />
@@ -237,7 +237,7 @@ export function AuthPanel({ initialTab = 'login', variant = 'page', onSuccess }:
                   <input
                     type="password"
                     className="auth-form-input"
-                    placeholder="••••••••"
+                    placeholder="Tối thiểu 8 ký tự"
                     value={regPassword}
                     onChange={(e) => setRegPassword(e.target.value)}
                   />
@@ -273,7 +273,7 @@ export function AuthPanel({ initialTab = 'login', variant = 'page', onSuccess }:
           <input
             type="email"
             className="auth-form-input"
-            placeholder="ban@example.com"
+            placeholder="you@example.com"
             value={forgotEmail}
             onChange={(e) => setForgotEmail(e.target.value)}
           />

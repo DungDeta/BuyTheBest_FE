@@ -62,7 +62,7 @@ export function Component() {
                   { type: 'email', message: 'Email không hợp lệ' },
                 ]}
               >
-                <Input placeholder="ban@example.com" autoComplete="email" />
+                <Input placeholder="you@example.com" autoComplete="email" />
               </Form.Item>
 
               <Form.Item style={{ marginBottom: 0, marginTop: 8 }}>

@@ -260,6 +260,7 @@
 
 .auth-form-input::placeholder {
   color: var(--muted);
+  opacity: 0.68;
 }
 
 .auth-label-row {
