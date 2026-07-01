@@ -160,7 +160,8 @@ export function AuthPanel({ initialTab = 'login', variant = 'page', onSuccess }:
             <Spin spinning={loading}>
               <div className="oauth-row">
                 <button className="oauth-btn" onClick={handleGoogleOAuth} type="button">
-                  <span className="ico" style={{ color: 'var(--accent)' }}>G</span> Google
+                  <span className="ico" style={{ color: 'var(--accent)' }}>G</span>
+                  Đăng nhập bằng Google
                 </button>
               </div>
               <div className="auth-divider">hoặc bằng email</div>
@@ -202,7 +203,8 @@ export function AuthPanel({ initialTab = 'login', variant = 'page', onSuccess }:
             <Spin spinning={loading}>
               <div className="oauth-row">
                 <button className="oauth-btn" onClick={handleGoogleOAuth} type="button">
-                  <span className="ico" style={{ color: 'var(--accent)' }}>G</span> Google
+                  <span className="ico" style={{ color: 'var(--accent)' }}>G</span>
+                  Đăng ký bằng Google
                 </button>
               </div>
               <div className="auth-divider">hoặc bằng email</div>
