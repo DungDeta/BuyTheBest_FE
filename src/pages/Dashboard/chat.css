@@ -14,6 +14,28 @@
   font-family: var(--font-mono);
 }
 
+.app-layout--chat {
+  height: 100dvh;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.app-layout--chat .dashboard-container {
+  min-height: 0;
+}
+
+.dashboard-content--chat {
+  display: flex;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.dashboard-content--chat .chat-shell {
+  flex: 1;
+  height: auto;
+  min-height: 0;
+}
+
 /* ── Sidebar ─────────────────────────────────────────── */
 
 .chat-sidebar {
