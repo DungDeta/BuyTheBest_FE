@@ -20,13 +20,13 @@ export default function AdminSidebar() {
     if (!window.matchMedia('(max-width: 768px)').matches) return
 
     const frame = window.requestAnimationFrame(() => {
-      const sidebar = sidebarRef.current
+      const menu = sidebarRef.current?.querySelector<HTMLElement>('.ant-menu')
       const selected = sidebarRef.current?.querySelector<HTMLElement>(
         '.ant-menu-item-selected',
       )
 
-      if (sidebar && selected) {
-        sidebar.scrollLeft = Math.max(0, selected.offsetLeft - 12)
+      if (menu && selected) {
+        menu.scrollLeft = Math.max(0, selected.offsetLeft - 12)
       }
     })
 
