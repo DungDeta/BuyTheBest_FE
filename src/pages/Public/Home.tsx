@@ -38,6 +38,9 @@ interface CategoryOption {
 interface HomeData {
   categories?: CategoryOption[]
   banners?: Banner[]
+  ending_soon?: Auction[]
+  hot?: Auction[]
+  newest?: Auction[]
 }
 
 interface Banner {
@@ -56,6 +59,17 @@ const FALLBACK_CATEGORIES: CategoryOption[] = [
   { name: 'Sneakers', slug: 'sneakers' },
   { name: 'Sưu tầm',  slug: 'suu-tam' },
   { name: 'Gaming',   slug: 'gaming' },
+]
+
+const FALLBACK_BANNERS: Banner[] = [
+  {
+    id: -1,
+    title: 'Khám phá phiên đấu giá nổi bật',
+    image_url: '/demo-products/iphone-15-pro-max.png',
+    link_url: '/auctions',
+    sort_order: 0,
+    is_active: true,
+  },
 ]
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -184,6 +198,19 @@ function isAuctionEndingSoon(auction: Auction): boolean {
   return auction.status === 'active' && remaining > 0 && remaining <= ENDING_SOON_WINDOW_MS
 }
 
+function uniqueAuctions(items: Auction[]): Auction[] {
+  const seen = new Set<string>()
+  const result: Auction[] = []
+
+  for (const item of items) {
+    if (!item?.id || seen.has(item.id)) continue
+    seen.add(item.id)
+    result.push(item)
+  }
+
+  return result
+}
+
 function categoryLabel(category: CategoryOption): string {
   return CATEGORY_LABELS[category.slug] ?? category.name
 }
@@ -269,8 +296,10 @@ function AuctionCard({ auction }: AuctionCardProps) {
 export default function Home() {
   useDocumentTitle('Trang chủ')
   const [liveAuctions, setLiveAuctions] = useState<Auction[]>([])
+  const [featuredAuctions, setFeaturedAuctions] = useState<Auction[]>([])
+  const [homeEndingSoon, setHomeEndingSoon] = useState<Auction[]>([])
   const [categories, setCategories] = useState<CategoryOption[]>(FALLBACK_CATEGORIES)
-  const [banners, setBanners] = useState<Banner[]>([])
+  const [banners, setBanners] = useState<Banner[]>(FALLBACK_BANNERS)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -279,23 +308,50 @@ export default function Home() {
     async function fetchAuctions() {
       setLoading(true)
       try {
-        const [auctionResult, homeResult] = await Promise.allSettled([
+        const [auctionResult, fallbackAuctionResult, homeResult] = await Promise.allSettled([
           publicGet<PageResponse<Auction>>('/auctions', {
             status: 'active',
             limit: 100,
             sort: 'ending_soon',
           }),
+          publicGet<PageResponse<Auction>>('/auctions', {
+            limit: 8,
+            sort: 'newest',
+          }),
           publicGet<HomeData>('/home'),
         ])
 
-        if (!cancelled && auctionResult.status === 'fulfilled' && auctionResult.value.data?.items) {
-          setLiveAuctions(auctionResult.value.data.items.filter(isAuctionLive))
-        }
+        if (cancelled) return
+
+        const activeItems =
+          auctionResult.status === 'fulfilled'
+            ? auctionResult.value.data?.items ?? []
+            : []
+        const fallbackItems =
+          fallbackAuctionResult.status === 'fulfilled'
+            ? fallbackAuctionResult.value.data?.items ?? []
+            : []
+        const homeData = homeResult.status === 'fulfilled' ? homeResult.value.data : undefined
+        const homeItems = uniqueAuctions([
+          ...(homeData?.ending_soon ?? []),
+          ...(homeData?.hot ?? []),
+          ...(homeData?.newest ?? []),
+        ])
+        const liveItems = uniqueAuctions([...activeItems, ...homeItems]).filter(isAuctionLive)
+        const fallbackFeatured = uniqueAuctions([
+          ...homeItems,
+          ...fallbackItems,
+        ]).filter((auction) => !isAuctionLive(auction))
+
+        setLiveAuctions(liveItems)
+        setFeaturedAuctions(fallbackFeatured.slice(0, 8))
+        setHomeEndingSoon(uniqueAuctions([...(homeData?.ending_soon ?? []), ...liveItems]))
+
         if (!cancelled && homeResult.status === 'fulfilled') {
-          const nextCategories = homeResult.value.data?.categories
+          const nextCategories = homeData?.categories
           setCategories(nextCategories?.length ? nextCategories : FALLBACK_CATEGORIES)
-          const nextBanners = homeResult.value.data?.banners
-          if (nextBanners?.length) setBanners(nextBanners)
+          const nextBanners = homeData?.banners
+          setBanners(nextBanners?.length ? nextBanners : FALLBACK_BANNERS)
         }
       } catch {
       } finally {
@@ -307,8 +363,10 @@ export default function Home() {
     return () => { cancelled = true }
   }, [])
 
-  const endingSoon = liveAuctions.filter(isAuctionEndingSoon)
+  const endingSoon = uniqueAuctions([...homeEndingSoon, ...liveAuctions]).filter(isAuctionEndingSoon)
   const ongoingAuctions = liveAuctions.filter((auction) => !isAuctionEndingSoon(auction))
+  const primaryAuctions = ongoingAuctions.length > 0 ? ongoingAuctions : featuredAuctions
+  const showingLiveAuctions = ongoingAuctions.length > 0
 
   return (
     <>
@@ -383,21 +441,28 @@ export default function Home() {
       {/* ── Live auctions ─────────────────────────────────────────── */}
       <section className="home-section">
         <div className="section-header">
-          <h2>Đang <em>diễn ra</em></h2>
-          <span className="count">{ongoingAuctions.length} phiên</span>
-          <span className="live-pill">
-            <span className="live-dot" />
-            Live
+          <h2>
+            {showingLiveAuctions ? 'Đang ' : 'Phiên '}
+            <em>{showingLiveAuctions ? 'diễn ra' : 'nổi bật'}</em>
+          </h2>
+          <span className="count">
+            {primaryAuctions.length} {showingLiveAuctions ? 'phiên' : 'phiên gợi ý'}
           </span>
+          {showingLiveAuctions && (
+            <span className="live-pill">
+              <span className="live-dot" />
+              Live
+            </span>
+          )}
         </div>
 
         {loading ? (
           <div className="home-loading"><Spin /></div>
-        ) : ongoingAuctions.length === 0 ? (
-          <div className="home-empty">Chưa có phiên nào đang diễn ra</div>
+        ) : primaryAuctions.length === 0 ? (
+          <div className="home-empty">Chưa có phiên đấu giá nào để hiển thị</div>
         ) : (
           <div className="listings">
-            {ongoingAuctions.map((a) => <AuctionCard key={a.id} auction={a} />)}
+            {primaryAuctions.map((a) => <AuctionCard key={a.id} auction={a} />)}
           </div>
         )}
       </section>

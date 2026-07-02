@@ -15,7 +15,8 @@ export interface CountdownResult {
 
 function computeCountdown(endTime: string, serverOffsetMs: number): CountdownResult {
   const nowMs = Date.now() + serverOffsetMs
-  const diffMs = Math.max(0, new Date(endTime).getTime() - nowMs)
+  const endMs = new Date(endTime).getTime()
+  const diffMs = Number.isNaN(endMs) ? 0 : Math.max(0, endMs - nowMs)
   const wholeSeconds = Math.floor(diffMs / 1000)
   const hours = Math.floor(wholeSeconds / 3600)
   const minutes = Math.floor((wholeSeconds % 3600) / 60)

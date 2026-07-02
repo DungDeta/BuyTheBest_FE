@@ -44,23 +44,23 @@ interface Review {
 
 interface SellerProfile {
   id: string
-  user_id: number
-  username: string
-  shop_name: string
-  description: string
-  avatar_url?: string
-  banner_url?: string
-  shipping_policy: string
-  return_policy: string
-  rating_avg: number
-  review_count: number
-  total_revenue: number
-  total_auctions: number
-  active_auctions: number
-  successful_transactions: number
-  member_since: string
-  open_auctions: Auction[]
-  latest_reviews: Review[]
+  user_id?: number
+  username?: string | null
+  shop_name?: string | null
+  description?: string | null
+  avatar_url?: string | null
+  banner_url?: string | null
+  shipping_policy?: string | null
+  return_policy?: string | null
+  rating_avg?: number | null
+  review_count?: number | null
+  total_revenue?: number | null
+  total_auctions?: number | null
+  active_auctions?: number | null
+  successful_transactions?: number | null
+  member_since?: string | null
+  open_auctions?: Auction[] | null
+  latest_reviews?: Review[] | null
 }
 
 type TabId = 'auctions' | 'reviews'
@@ -70,6 +70,7 @@ function formatPrice(amount: number): string {
 }
 
 function formatDate(iso: string): string {
+  if (!iso) return 'Chưa cập nhật'
   return new Date(iso).toLocaleDateString('vi-VN', {
     day: '2-digit',
     month: '2-digit',
@@ -78,6 +79,7 @@ function formatDate(iso: string): string {
 }
 
 function formatJoinDate(iso: string): string {
+  if (!iso) return 'Chưa cập nhật'
   return new Date(iso).toLocaleDateString('vi-VN', {
     month: 'long',
     year: 'numeric',
@@ -87,6 +89,21 @@ function formatJoinDate(iso: string): string {
 function renderStars(rating: number): string {
   const full = Math.round(Math.max(0, Math.min(5, rating)))
   return '★'.repeat(full) + '☆'.repeat(5 - full)
+}
+
+function cleanText(value: string | null | undefined): string {
+  return typeof value === 'string' ? value.trim() : ''
+}
+
+function getSellerDisplayName(seller: SellerProfile): string {
+  const name = cleanText(seller.shop_name) || cleanText(seller.username)
+  if (name) return name
+  if (typeof seller.user_id === 'number') return `Người bán #${seller.user_id}`
+  return seller.id ? `Người bán #${seller.id.slice(0, 8)}` : 'Người bán'
+}
+
+function getInitials(name: string): string {
+  return name.trim().slice(0, 2).toUpperCase() || 'BT'
 }
 
 function modeLabel(mode: Auction['mode']): string {
@@ -182,7 +199,7 @@ export default function SellerProfile() {
   const [error, setError] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState<TabId>('auctions')
 
-  useDocumentTitle(seller ? (seller.shop_name || seller.username) : 'Hồ sơ người bán')
+  useDocumentTitle(seller ? getSellerDisplayName(seller) : 'Hồ sơ người bán')
 
   useEffect(() => {
     if (!id) return
@@ -216,6 +233,10 @@ export default function SellerProfile() {
 
   async function handleMessageSeller() {
     if (!seller || contacting) return
+    if (typeof seller.user_id !== 'number') {
+      message.error('Không thể xác định người bán để mở cuộc trò chuyện')
+      return
+    }
     setContacting(true)
     try {
       const res = await privatePost<{ id: number }>('/conversations', {
@@ -249,11 +270,14 @@ export default function SellerProfile() {
     )
   }
 
-  const displayName = seller.shop_name || seller.username
-  const avatarLetters = displayName.slice(0, 2).toUpperCase()
+  const displayName = getSellerDisplayName(seller)
+  const avatarLetters = getInitials(displayName)
   const isOwner = currentUser?.id === seller.id
   const auctions = seller.open_auctions ?? []
   const reviews = seller.latest_reviews ?? []
+  const ratingAvg = seller.rating_avg ?? 0
+  const reviewCount = seller.review_count ?? 0
+  const successfulTransactions = seller.successful_transactions ?? 0
 
   return (
     <>
@@ -293,7 +317,7 @@ export default function SellerProfile() {
                   <div>
                     <h1 className="sp-shop-name" id="sp-shop-name">{displayName}</h1>
                     <span className="sp-member-since">
-                      Tham gia từ {formatJoinDate(seller.member_since)}
+                      Tham gia từ {formatJoinDate(seller.member_since ?? '')}
                     </span>
                   </div>
                   {isAuthenticated && !isOwner && (
@@ -319,22 +343,22 @@ export default function SellerProfile() {
               <div className="sp-stat-divider" aria-hidden="true" />
               <div className="sp-stat">
                 <span className="sp-stat-val">
-                  {seller.successful_transactions.toLocaleString('vi-VN')}
+                  {successfulTransactions.toLocaleString('vi-VN')}
                 </span>
                 <span className="sp-stat-label">Giao dịch thành công</span>
               </div>
               <div className="sp-stat-divider" aria-hidden="true" />
               <div className="sp-stat">
                 <span className="sp-stat-val sp-stars">
-                  {renderStars(seller.rating_avg)}
-                  <span className="sp-rating-num">{seller.rating_avg.toFixed(1)}</span>
+                  {renderStars(ratingAvg)}
+                  <span className="sp-rating-num">{ratingAvg.toFixed(1)}</span>
                 </span>
                 <span className="sp-stat-label">Đánh giá trung bình</span>
               </div>
               <div className="sp-stat-divider" aria-hidden="true" />
               <div className="sp-stat">
                 <span className="sp-stat-val">
-                  {seller.review_count.toLocaleString('vi-VN')}
+                  {reviewCount.toLocaleString('vi-VN')}
                 </span>
                 <span className="sp-stat-label">Lượt đánh giá</span>
               </div>
@@ -376,7 +400,7 @@ export default function SellerProfile() {
             className={activeTab === 'reviews' ? 'sp-tab sp-tab-active' : 'sp-tab'}
             onClick={() => setActiveTab('reviews')}
           >
-            Đánh giá <span>{seller.review_count}</span>
+            Đánh giá <span>{reviewCount}</span>
           </button>
         </div>
 

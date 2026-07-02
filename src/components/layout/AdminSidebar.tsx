@@ -26,7 +26,7 @@ export default function AdminSidebar() {
       )
 
       if (menu && selected) {
-        menu.scrollLeft = Math.max(0, selected.offsetLeft - 12)
+        menu.scrollLeft = selected.offsetLeft > 16 ? selected.offsetLeft : 0
       }
     })
 

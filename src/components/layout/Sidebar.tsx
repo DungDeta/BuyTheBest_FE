@@ -29,7 +29,7 @@ export default function Sidebar() {
       )
 
       if (sidebar && selected) {
-        sidebar.scrollLeft = Math.max(0, selected.offsetLeft - 12)
+        sidebar.scrollLeft = selected.offsetLeft
       }
     })
 

@@ -56,6 +56,17 @@ interface DisputeListResponse {
   total: number
 }
 
+interface DisputeListEnvelope {
+  disputes?: AdminDispute[]
+  items?: AdminDispute[]
+  data?: AdminDispute[] | {
+    disputes?: AdminDispute[]
+    items?: AdminDispute[]
+    total?: number
+  }
+  total?: number
+}
+
 type MessagesResponse = DisputeMessage[] | { data: DisputeMessage[] }
 type EvidenceResponse = DisputeEvidence[] | { data: DisputeEvidence[] }
 
@@ -112,12 +123,35 @@ const ROLE_LABEL: Record<string, string> = {
 
 function extractMessages(raw: MessagesResponse | undefined): DisputeMessage[] {
   if (!raw) return []
-  return Array.isArray(raw) ? raw : raw.data
+  return Array.isArray(raw) ? raw : raw.data ?? []
 }
 
 function extractEvidence(raw: EvidenceResponse | undefined): DisputeEvidence[] {
   if (!raw) return []
-  return Array.isArray(raw) ? raw : raw.data
+  return Array.isArray(raw) ? raw : raw.data ?? []
+}
+
+function normalizeDisputeList(raw: DisputeListEnvelope | AdminDispute[] | null | undefined): DisputeListResponse {
+  if (Array.isArray(raw)) {
+    return { disputes: raw, total: raw.length }
+  }
+
+  const nested = raw?.data
+  const disputes =
+    raw?.disputes ??
+    raw?.items ??
+    (Array.isArray(nested) ? nested : nested?.disputes ?? nested?.items) ??
+    []
+  const total =
+    raw?.total ??
+    (Array.isArray(nested) ? undefined : nested?.total) ??
+    disputes.length
+
+  return { disputes, total }
+}
+
+function shortDisputeId(id: string | undefined): string {
+  return id ? id.slice(0, 8) : 'N/A'
 }
 
 function msgRole(msg: DisputeMessage): 'admin' | 'buyer' | 'seller' {
@@ -171,8 +205,8 @@ export function Component() {
         }
         if (filter !== 'all') params.status = filter
 
-        const res = await privateGet<DisputeListResponse>('/admin/disputes', params)
-        setData(res.data)
+        const res = await privateGet<DisputeListEnvelope | AdminDispute[]>('/admin/disputes', params)
+        setData(normalizeDisputeList(res.data))
       } catch (err) {
         const e = err as ErrorResponse
         message.error(e?.error ?? 'Không tải được danh sách khiếu nại')
@@ -282,7 +316,7 @@ export function Component() {
             color: 'var(--muted)',
           }}
         >
-          {id.slice(0, 8)}…
+          {shortDisputeId(id)}…
         </span>
       ),
     },
@@ -577,6 +611,8 @@ export function Component() {
 
   // ─── Render ───────────────────────────────────────────────────────
 
+  const disputes = data?.disputes ?? []
+
   return (
     <div className="admin-page">
       <h1 className="admin-page__title">Quản lý khiếu nại</h1>
@@ -592,7 +628,7 @@ export function Component() {
         <Table<AdminDispute>
           rowKey="id"
           columns={columns}
-          dataSource={data?.disputes ?? []}
+          dataSource={disputes}
           loading={loading}
           pagination={false}
           onRow={(record) => ({
@@ -613,8 +649,8 @@ export function Component() {
             <Spin size="small" />
             <span>Đang tải khiếu nại...</span>
           </div>
-        ) : data?.disputes.length ? (
-          data.disputes.map((dispute) => {
+        ) : disputes.length ? (
+          disputes.map((dispute) => {
             const cfg = STATUS_CONFIG[dispute.status]
 
             return (
@@ -623,10 +659,10 @@ export function Component() {
                 type="button"
                 className="dispute-mobile-card"
                 onClick={() => openDrawer(dispute)}
-                aria-label={`Xem chi tiết khiếu nại ${dispute.id.slice(0, 8)}`}
+                aria-label={`Xem chi tiết khiếu nại ${shortDisputeId(dispute.id)}`}
               >
                 <span className="dispute-mobile-card__header">
-                  <span className="dispute-mobile-card__id">{dispute.id.slice(0, 8)}...</span>
+                  <span className="dispute-mobile-card__id">{shortDisputeId(dispute.id)}...</span>
                   <span className="dispute-mobile-card__tags">
                     {cfg && <Tag color={cfg.color}>{cfg.label}</Tag>}
                     <Tag>{REASON_LABELS[dispute.reason] ?? dispute.reason}</Tag>

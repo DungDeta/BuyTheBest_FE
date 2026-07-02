@@ -427,6 +427,11 @@ em {
     white-space: nowrap;
   }
 
+  .sidebar .ant-menu::after {
+    content: '';
+    flex: 0 0 max(96px, calc(100vw - 140px));
+  }
+
   .sidebar::-webkit-scrollbar,
   .sidebar .ant-menu::-webkit-scrollbar {
     display: none;
@@ -498,6 +503,10 @@ em {
     scroll-behavior: smooth;
     scrollbar-width: none;
     white-space: nowrap;
+  }
+  .admin-sidebar .ant-menu::after {
+    content: '';
+    flex: 0 0 max(128px, calc(100vw - 96px));
   }
   .admin-sidebar::-webkit-scrollbar,
   .admin-sidebar .ant-menu::-webkit-scrollbar {

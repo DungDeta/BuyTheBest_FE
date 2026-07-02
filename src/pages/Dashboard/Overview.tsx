@@ -16,7 +16,8 @@ interface WatchlistItem {
   title: string
   current_price: number
   bid_count: number
-  end_time: string
+  end_time?: string
+  ends_at?: string
   status: string
   thumbnail_url?: string | null
   added_at: string
@@ -47,7 +48,12 @@ interface DashboardData {
 }
 
 function CountdownDisplay({ endTime }: { endTime: string }) {
+  const invalidEndTime = !endTime || Number.isNaN(new Date(endTime).getTime())
   const cd = useCountdown(endTime)
+
+  if (invalidEndTime) {
+    return <span className="overview-mini-card__countdown">Chưa rõ lịch</span>
+  }
 
   if (cd.isExpired) {
     return <span className="overview-mini-card__countdown">Đã kết thúc</span>
@@ -69,6 +75,7 @@ function CountdownDisplay({ endTime }: { endTime: string }) {
 
 function EndingSoonCard({ item }: { item: WatchlistItem }) {
   const imageUrl = item.thumbnail_url || getDemoProductImage(item.title)
+  const endTime = item.end_time ?? item.ends_at ?? ''
 
   return (
     <Link to={`/auctions/${item.auction_id}`} className="overview-mini-card">
@@ -87,7 +94,7 @@ function EndingSoonCard({ item }: { item: WatchlistItem }) {
       <span className="overview-mini-card__price">
         {item.current_price.toLocaleString('vi-VN')} ₫
       </span>
-      <CountdownDisplay endTime={item.end_time} />
+      <CountdownDisplay endTime={endTime} />
     </Link>
   )
 }
