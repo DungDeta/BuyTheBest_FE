@@ -82,8 +82,9 @@
 /* Summary sidebar */
 .summary-card { background: var(--color-surface); border: 2px solid var(--color-border-strong); border-radius: 3px; padding: 22px; position: sticky; top: 12px; align-self: start; }
 .summary-card__title { font-family: var(--font-mono); font-size: 18px; font-weight: 700; margin-bottom: 14px; padding-bottom: 8px; border-bottom: 2px solid var(--color-border-strong); }
-.summary-line { display: flex; justify-content: space-between; padding: 7px 0; font-size: 13px; }
-.summary-line__value { font-family: var(--font-mono); font-weight: 700; }
+.summary-line { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; padding: 7px 0; font-size: 13px; }
+.summary-line > span:first-child { min-width: 0; overflow-wrap: anywhere; }
+.summary-line__value { min-width: 0; font-family: var(--font-mono); font-weight: 700; text-align: right; overflow-wrap: anywhere; }
 .summary-line small { display: block; margin-top: 2px; color: var(--color-muted); font-size: 9px; }
 .summary-line--total { border-top: 2px solid var(--color-border-strong); margin-top: 8px; padding-top: 10px; font-size: 16px; }
 .summary-line--total .summary-line__value { font-size: 18px; }
@@ -114,9 +115,9 @@
 .detail-section__title { font-family: var(--font-mono); font-size: 16px; font-weight: 700; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid var(--color-border); }
 
 .shipment-info { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-.shipment-info__item { font-size: 13px; }
+.shipment-info__item { min-width: 0; font-size: 13px; }
 .shipment-info__label { font-family: var(--font-mono); font-size: 10px; color: var(--color-muted); text-transform: uppercase; letter-spacing: 0.5px; }
-.shipment-info__value { font-weight: 700; margin-top: 2px; }
+.shipment-info__value { min-width: 0; font-weight: 700; line-height: 1.45; margin-top: 2px; overflow-wrap: anywhere; }
 .detail-empty { color: var(--color-muted); font-weight: 400; }
 .payment-result__link { display: inline-block; padding: 10px 20px; background: #0654ba; color: #fff; border-radius: 3px; font-family: var(--font-mono); font-size: 13px; font-weight: 700; text-decoration: none; }
 
