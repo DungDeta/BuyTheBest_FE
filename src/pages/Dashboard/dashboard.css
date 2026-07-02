@@ -67,6 +67,7 @@
 .stat-card__icon {
   font-size: 1.5rem;
   line-height: 1;
+  color: var(--color-primary, #1677ff);
 }
 
 .stat-card__value {
@@ -481,9 +482,13 @@
 }
 
 .watchlist-empty__icon {
-  font-size: 2.5rem;
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
   display: block;
   margin-bottom: 12px;
+  color: var(--color-text, #111827);
 }
 
 /* ---------- my auctions page ---------- */
@@ -631,9 +636,13 @@
 }
 
 .my-auctions-empty__icon {
-  font-size: 2rem;
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
   display: block;
   margin-bottom: 10px;
+  color: var(--color-text, #111827);
 }
 
 .my-auctions-empty p {

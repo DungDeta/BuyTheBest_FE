@@ -55,6 +55,8 @@ export interface ProductSummary {
   id: string
   title: string
   slug: string
+  description?: string | null
+  category_id?: number | null
   condition: string
   images: ProductImage[]
 }

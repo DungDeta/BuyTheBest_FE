@@ -1,6 +1,12 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Spin } from 'antd'
+import {
+  BellOutlined,
+  EyeOutlined,
+  ShoppingOutlined,
+  StarOutlined,
+} from '@ant-design/icons'
 import dayjs from 'dayjs'
 import { privateGet } from '@/api/api'
 import { useAuthStore } from '@/store/useAuthStore'
@@ -195,20 +201,20 @@ export function Component() {
   const displayName = user?.display_name ?? 'bạn'
 
   const stats = [
-    { icon: 'ORD', value: data.orderCount, label: 'Đơn hàng', to: '/orders' },
+    { icon: <ShoppingOutlined />, value: data.orderCount, label: 'Đơn hàng', to: '/orders' },
     {
-      icon: 'WCH',
+      icon: <EyeOutlined />,
       value: data.watchlistCount,
       label: 'Theo dõi',
       to: '/watchlist',
     },
     {
-      icon: 'NOT',
+      icon: <BellOutlined />,
       value: data.notifCount,
       label: 'Thông báo',
       to: '/notifications',
     },
-    { icon: 'REV', value: 0, label: 'Đánh giá', to: '/orders' },
+    { icon: <StarOutlined />, value: 0, label: 'Đánh giá', to: '/orders' },
   ]
 
   if (loading) {

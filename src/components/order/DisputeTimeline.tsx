@@ -15,8 +15,8 @@ interface TlItem {
 }
 
 const RESOLUTION_LABELS: Record<string, string> = {
-  refund_buyer: 'Hoàn tiền cho Buyer',
-  release_seller: 'Giải ngân cho Seller',
+  refund_buyer: 'Hoàn tiền cho người mua',
+  release_seller: 'Giải ngân cho người bán',
   partial_refund: 'Hoàn tiền một phần',
   pending: 'Đang xử lý',
 }
@@ -31,7 +31,7 @@ function buildItems(dispute: OrderDispute): TlItem[] {
   const items: TlItem[] = []
 
   items.push({
-    title: 'Buyer mở khiếu nại',
+    title: 'Người mua mở khiếu nại',
     desc: `Lý do: ${reasonLabel(dispute.reason)}`,
     ts: fmtTs(created_at),
     state: 'done',
@@ -40,17 +40,17 @@ function buildItems(dispute: OrderDispute): TlItem[] {
   const sellerDone = status === 'awaiting_buyer' || status === 'admin_review' || status === 'resolved' || status === 'closed'
   if (sellerDone) {
     items.push({
-      title: 'Seller phản hồi',
-      desc: 'Seller đã gửi phản hồi khiếu nại',
+      title: 'Người bán phản hồi',
+      desc: 'Người bán đã gửi phản hồi khiếu nại',
       ts: seller_response_deadline ? fmtTs(seller_response_deadline) : '',
       state: 'done',
     })
   } else if (status === 'open' || status === 'awaiting_seller') {
     items.push({
-      title: 'Chờ Seller phản hồi',
+      title: 'Chờ người bán phản hồi',
       desc: seller_response_deadline
         ? `Hạn chót: ${fmtTs(seller_response_deadline)}`
-        : 'Seller cần phản hồi trong thời gian quy định',
+        : 'Người bán cần phản hồi trong thời gian quy định',
       ts: null,
       state: 'warn',
     })
@@ -58,10 +58,10 @@ function buildItems(dispute: OrderDispute): TlItem[] {
 
   if (status === 'awaiting_buyer') {
     items.push({
-      title: 'Buyer phản hồi',
+      title: 'Người mua phản hồi',
       desc: buyer_counter_deadline
         ? `Hạn chót: ${fmtTs(buyer_counter_deadline)}`
-        : 'Buyer cần chấp nhận hoặc leo thang',
+        : 'Người mua cần chấp nhận hoặc chuyển quản trị viên xem xét',
       ts: null,
       state: 'active',
     })
@@ -69,8 +69,8 @@ function buildItems(dispute: OrderDispute): TlItem[] {
 
   if (status === 'admin_review') {
     items.push({
-      title: 'Admin xem xét',
-      desc: 'Khiếu nại đang được Admin xử lý',
+      title: 'Quản trị viên xem xét',
+      desc: 'Khiếu nại đang được quản trị viên xử lý',
       ts: null,
       state: 'active',
     })

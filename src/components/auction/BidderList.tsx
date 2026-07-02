@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Spin } from 'antd'
 import { publicGet } from '@/api/api'
-import { isSelfBidder } from '@/utils/auctionIdentity'
+import { formatParticipantLabel, isSelfBidder } from '@/utils/auctionIdentity'
 import type { Participant } from '@/types/auction'
 
 interface BidderListProps {
@@ -57,7 +57,7 @@ export function BidderList({
 
   if (loading) {
     return (
-      <div className="tab-content tab-content--center" aria-label="Đang tải danh sách bidder">
+      <div className="tab-content tab-content--center" aria-label="Đang tải danh sách người đặt giá">
         <Spin size="small" />
       </div>
     )
@@ -78,6 +78,7 @@ export function BidderList({
     <div className="tab-content bidder-list" aria-label="Danh sách người đấu giá">
       {displayed.map((p, index) => {
         const pos = index + 1
+        const participantLabel = formatParticipantLabel(p.label)
         const isCurrentUser = isSelfBidder(p, {
           userId: currentUserId,
           bidderLabel: currentBidderLabel,
@@ -89,18 +90,18 @@ export function BidderList({
           <div
             key={p.label}
             className={`bidder-row${isCurrentUser ? ' bidder-row--self' : ''}`}
-            aria-label={`Vị trí ${pos}: ${p.label}`}
+            aria-label={`Vị trí ${pos}: ${participantLabel}`}
           >
             <span className={`bidder-row__pos${isGold ? ' gold' : ''}`}>
               #{pos}
             </span>
             <span className="bidder-row__name">
-              {isCurrentUser ? `Bạn (${p.label})` : `@${p.label}`}
+              {isCurrentUser ? `Bạn (${participantLabel})` : participantLabel}
               {p.is_active && (
                 <span className="bidder-row__active-dot" aria-label="Đang trực tuyến" />
               )}
             </span>
-            <span className="bidder-row__bids">{p.bid_count} bids</span>
+            <span className="bidder-row__bids">{p.bid_count} lượt đặt</span>
             <span className="bidder-row__amount">{formatVnd(p.highest_amount)}</span>
           </div>
         )
@@ -108,7 +109,7 @@ export function BidderList({
 
       {remaining > 0 && (
         <div className="bidder-row__more" aria-label={`Còn ${remaining} người khác`}>
-          + {remaining} bidder khác
+          + {remaining} người đặt giá khác
         </div>
       )}
     </div>

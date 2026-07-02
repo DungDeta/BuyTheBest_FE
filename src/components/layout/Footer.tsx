@@ -8,15 +8,15 @@ export default function Footer() {
           <div className="footer-brand">
             Buy<em>The</em>Best
           </div>
-          <p>Sàn đấu giá trực tuyến thời gian thực. 4 hình thức đấu giá, escrow an toàn, truy vết minh bạch.</p>
+          <p>Sàn đấu giá trực tuyến thời gian thực với bốn hình thức đấu giá và lịch sử giao dịch minh bạch.</p>
         </div>
         <div className="footer-col">
           <h5>Khám phá</h5>
           <ul>
             <li><Link to="/auctions">Tất cả phiên</Link></li>
-            <li><Link to="/auctions?mode=english">English Auction</Link></li>
-            <li><Link to="/auctions?mode=dutch">Dutch Auction</Link></li>
-            <li><Link to="/auctions?mode=sealed">Sealed-bid</Link></li>
+            <li><Link to="/auctions?mode=english">Đấu giá tăng dần</Link></li>
+            <li><Link to="/auctions?mode=dutch">Đấu giá giảm dần</Link></li>
+            <li><Link to="/auctions?mode=sealed">Đấu giá kín</Link></li>
           </ul>
         </div>
         <div className="footer-col">

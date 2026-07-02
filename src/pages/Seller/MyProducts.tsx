@@ -183,7 +183,7 @@ export function Component() {
         </div>
       ) : (
         <>
-          <div className="product-grid" role="list" aria-label="Danh sách sản phẩm">
+          <div className="seller-product-grid" role="list" aria-label="Danh sách sản phẩm">
             {products.map((product) => (
               <ProductCard
                 key={product.id}

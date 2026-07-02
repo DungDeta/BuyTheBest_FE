@@ -1,3 +1,3 @@
 export function Component() {
-  return <div>Dispute Detail</div>
+  return <div>Chi tiết tranh chấp</div>
 }

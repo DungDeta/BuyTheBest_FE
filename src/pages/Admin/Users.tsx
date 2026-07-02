@@ -63,9 +63,9 @@ type BanMode = 'permanent' | 'temporary'
 // ─── Helpers ──────────────────────────────────────────────────────
 
 function roleBadge(user: AdminUser) {
-  if (user.is_admin) return <Tag color="blue" className="role-badge">Admin</Tag>
-  if (user.is_seller) return <Tag color="green" className="role-badge">Seller</Tag>
-  return <Tag className="role-badge">Buyer</Tag>
+  if (user.is_admin) return <Tag color="blue" className="role-badge">Quản trị viên</Tag>
+  if (user.is_seller) return <Tag color="green" className="role-badge">Người bán</Tag>
+  return <Tag className="role-badge">Người mua</Tag>
 }
 
 function statusBadge(status: 'active' | 'banned') {
@@ -85,7 +85,7 @@ function formatDate(iso: string): string {
 // ─── Component ────────────────────────────────────────────────────
 
 export function Component() {
-  useDocumentTitle('Admin · Người dùng')
+  useDocumentTitle('Quản trị · Người dùng')
   const { message } = App.useApp()
 
   // Filter state
@@ -384,9 +384,9 @@ export function Component() {
           style={{ width: 140 }}
           options={[
             { label: 'Tất cả vai trò', value: '' },
-            { label: 'Buyer', value: 'buyer' },
-            { label: 'Seller', value: 'seller' },
-            { label: 'Admin', value: 'admin' },
+            { label: 'Người mua', value: 'buyer' },
+            { label: 'Người bán', value: 'seller' },
+            { label: 'Quản trị viên', value: 'admin' },
           ]}
         />
         <Select<StatusFilter>
@@ -596,11 +596,11 @@ function DetailContent({ user }: DetailContentProps) {
           <p className="user-detail-modal__email">{user.email}</p>
           <div className="user-detail-modal__badges">
             {user.is_admin ? (
-              <Tag color="blue">Admin</Tag>
+              <Tag color="blue">Quản trị viên</Tag>
             ) : user.is_seller ? (
-              <Tag color="green">Seller</Tag>
+              <Tag color="green">Người bán</Tag>
             ) : (
-              <Tag>Buyer</Tag>
+              <Tag>Người mua</Tag>
             )}
             {user.status === 'active' ? (
               <Tag color="success">Hoạt động</Tag>

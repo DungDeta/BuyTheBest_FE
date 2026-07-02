@@ -21,8 +21,8 @@ interface RespondBody {
 type ResponseOption = RespondBody['action']
 
 const RESOLUTION_LABELS: Record<string, string> = {
-  refund_buyer: 'Hoàn tiền cho Buyer',
-  release_seller: 'Giải ngân cho Seller',
+  refund_buyer: 'Hoàn tiền cho người mua',
+  release_seller: 'Giải ngân cho người bán',
   partial_refund: 'Hoàn tiền một phần',
   pending: 'Đang xử lý',
 }
@@ -109,10 +109,10 @@ export function DisputeActions({ dispute, disputeId, isBuyer, isSeller, payment,
 
   function handleBuyerAccept() {
     const content = hasPartialProposal
-      ? `Bạn đồng ý nhận ${formatMoney(partialProposalAmount)} và giải ngân ${formatMoney(partialSellerAmount)} cho Seller? Hành động này không thể hoàn tác.`
-      : 'Bạn đồng ý với giải pháp mà Seller đề xuất? Hành động này không thể hoàn tác.'
+      ? `Bạn đồng ý nhận ${formatMoney(partialProposalAmount)} và giải ngân ${formatMoney(partialSellerAmount)} cho người bán? Hành động này không thể hoàn tác.`
+      : 'Bạn đồng ý với giải pháp mà người bán đề xuất? Hành động này không thể hoàn tác.'
     modal.confirm({
-      title: 'Chấp nhận giải pháp của Seller',
+      title: 'Chấp nhận giải pháp của người bán',
       content,
       okText: 'Chấp nhận',
       cancelText: 'Chưa',
@@ -133,8 +133,8 @@ export function DisputeActions({ dispute, disputeId, isBuyer, isSeller, payment,
 
   function handleBuyerEscalate() {
     modal.confirm({
-      title: 'Leo thang lên Admin',
-      content: 'Bạn muốn chuyển khiếu nại này lên Admin để xem xét? Hành động này không thể hoàn tác.',
+      title: 'Chuyển quản trị viên xem xét',
+      content: 'Bạn muốn chuyển khiếu nại này cho quản trị viên xem xét? Hành động này không thể hoàn tác.',
       okText: 'Leo thang',
       okType: 'danger',
       cancelText: 'Chưa',
@@ -142,7 +142,7 @@ export function DisputeActions({ dispute, disputeId, isBuyer, isSeller, payment,
         setLoading(true)
         try {
           await privatePost(`/disputes/${disputeId}/escalate`, {})
-          message.success('Đã chuyển lên Admin')
+          message.success('Đã chuyển quản trị viên xem xét')
           onUpdate()
         } catch {
           message.error('Không thể thực hiện. Vui lòng thử lại.')
@@ -166,7 +166,7 @@ export function DisputeActions({ dispute, disputeId, isBuyer, isSeller, payment,
             letterSpacing: '0.5px',
           }}
         >
-          Gửi phản hồi cho Buyer
+          Gửi phản hồi cho người mua
         </div>
 
         <div
@@ -233,7 +233,7 @@ export function DisputeActions({ dispute, disputeId, isBuyer, isSeller, payment,
                   lineHeight: 1.6,
                 }}
               >
-                Buyer nhận {formatMoney(partialAmount)} · Seller nhận {formatMoney(payment.amount - partialAmount)}
+                Người mua nhận {formatMoney(partialAmount)} · Người bán nhận {formatMoney(payment.amount - partialAmount)}
               </div>
             )}
           </div>
@@ -311,7 +311,7 @@ export function DisputeActions({ dispute, disputeId, isBuyer, isSeller, payment,
             }}
             role="status"
           >
-            Seller đề xuất hoàn {formatMoney(partialProposalAmount)} cho Buyer và giải ngân {formatMoney(partialSellerAmount)} cho Seller.
+            Người bán đề xuất hoàn {formatMoney(partialProposalAmount)} cho người mua và giải ngân {formatMoney(partialSellerAmount)} cho người bán.
           </div>
         )}
         <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
@@ -321,14 +321,14 @@ export function DisputeActions({ dispute, disputeId, isBuyer, isSeller, payment,
             onClick={handleBuyerAccept}
             loading={loading}
           >
-            Chấp nhận giải pháp của Seller
+            Chấp nhận giải pháp của người bán
           </Button>
           <Button
             danger
             onClick={handleBuyerEscalate}
             loading={loading}
           >
-            Leo thang lên Admin
+            Chuyển quản trị viên xem xét
           </Button>
         </div>
       </div>
@@ -350,7 +350,7 @@ export function DisputeActions({ dispute, disputeId, isBuyer, isSeller, payment,
         }}
         role="status"
       >
-        Đang chờ Admin xử lý. Chúng tôi sẽ thông báo khi có kết quả.
+        Đang chờ quản trị viên xử lý. Chúng tôi sẽ thông báo khi có kết quả.
       </div>
     )
   }
@@ -410,7 +410,7 @@ export function DisputeActions({ dispute, disputeId, isBuyer, isSeller, payment,
         }}
         role="status"
       >
-        Đang chờ Seller phản hồi. Chúng tôi sẽ thông báo khi có cập nhật.
+        Đang chờ người bán phản hồi. Chúng tôi sẽ thông báo khi có cập nhật.
       </div>
     )
   }

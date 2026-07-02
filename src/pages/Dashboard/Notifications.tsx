@@ -26,14 +26,14 @@ const FILTER_TABS: { value: NotificationFilter; label: string }[] = [
 ]
 
 const EVENT_TYPE_MARKS: Record<string, string> = {
-  auction: 'AUC',
-  outbid: 'AUC',
-  order: 'ORD',
-  payment: 'PAY',
-  escrow: 'PAY',
-  payout: 'PAY',
-  dispute: 'DSP',
-  new_message: 'MSG',
+  auction: 'Đấu giá',
+  outbid: 'Đấu giá',
+  order: 'Đơn hàng',
+  payment: 'Thanh toán',
+  escrow: 'Thanh toán',
+  payout: 'Thanh toán',
+  dispute: 'Khiếu nại',
+  new_message: 'Tin nhắn',
 }
 
 const PREF_LABELS: Record<string, string> = {
@@ -90,7 +90,7 @@ function getIcon(eventType: string): string {
   for (const key of Object.keys(EVENT_TYPE_MARKS) as Array<keyof typeof EVENT_TYPE_MARKS>) {
     if (eventType.startsWith(key)) return EVENT_TYPE_MARKS[key] ?? ''
   }
-  return 'SYS'
+  return 'Hệ thống'
 }
 
 function relativeTimeStr(createdAt: string): string {
@@ -299,7 +299,7 @@ export function Component() {
         />
       ) : notifications.length === 0 ? (
         <div className="notif-empty" role="status">
-          <span className="notif-empty__icon">SYS</span>
+          <span className="notif-empty__icon">Hệ thống</span>
           Không có thông báo nào.
         </div>
       ) : (

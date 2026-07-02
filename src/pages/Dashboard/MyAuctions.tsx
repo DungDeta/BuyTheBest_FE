@@ -139,7 +139,7 @@ function WatchingTab() {
   if (items.length === 0) {
     return (
       <div className="my-auctions-empty" role="status">
-        <span className="my-auctions-empty__icon" aria-hidden="true">WCH</span>
+        <span className="my-auctions-empty__icon" aria-hidden="true">Theo dõi</span>
         Chưa theo dõi phiên nào.{' '}
         <Link to="/auctions">Khám phá ngay →</Link>
       </div>
@@ -248,7 +248,7 @@ function BoughtTab() {
   if (orders.length === 0) {
     return (
       <div className="my-auctions-empty" role="status">
-        <span className="my-auctions-empty__icon" aria-hidden="true">ORD</span>
+        <span className="my-auctions-empty__icon" aria-hidden="true">Đơn hàng</span>
         Chưa có đơn hàng nào.
       </div>
     )
@@ -390,7 +390,7 @@ function CreatedTab() {
 
       {auctions.length === 0 ? (
         <div className="my-auctions-empty" role="status">
-          <span className="my-auctions-empty__icon" aria-hidden="true">AUC</span>
+          <span className="my-auctions-empty__icon" aria-hidden="true">Đấu giá</span>
           <p>Bạn chưa tạo phiên đấu giá nào.</p>
           <Button type="primary" onClick={() => navigate('/seller/auctions/new')}>
             Tạo phiên đấu giá đầu tiên

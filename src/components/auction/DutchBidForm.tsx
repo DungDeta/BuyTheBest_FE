@@ -66,11 +66,11 @@ export function DutchBidForm({ auction, onBidPlaced }: DutchBidFormProps) {
             </span>
           )}
         </div>
-        <span className="mode-badge D" aria-label="Phương thức Dutch">D · Dutch</span>
+        <span className="mode-badge D" aria-label="Phương thức đấu giá giảm dần">Giá giảm dần</span>
       </div>
 
       <div className="dutch-info" role="note">
-        ⏬ Giá giảm dần — người đầu tiên chấp nhận thắng phiên đấu giá.
+        Giá giảm dần: người đầu tiên chấp nhận mức giá hiện tại sẽ thắng phiên đấu giá.
       </div>
 
       <div className="dutch-timer" aria-label="Thời gian đến lần giảm giá tiếp theo">

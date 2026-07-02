@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Spin } from 'antd'
 import dayjs from 'dayjs'
 import { publicGet } from '@/api/api'
-import { isSelfBidder } from '@/utils/auctionIdentity'
+import { formatParticipantLabel, isSelfBidder } from '@/utils/auctionIdentity'
 import type { BidHistoryItem } from '@/types/auction'
 
 interface LiveFeedProps {
@@ -43,28 +43,28 @@ function FeedItem({ item, delta, isCurrentUser, isOutbid }: FeedItemProps) {
       <div className="feed-item feed-item--system" aria-label={`Sự kiện hệ thống lúc ${time}`}>
         <span className="feed-item__time">{time}</span>
         <span className="feed-item__content feed-item__content--system">
-          — {item.bidder_label} · {formatVnd(item.amount)} —
+          — {formatParticipantLabel(item.bidder_label)} · {formatVnd(item.amount)} —
         </span>
       </div>
     )
   }
 
-  const label = isCurrentUser ? 'Bạn' : `@${item.bidder_label}`
-  const typeTag = item.type === 'auto' ? ' · auto-bid' : item.type === 'buy_now' ? ' · buy now' : ''
+  const label = isCurrentUser ? 'Bạn' : formatParticipantLabel(item.bidder_label)
+  const typeTag = item.type === 'auto' ? ' · đặt tự động' : item.type === 'buy_now' ? ' · mua ngay' : ''
 
   return (
     <div
       className={`feed-item${isOutbid ? ' feed-item--outbid' : ''}${isCurrentUser ? ' feed-item--self' : ''}`}
-      aria-label={`Bid bởi ${label} lúc ${time}`}
+      aria-label={`Lượt đặt của ${label} lúc ${time}`}
     >
       <span className="feed-item__time">{time}</span>
       <span className="feed-item__content">
         <span className="feed-item__label">{label}</span>
-        {' đặt bid '}
+        {' đặt giá '}
         <span className="feed-item__amount">{formatVnd(item.amount)}</span>
         {delta && <span className="feed-item__delta"> · {delta}</span>}
         {typeTag && <span className="feed-item__tag">{typeTag}</span>}
-        {isOutbid && <span className="feed-item__outbid-note"> → outbid</span>}
+        {isOutbid && <span className="feed-item__outbid-note"> → đã bị vượt giá</span>}
       </span>
     </div>
   )
@@ -120,7 +120,7 @@ export function LiveFeed({
 
   if (loading) {
     return (
-      <div className="tab-content tab-content--center" aria-label="Đang tải feed">
+      <div className="tab-content tab-content--center" aria-label="Đang tải hoạt động">
         <Spin size="small" />
       </div>
     )
@@ -135,7 +135,7 @@ export function LiveFeed({
   }
 
   return (
-    <div className="tab-content feed-list" role="log" aria-live="polite" aria-label="Lịch sử bid">
+    <div className="tab-content feed-list" role="log" aria-live="polite" aria-label="Lịch sử đặt giá">
       <div ref={topRef} />
       {feed.map((item, index) => {
         const isCurrentUser = isSelfBidder(item, {

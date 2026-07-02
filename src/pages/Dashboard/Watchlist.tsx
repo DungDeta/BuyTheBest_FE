@@ -253,7 +253,7 @@ export function Component() {
         </div>
       ) : items.length === 0 ? (
         <div className="watchlist-empty" role="status">
-          <span className="watchlist-empty__icon" aria-hidden="true">WCH</span>
+          <span className="watchlist-empty__icon" aria-hidden="true">Theo dõi</span>
           {EMPTY_MESSAGES[filter]}
         </div>
       ) : (

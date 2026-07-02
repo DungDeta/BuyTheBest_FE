@@ -567,7 +567,7 @@ export function Component() {
             <div className="escrow-info__flow">
               <div className="escrow-info__stage escrow-info__stage--active">Bạn trả</div>
               <div className="escrow-info__stage">Escrow giữ</div>
-              <div className="escrow-info__stage">Seller nhận</div>
+              <div className="escrow-info__stage">Người bán nhận</div>
             </div>
           </div>
 

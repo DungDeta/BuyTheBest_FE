@@ -32,9 +32,9 @@ const REASON_LABELS: Record<string, string> = {
 
 const STATUS_LABELS: Record<string, string> = {
   open: 'Đang mở',
-  awaiting_seller: 'Chờ Seller',
-  awaiting_buyer: 'Chờ Buyer',
-  admin_review: 'Admin xem xét',
+  awaiting_seller: 'Chờ người bán',
+  awaiting_buyer: 'Chờ người mua',
+  admin_review: 'Quản trị viên xem xét',
   resolved: 'Đã giải quyết',
   closed: 'Đã đóng',
 }

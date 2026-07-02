@@ -83,24 +83,24 @@ const CATEGORY_LABELS: Record<string, string> = {
 
 const AUCTION_TYPES = [
   {
-    letter: 'E',
-    name: 'English Auction',
-    desc: 'Giá tăng dần, ai trả cao nhất lúc hết giờ thắng. Có anti-sniping tự động kéo dài 60s nếu có bid phút cuối.',
+    letter: '01',
+    name: 'Đấu giá tăng dần',
+    desc: 'Người trả giá cao nhất khi hết thời gian sẽ thắng. Hệ thống tự gia hạn nếu có lượt đặt giá ở phút cuối.',
   },
   {
-    letter: 'D',
-    name: 'Dutch Auction',
+    letter: '02',
+    name: 'Đấu giá giảm dần',
     desc: 'Giá giảm dần theo bước. Người đầu tiên chấp nhận thắng. Dùng cho hàng số lượng có giới hạn.',
   },
   {
-    letter: 'S',
-    name: 'Sealed-Bid',
-    desc: 'Đặt giá kín, một lần duy nhất. Mở niêm phong tại thời điểm hẹn — ai cao nhất thắng.',
+    letter: '03',
+    name: 'Đấu giá kín',
+    desc: 'Đặt giá kín một lần duy nhất. Mở niêm phong tại thời điểm hẹn, người trả giá cao nhất thắng.',
   },
   {
-    letter: 'R',
-    name: 'Reverse Auction',
-    desc: 'Buyer đăng nhu cầu, sellers cạnh tranh giá thấp nhất trong ngân sách. Buyer chọn deal tốt nhất.',
+    letter: '04',
+    name: 'Đấu giá ngược',
+    desc: 'Người mua đăng nhu cầu và ngân sách. Người bán cạnh tranh bằng mức giá phù hợp nhất.',
   },
 ]
 
@@ -108,22 +108,22 @@ const HOW_STEPS = [
   {
     num: '01',
     title: 'Đăng ký',
-    desc: 'Email hoặc Google. Verify email xong là bid được ngay. Nâng cấp Seller bất cứ lúc nào.',
+    desc: 'Đăng ký bằng email hoặc Google. Xác thực email xong là có thể đặt giá. Có thể nâng cấp người bán bất cứ lúc nào.',
   },
   {
     num: '02',
     title: 'Đặt giá',
-    desc: 'Chọn phiên phù hợp, đặt giá thủ công hoặc auto-bid với giá tối đa. Countdown chính xác từng giây.',
+    desc: 'Chọn phiên phù hợp, đặt giá thủ công hoặc đặt giá tự động với mức tối đa. Đồng hồ đếm ngược cập nhật theo thời gian thực.',
   },
   {
     num: '03',
     title: 'Thanh toán escrow',
-    desc: 'Thắng phiên → checkout VNPay/Stripe → tiền giữ trong escrow đến khi nhận hàng.',
+    desc: 'Thắng phiên, thanh toán qua VNPay hoặc Stripe, tiền được giữ lại đến khi người mua xác nhận nhận hàng.',
   },
   {
     num: '04',
     title: 'Xác nhận hoặc khiếu nại',
-    desc: 'Nhận hàng OK → tiền chuyển Seller. Có vấn đề → mở dispute, Admin phân xử minh bạch.',
+    desc: 'Nếu nhận hàng thành công, tiền được chuyển cho người bán. Nếu có vấn đề, người mua mở khiếu nại để quản trị viên xử lý minh bạch.',
   },
 ]
 
@@ -159,10 +159,10 @@ function countdownClass(endsAt: string): string {
 
 function modeBadgeLabel(mode: Auction['mode']): string {
   switch (mode) {
-    case 'english':    return 'E · English'
-    case 'dutch':      return 'D · Dutch'
-    case 'sealed_bid': return 'S · Sealed'
-    case 'reverse':    return 'R · Reverse'
+    case 'english':    return 'Giá tăng dần'
+    case 'dutch':      return 'Giá giảm dần'
+    case 'sealed_bid': return 'Đấu giá kín'
+    case 'reverse':    return 'Đấu giá ngược'
   }
 }
 
@@ -265,7 +265,7 @@ function AuctionCard({ auction }: AuctionCardProps) {
       <div className="listing-title">{title}</div>
 
       {isSealed ? (
-        <div className="listing-price sealed">Đang nhận bid kín</div>
+        <div className="listing-price sealed">Đang nhận giá đặt kín</div>
       ) : isReverse ? (
         <div className="listing-price">≤ {formatPrice(auction.current_price)}</div>
       ) : isDutch ? (
@@ -285,7 +285,7 @@ function AuctionCard({ auction }: AuctionCardProps) {
         ) : isReverse ? (
           <span>{auction.bid_count} sellers</span>
         ) : (
-          <span>{auction.bid_count} bids</span>
+          <span>{auction.bid_count} lượt đặt</span>
         )}
         <CountdownCell endsAt={auction.ends_at} />
       </div>
@@ -412,7 +412,7 @@ export default function Home() {
           </h1>
           <p>
             4 hình thức đấu giá. Thanh toán escrow. Truy vết mọi giao dịch.
-            Tranh chấp minh bạch — quyền lợi cả Buyer và Seller được bảo vệ.
+            Tranh chấp minh bạch — quyền lợi của người mua và người bán đều được bảo vệ.
           </p>
           <Link to="/register" className="hero-cta">Bắt đầu ngay →</Link>
         </div>
@@ -530,9 +530,9 @@ export default function Home() {
         <strong>Bảo vệ:</strong>
         <div className="trust-items">
           <span><span className="trust-check">✓</span> Escrow an toàn</span>
-          <span><span className="trust-check">✓</span> Audit log công khai</span>
-          <span><span className="trust-check">✓</span> Anti-sniping bảo vệ Buyer</span>
-          <span><span className="trust-check">✓</span> Dispute có Admin phân xử</span>
+          <span><span className="trust-check">✓</span> Nhật ký minh bạch</span>
+          <span><span className="trust-check">✓</span> Chống đặt giá phút cuối</span>
+          <span><span className="trust-check">✓</span> Tranh chấp có quản trị viên phân xử</span>
           <span><span className="trust-check">✓</span> Auto-release sau 7 ngày</span>
         </div>
       </div>

@@ -91,7 +91,7 @@ const TAB_ITEMS = [
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export function Component() {
-  useDocumentTitle('Admin · Sản phẩm')
+  useDocumentTitle('Quản trị · Sản phẩm')
   const { message } = App.useApp()
 
   const [status, setStatus] = useState<ProductStatus>('pending_review')
@@ -231,7 +231,7 @@ export function Component() {
       render: (c: string) => CONDITION_LABELS[c] ?? c,
     },
     {
-      title: 'Seller ID',
+      title: 'Mã người bán',
       dataIndex: 'seller_id',
       width: 100,
     },
@@ -338,7 +338,7 @@ export function Component() {
                   <span className="product-mobile-card__main">
                     <span className="product-mobile-card__title">{product.title}</span>
                     <span className="product-mobile-card__meta-line">
-                      Seller ID: {product.seller_id}
+                      Mã người bán: {product.seller_id}
                     </span>
                   </span>
                   <Tag color={statusConfig?.color}>
@@ -470,7 +470,7 @@ export function Component() {
               ) : (
                 <div className="review-seller-card__body">
                   <div>
-                    <span>Seller ID</span>
+                    <span>Mã người bán</span>
                     <strong>{selected.seller_id}</strong>
                   </div>
                 </div>

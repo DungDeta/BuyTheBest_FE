@@ -4,7 +4,7 @@ import { EnglishBidForm } from '@/components/auction/EnglishBidForm'
 import { DutchBidForm } from '@/components/auction/DutchBidForm'
 import { SealedBidForm } from '@/components/auction/SealedBidForm'
 import { ReverseBidForm } from '@/components/auction/ReverseBidForm'
-import { isSelfBidder } from '@/utils/auctionIdentity'
+import { formatParticipantLabel, isSelfBidder } from '@/utils/auctionIdentity'
 import type { Auction, AuctionConnectionState, BidActionResponse } from '@/types/auction'
 
 interface BidPanelProps {
@@ -29,10 +29,10 @@ function formatVnd(amount: number): string {
 }
 
 const MODE_SUMMARY = {
-  english: { code: 'E', label: 'TĂNG DẦN', priceLabel: 'Giá hiện tại' },
-  dutch: { code: 'D', label: 'GIẢM DẦN', priceLabel: 'Giá hiện tại' },
-  sealed_bid: { code: 'S', label: 'KÍN', priceLabel: 'Giá khởi điểm' },
-  reverse: { code: 'R', label: 'NGƯỢC', priceLabel: 'Giá tốt nhất' },
+  english: { code: 'E', label: 'Giá tăng dần', priceLabel: 'Giá hiện tại' },
+  dutch: { code: 'D', label: 'Giá giảm dần', priceLabel: 'Giá hiện tại' },
+  sealed_bid: { code: 'S', label: 'Đấu giá kín', priceLabel: 'Giá khởi điểm' },
+  reverse: { code: 'R', label: 'Đấu giá ngược', priceLabel: 'Giá tốt nhất' },
 } as const
 
 function ReadOnlyBidSummary({ auction }: { auction: Auction }) {
@@ -46,7 +46,7 @@ function ReadOnlyBidSummary({ auction }: { auction: Auction }) {
           <span className="bid-current__price">{formatVnd(auction.current_price)}</span>
         </div>
         <span className={`mode-badge ${mode.code}`}>
-          {mode.code} · {mode.label}
+          {mode.label}
         </span>
       </div>
       <div className="bid-gate">
@@ -110,10 +110,10 @@ function ResultPanel({
         <div className="result-panel__price">{formatVnd(auction.current_price)}</div>
       </div>
       <div>
-        <div className="result-panel__label">Winner</div>
+        <div className="result-panel__label">Người thắng</div>
         {hasWinner ? (
           <div className="result-panel__winner">
-            {isWinner ? 'Bạn' : winnerLabel ? `@${winnerLabel}` : 'Đang chờ công bố'}
+            {isWinner ? 'Bạn' : winnerLabel ? formatParticipantLabel(winnerLabel) : 'Đang chờ công bố'}
           </div>
         ) : (
           <div className="result-panel__no-winner">Không có người thắng</div>
@@ -251,7 +251,7 @@ export function BidPanel({
 
       <div className="bid-panel-footer">
         <span>
-          {bidCount} lượt bid · {watcherCount} đang xem
+          {bidCount} lượt đặt · {watcherCount} đang xem
         </span>
         {isActive && (
           <span
@@ -271,10 +271,10 @@ export function BidPanel({
               aria-hidden="true"
             />
             {connectionState === 'failed'
-              ? 'OFFLINE'
+              ? 'Mất kết nối'
               : connectionState === 'connected'
-                ? 'LIVE'
-                : 'SYNCING'}
+                ? 'Đang diễn ra'
+                : 'Đang đồng bộ'}
           </span>
         )}
       </div>

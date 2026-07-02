@@ -310,7 +310,7 @@ function AuctionCard({ auction }: AuctionCardProps) {
         ) : isReverse ? (
           <span>{auction.bid_count} sellers</span>
         ) : (
-          <span>{auction.bid_count} bids</span>
+          <span>{auction.bid_count} lượt đặt</span>
         )}
         <CountdownCell endsAt={auction.ends_at} />
       </div>
@@ -343,7 +343,7 @@ function AuctionListRow({ auction }: AuctionListRowProps) {
       <div className="num">
         {isSealed ? '— ẩn —' : formatPrice(auction.current_price)}
       </div>
-      <div className="num">{auction.bid_count} bid</div>
+      <div className="num">{auction.bid_count} lượt đặt</div>
       <div className="num">
         <CountdownCell endsAt={auction.ends_at} />
       </div>
@@ -827,7 +827,7 @@ export default function AuctionList() {
               {hasLiveResults && (
                 <span className="live-pill">
                   <span className="live-dot" />
-                  LIVE
+                  Đang diễn ra
                 </span>
               )}
             </div>

@@ -44,15 +44,15 @@ export function ReverseBidForm({ auction, onBidPlaced }: ReverseBidFormProps) {
     <div className="bid-form">
       <div className="bid-current">
         <div className="bid-current__left">
-          <span className="bid-current__label">Ngân sách Buyer</span>
+          <span className="bid-current__label">Ngân sách người mua</span>
           <span className="bid-current__price">{formatVnd(budget)}</span>
-          <span className="bid-current__delta">Seller cạnh tranh giá thấp</span>
+          <span className="bid-current__delta">Người bán cạnh tranh bằng mức giá thấp</span>
         </div>
-        <span className="mode-badge R" aria-label="Phương thức Reverse">R · Reverse</span>
+        <span className="mode-badge R" aria-label="Phương thức đấu giá ngược">Đấu giá ngược</span>
       </div>
 
       <div className="reverse-info" role="note">
-        Buyer đặt yêu cầu + ngân sách. Seller cạnh tranh giá thấp nhất.
+        Người mua đặt yêu cầu và ngân sách. Người bán cạnh tranh bằng mức giá phù hợp nhất.
       </div>
 
       <div className="reverse-lowest" aria-label="Bid thấp nhất hiện tại">
@@ -98,7 +98,7 @@ export function ReverseBidForm({ auction, onBidPlaced }: ReverseBidFormProps) {
       </div>
 
       {auction.bid_count > 0 && (
-        <p className="bid-input-hint">{auction.bid_count} seller đang cạnh tranh</p>
+        <p className="bid-input-hint">{auction.bid_count} người bán đang cạnh tranh</p>
       )}
 
       {error !== null && (

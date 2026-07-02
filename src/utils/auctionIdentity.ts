@@ -8,6 +8,18 @@ function sameId(a: number | string | null | undefined, b: number | string | null
   return a != null && b != null && String(a) === String(b)
 }
 
+export function formatParticipantLabel(label: string | null | undefined): string {
+  if (!label) return 'Người đặt giá'
+
+  const normalized = label.trim()
+  const bidderMatch = normalized.match(/^bidder(?:\s*#?\s*(\d+))?$/i)
+  if (bidderMatch) {
+    return bidderMatch[1] ? `Người đặt giá ${bidderMatch[1]}` : 'Người đặt giá'
+  }
+  if (/^system$/i.test(normalized)) return 'Hệ thống'
+  return normalized
+}
+
 export function isSelfBidder(
   item: {
     is_self?: boolean

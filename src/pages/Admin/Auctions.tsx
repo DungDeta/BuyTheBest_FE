@@ -89,7 +89,7 @@ function formatDateTime(value?: string) {
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export function Component() {
-  useDocumentTitle('Admin · Phiên đấu giá')
+  useDocumentTitle('Quản trị · Phiên đấu giá')
   const { message, modal } = App.useApp()
 
   const [status, setStatus] = useState<AuctionStatus>('active')

@@ -34,7 +34,7 @@ function formatCount(n: number): string {
 }
 
 export function Component() {
-  useDocumentTitle('Admin · Dashboard')
+  useDocumentTitle('Quản trị · Tổng quan')
   const { message } = App.useApp()
   const navigate = useNavigate()
 
@@ -120,11 +120,11 @@ export function Component() {
             value={formatCount(kpi?.active_auctions ?? 0)}
           />
           <KpiCard
-            label="GMV hôm nay"
+            label="Tổng giá trị giao dịch hôm nay"
             value={formatVND(kpi?.today_gmv ?? 0)}
           />
           <KpiCard
-            label="GMV tuần này"
+            label="Tổng giá trị giao dịch tuần này"
             value={formatVND(kpi?.weekly_gmv ?? 0)}
           />
           <KpiCard
@@ -132,11 +132,11 @@ export function Component() {
             value={formatCount(kpi?.active_users ?? 0)}
           />
           <KpiCard
-            label="Buyer hoạt động"
+            label="Người mua hoạt động"
             value={formatCount(kpi?.active_buyers ?? 0)}
           />
           <KpiCard
-            label="Seller hoạt động"
+            label="Người bán hoạt động"
             value={formatCount(kpi?.active_sellers ?? 0)}
           />
           <KpiCard

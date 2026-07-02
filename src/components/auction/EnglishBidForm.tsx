@@ -165,7 +165,7 @@ export function EnglishBidForm({
           )}
         </div>
         <span className="mode-badge E" aria-label="Phương thức đấu giá tăng dần">
-          E · Tăng dần
+          Giá tăng dần
         </span>
       </div>
 
@@ -183,7 +183,7 @@ export function EnglishBidForm({
             inputMode="numeric"
             value={Number(bidInput.replace(/\D/g, '') || 0).toLocaleString('vi-VN')}
             onChange={(e) => setBidInput(e.target.value.replace(/\D/g, ''))}
-            aria-label={`Nhập số tiền bid, tối thiểu ${formatVnd(minBid)}`}
+            aria-label={`Nhập số tiền đặt, tối thiểu ${formatVnd(minBid)}`}
           />
           <button
             type="button"

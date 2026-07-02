@@ -145,13 +145,13 @@
   padding: 18px;
 }
 
-.product-grid {
+.auction-product-grid {
   display: grid;
   grid-template-columns: 1.1fr 1fr;
   gap: 24px;
 }
 
-.product-grid > * {
+.auction-product-grid > * {
   min-width: 0;
 }
 
@@ -548,25 +548,6 @@
   opacity: 0.6;
 }
 
-/* ── Escrow info banner ──────────────────────────────── */
-
-.escrow-banner {
-  background: var(--surface);
-  border: 1.5px solid var(--border);
-  border-radius: var(--radius);
-  padding: 12px 14px;
-  font-family: var(--font-mono);
-  font-size: 10px;
-  color: var(--muted);
-  line-height: 1.6;
-  text-align: center;
-}
-
-.escrow-banner strong {
-  color: var(--fg);
-  font-weight: 700;
-}
-
 .contact-seller-btn {
   width: 100%;
   padding: 10px 16px;
@@ -618,13 +599,12 @@
   .product-hero,
   .room-tabs,
   .bid-panel,
-  .countdown-box,
-  .escrow-banner {
+  .countdown-box {
     max-width: 100%;
     overflow: hidden;
   }
 
-  .product-grid {
+  .auction-product-grid {
     grid-template-columns: 1fr;
   }
 
@@ -667,6 +647,7 @@
   .gallery__thumbs {
     display: none;
   }
+
 }
 
 /* =====================================================
@@ -1711,6 +1692,7 @@
 
 .audit-table {
   width: 100%;
+  table-layout: fixed;
   border-collapse: collapse;
   font-family: var(--font-mono);
   font-size: 11px;
@@ -1742,25 +1724,43 @@
 .audit-table__time {
   white-space: nowrap;
   color: var(--muted);
-  width: 68px;
+  width: 74px;
 }
 
 .audit-table__action {
   font-weight: 700;
-  white-space: nowrap;
+  width: 150px;
+  overflow-wrap: break-word;
+  word-break: normal;
 }
 
 .audit-table__actor {
   color: var(--muted);
-  white-space: nowrap;
-  max-width: 100px;
+  width: 92px;
   overflow: hidden;
   text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .audit-table__detail {
   color: var(--muted);
-  word-break: break-word;
+  overflow-wrap: break-word;
+  word-break: normal;
+}
+
+.audit-table__detail-list {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.audit-table__detail-item {
+  line-height: 1.45;
+}
+
+.audit-table__detail-empty {
+  color: var(--muted);
+  opacity: 0.75;
 }
 
 /* ── Description tab ─────────────────────────────── */
@@ -1772,7 +1772,16 @@
 .desc-product {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 8px;
+}
+
+.desc-product__heading {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
 }
 
 .desc-product__title {
@@ -1780,6 +1789,22 @@
   font-size: 13px;
   font-weight: 700;
   color: var(--fg);
+}
+
+.desc-product__body {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--fg);
+  line-height: 1.65;
+  white-space: pre-line;
+  overflow-wrap: break-word;
+  word-break: normal;
+}
+
+.desc-product__body--empty {
+  color: var(--muted);
+  font-style: italic;
 }
 
 .desc-product__condition {
@@ -1854,4 +1879,65 @@
 .desc-meta__value {
   font-weight: 700;
   color: var(--fg);
+}
+
+@media (max-width: 680px) {
+  .room-tabs__nav {
+    overflow-x: hidden;
+  }
+
+  .room-tabs__tab {
+    flex: 1 1 auto;
+    padding: 10px 6px;
+    font-size: 9px;
+  }
+
+  .tab-content {
+    max-height: none;
+    overflow-y: visible;
+  }
+
+  .audit-table,
+  .audit-table tbody,
+  .audit-table tr,
+  .audit-table td {
+    display: block;
+    width: 100%;
+  }
+
+  .audit-table {
+    table-layout: auto;
+  }
+
+  .audit-table thead {
+    display: none;
+  }
+
+  .audit-table tr {
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border-strong);
+  }
+
+  .audit-table tr:last-child {
+    border-bottom: none;
+  }
+
+  .audit-table td {
+    display: grid;
+    grid-template-columns: minmax(88px, 32%) minmax(0, 1fr);
+    gap: 10px;
+    padding: 3px 0;
+    border-bottom: none;
+    white-space: normal;
+    overflow: visible;
+  }
+
+  .audit-table td::before {
+    content: attr(data-label);
+    color: var(--muted);
+    font-size: 9px;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+    text-transform: uppercase;
+  }
 }

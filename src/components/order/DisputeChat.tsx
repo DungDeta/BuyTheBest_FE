@@ -53,9 +53,9 @@ function isSelfMessage(
 }
 
 const ROLE_LABELS: Record<DisputeChatRole, string> = {
-  buyer: 'Buyer',
-  seller: 'Seller',
-  admin: 'Admin',
+  buyer: 'Người mua',
+  seller: 'Người bán',
+  admin: 'Quản trị viên',
 }
 
 export function DisputeChat({

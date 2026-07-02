@@ -46,11 +46,11 @@ export function RoomTabs({
   }, [])
 
   const tabs: { key: TabKey; label: string }[] = [
-    { key: 'feed', label: `Live Feed (${bidFeed.length > 0 ? bidFeed.length : '…'})` },
+    { key: 'feed', label: `Hoạt động (${bidFeed.length > 0 ? bidFeed.length : '…'})` },
     { key: 'desc', label: 'Mô tả' },
-    { key: 'bidders', label: `Bidder (${resolvedParticipantCount})` },
-    { key: 'chat', label: 'Chat' },
-    ...(showLog ? [{ key: 'log' as TabKey, label: 'Audit log' }] : []),
+    { key: 'bidders', label: `Người đặt (${resolvedParticipantCount})` },
+    { key: 'chat', label: 'Tin nhắn' },
+    ...(showLog ? [{ key: 'log' as TabKey, label: 'Nhật ký' }] : []),
   ]
 
   return (

@@ -34,7 +34,7 @@ export default function AdminSidebar() {
   }, [location.pathname])
 
   const items: MenuProps['items'] = [
-    { key: '/admin', icon: <DashboardOutlined />, label: <Link to="/admin">Dashboard</Link> },
+    { key: '/admin', icon: <DashboardOutlined />, label: <Link to="/admin">Tổng quan</Link> },
     { key: '/admin/products', icon: <AppstoreOutlined />, label: <Link to="/admin/products">Sản phẩm</Link> },
     { key: '/admin/auctions', icon: <ThunderboltOutlined />, label: <Link to="/admin/auctions">Phiên đấu giá</Link> },
     { key: '/admin/users', icon: <UserOutlined />, label: <Link to="/admin/users">Người dùng</Link> },
@@ -46,7 +46,7 @@ export default function AdminSidebar() {
   return (
     <aside ref={sidebarRef} className="admin-sidebar">
       <div className="admin-brand">
-        <Link to="/admin">BTB Admin</Link>
+        <Link to="/admin">BuyTheBest · Quản trị</Link>
       </div>
       <Menu
         mode="inline"

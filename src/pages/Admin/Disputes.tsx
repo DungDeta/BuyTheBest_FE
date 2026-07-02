@@ -91,8 +91,8 @@ const REASON_LABELS: Record<string, string> = {
 
 const STATUS_CONFIG: Record<DisputeStatus, { color: string; label: string }> = {
   open: { color: 'orange', label: 'Đang mở' },
-  awaiting_seller: { color: 'orange', label: 'Chờ Seller' },
-  awaiting_buyer: { color: 'blue', label: 'Chờ Buyer' },
+  awaiting_seller: { color: 'orange', label: 'Chờ người bán' },
+  awaiting_buyer: { color: 'blue', label: 'Chờ người mua' },
   admin_review: { color: 'red', label: 'Chờ xử lý' },
   resolved: { color: 'green', label: 'Đã giải quyết' },
   closed: { color: 'default', label: 'Đã đóng' },
@@ -101,22 +101,22 @@ const STATUS_CONFIG: Record<DisputeStatus, { color: string; label: string }> = {
 const TAB_ITEMS: { key: DisputeStatusFilter; label: string }[] = [
   { key: 'admin_review', label: 'Chờ xử lý' },
   { key: 'open', label: 'Đang mở' },
-  { key: 'awaiting_seller', label: 'Chờ Seller' },
-  { key: 'awaiting_buyer', label: 'Chờ Buyer' },
+  { key: 'awaiting_seller', label: 'Chờ người bán' },
+  { key: 'awaiting_buyer', label: 'Chờ người mua' },
   { key: 'resolved', label: 'Đã giải quyết' },
   { key: 'all', label: 'Tất cả' },
 ]
 
 const RESOLUTION_OPTIONS: { value: Exclude<DisputeResolution, 'pending'>; label: string }[] = [
-  { value: 'refund_buyer', label: 'Hoàn tiền Buyer' },
-  { value: 'release_seller', label: 'Giải ngân Seller' },
+  { value: 'refund_buyer', label: 'Hoàn tiền người mua' },
+  { value: 'release_seller', label: 'Giải ngân người bán' },
   { value: 'partial_refund', label: 'Hoàn tiền một phần' },
 ]
 
 const ROLE_LABEL: Record<string, string> = {
-  buyer: 'Buyer',
-  seller: 'Seller',
-  admin: 'Admin',
+  buyer: 'Người mua',
+  seller: 'Người bán',
+  admin: 'Quản trị viên',
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -169,7 +169,7 @@ function evidenceSrc(ev: DisputeEvidence): string {
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export function Component() {
-  useDocumentTitle('Admin · Tranh chấp')
+  useDocumentTitle('Quản trị · Tranh chấp')
   const { message } = App.useApp()
 
   const [statusFilter, setStatusFilter] = useState<DisputeStatusFilter>('admin_review')
@@ -277,7 +277,7 @@ export function Component() {
     }
     if (resolution === 'partial_refund') {
       if (refundAmount == null || sellerAmount == null) {
-        message.warning('Vui lòng nhập số tiền hoàn trả và số tiền Seller')
+        message.warning('Vui lòng nhập số tiền hoàn trả và số tiền giải ngân cho người bán')
         return
       }
     }
@@ -503,7 +503,7 @@ export function Component() {
             {resolution === 'partial_refund' && (
               <div className="resolve-partial">
                 <div className="resolve-partial__field">
-                  <label className="resolve-partial__label">Hoàn trả Buyer (VNĐ)</label>
+                  <label className="resolve-partial__label">Hoàn trả người mua (VNĐ)</label>
                   <InputNumber
                     value={refundAmount}
                     onChange={(v) => setRefundAmount(v)}
@@ -516,7 +516,7 @@ export function Component() {
                   />
                 </div>
                 <div className="resolve-partial__field">
-                  <label className="resolve-partial__label">Giải ngân Seller (VNĐ)</label>
+                  <label className="resolve-partial__label">Giải ngân người bán (VNĐ)</label>
                   <InputNumber
                     value={sellerAmount}
                     onChange={(v) => setSellerAmount(v)}

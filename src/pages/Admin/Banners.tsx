@@ -64,7 +64,7 @@ const ACCEPTED_TYPES = ['image/jpeg', 'image/png', 'image/webp']
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export function Component() {
-  useDocumentTitle('Admin · Banner')
+  useDocumentTitle('Quản trị · Banner')
   const { message } = App.useApp()
   const [form] = Form.useForm<BannerFormValues>()
   const fileInputRef = useRef<HTMLInputElement>(null)

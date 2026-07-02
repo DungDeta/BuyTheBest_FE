@@ -190,7 +190,7 @@ function CategoryTreeNode({
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export function Component() {
-  useDocumentTitle('Admin · Danh mục')
+  useDocumentTitle('Quản trị · Danh mục')
   const { message } = App.useApp()
   const [form] = Form.useForm<CategoryFormValues>()
 

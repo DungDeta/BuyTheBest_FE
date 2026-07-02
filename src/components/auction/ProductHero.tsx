@@ -20,10 +20,10 @@ function modeBadgeClass(mode: Auction['mode']): string {
 
 function modeBadgeLabel(mode: Auction['mode']): string {
   switch (mode) {
-    case 'english':    return 'E · English'
-    case 'dutch':      return 'D · Dutch'
-    case 'sealed_bid': return 'S · Sealed'
-    case 'reverse':    return 'R · Reverse'
+    case 'english':    return 'Giá tăng dần'
+    case 'dutch':      return 'Giá giảm dần'
+    case 'sealed_bid': return 'Đấu giá kín'
+    case 'reverse':    return 'Đấu giá ngược'
   }
 }
 
@@ -43,12 +43,12 @@ export function ProductHero({ auction }: ProductHeroProps) {
   const displayImage = sortedImages[activeIndex] ?? primaryImage
   const displayImageUrl = displayImage?.url || displayImage?.thumbnail_url || getDemoProductImage(title)
 
-  const publicLabel = `#${id.slice(-6).toUpperCase()}`
+  const publicLabel = `Mã phiên ${id.slice(0, 8).toUpperCase()}`
   const isHot = bid_count > 10
 
   return (
     <div className="product-hero">
-      <div className="product-grid">
+      <div className="auction-product-grid">
 
         <div className="gallery">
           <div className="gallery__main" aria-label={`Hình ảnh: ${title}`}>

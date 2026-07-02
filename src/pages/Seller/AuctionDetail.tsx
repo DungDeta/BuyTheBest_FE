@@ -4,7 +4,6 @@ import {
   Alert,
   App,
   Button,
-  Descriptions,
   Spin,
   Tag,
 } from 'antd'
@@ -138,6 +137,37 @@ export function Component() {
   const canCancel =
     (auction.status === 'scheduled' || auction.status === 'active') &&
     auction.bid_count === 0
+  const scheduleFacts = [
+    { label: 'Hình thức', value: MODE_LABELS[auction.mode] },
+    { label: 'Giá khởi điểm', value: formatVnd(auction.starting_price) },
+    { label: 'Bắt đầu', value: dayjs(auction.starts_at).format('DD/MM/YYYY HH:mm') },
+    { label: 'Kết thúc', value: dayjs(auction.ends_at).format('DD/MM/YYYY HH:mm') },
+    auction.min_increment != null
+      ? { label: 'Bước giá tối thiểu', value: formatVnd(auction.min_increment) }
+      : null,
+    auction.buy_now_price != null
+      ? { label: 'Giá mua ngay', value: formatVnd(auction.buy_now_price) }
+      : null,
+    auction.end_price != null
+      ? { label: 'Giá kết thúc', value: formatVnd(auction.end_price) }
+      : null,
+    auction.min_decrement != null
+      ? { label: 'Bước giảm', value: formatVnd(auction.min_decrement) }
+      : null,
+    auction.decrement_interval_seconds != null
+      ? { label: 'Chu kỳ giảm', value: `${auction.decrement_interval_seconds} giây` }
+      : null,
+    auction.budget_cap != null
+      ? { label: 'Ngân sách tối đa', value: formatVnd(auction.budget_cap) }
+      : null,
+    auction.reveal_at
+      ? { label: 'Công bố kết quả', value: dayjs(auction.reveal_at).format('DD/MM/YYYY HH:mm') }
+      : null,
+    {
+      label: 'Chống đặt giá phút cuối',
+      value: `${auction.anti_snipe_threshold_seconds} giây cuối, gia hạn ${auction.anti_snipe_extension_seconds} giây`,
+    },
+  ].filter((fact): fact is { label: string; value: string } => Boolean(fact))
 
   return (
     <div className="seller-page seller-auction-detail">
@@ -221,59 +251,14 @@ export function Component() {
 
       <section className="seller-auction-detail__section">
         <h2>Lịch trình và cấu hình</h2>
-        <Descriptions column={{ xs: 1, sm: 2 }} bordered size="small">
-          <Descriptions.Item label="Hình thức">
-            {MODE_LABELS[auction.mode]}
-          </Descriptions.Item>
-          <Descriptions.Item label="Giá khởi điểm">
-            {formatVnd(auction.starting_price)}
-          </Descriptions.Item>
-          <Descriptions.Item label="Bắt đầu">
-            {dayjs(auction.starts_at).format('DD/MM/YYYY HH:mm')}
-          </Descriptions.Item>
-          <Descriptions.Item label="Kết thúc">
-            {dayjs(auction.ends_at).format('DD/MM/YYYY HH:mm')}
-          </Descriptions.Item>
-          {auction.min_increment != null && (
-            <Descriptions.Item label="Bước giá tối thiểu">
-              {formatVnd(auction.min_increment)}
-            </Descriptions.Item>
-          )}
-          {auction.buy_now_price != null && (
-            <Descriptions.Item label="Giá mua ngay">
-              {formatVnd(auction.buy_now_price)}
-            </Descriptions.Item>
-          )}
-          {auction.end_price != null && (
-            <Descriptions.Item label="Giá kết thúc">
-              {formatVnd(auction.end_price)}
-            </Descriptions.Item>
-          )}
-          {auction.min_decrement != null && (
-            <Descriptions.Item label="Bước giảm">
-              {formatVnd(auction.min_decrement)}
-            </Descriptions.Item>
-          )}
-          {auction.decrement_interval_seconds != null && (
-            <Descriptions.Item label="Chu kỳ giảm">
-              {auction.decrement_interval_seconds} giây
-            </Descriptions.Item>
-          )}
-          {auction.budget_cap != null && (
-            <Descriptions.Item label="Ngân sách tối đa">
-              {formatVnd(auction.budget_cap)}
-            </Descriptions.Item>
-          )}
-          {auction.reveal_at && (
-            <Descriptions.Item label="Công bố kết quả">
-              {dayjs(auction.reveal_at).format('DD/MM/YYYY HH:mm')}
-            </Descriptions.Item>
-          )}
-          <Descriptions.Item label="Chống snipe">
-            {auction.anti_snipe_threshold_seconds} giây cuối, gia hạn{' '}
-            {auction.anti_snipe_extension_seconds} giây
-          </Descriptions.Item>
-        </Descriptions>
+        <div className="seller-auction-detail__schedule-grid">
+          {scheduleFacts.map((fact) => (
+            <div key={fact.label} className="seller-auction-detail__schedule-item">
+              <span>{fact.label}</span>
+              <strong>{fact.value}</strong>
+            </div>
+          ))}
+        </div>
       </section>
     </div>
   )

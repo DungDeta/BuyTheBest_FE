@@ -24,6 +24,11 @@ import type {
 } from '@/types/auction'
 import './auction-room.css'
 
+interface ProductDetailResponse {
+  description?: string | null
+  images?: NonNullable<Auction['product']>['images']
+}
+
 export function Component() {
   const { id } = useParams<{ id: string }>()
   const { message } = App.useApp()
@@ -83,6 +88,24 @@ export function Component() {
           setServerNow(res.data?.server_time ?? res.timestamp ?? null)
           if (res.data && typeof res.data.id === 'string') {
             let nextAuction = res.data
+            if (nextAuction.product?.id && !nextAuction.product.description) {
+              try {
+                const productRes = await publicGet<ProductDetailResponse>(
+                  `/products/${nextAuction.product.id}`,
+                )
+                if (productRes.data) {
+                  nextAuction = {
+                    ...nextAuction,
+                    product: {
+                      ...nextAuction.product,
+                      description: productRes.data.description ?? nextAuction.product.description,
+                      images: productRes.data.images ?? nextAuction.product.images,
+                    },
+                  }
+                }
+              } catch {
+              }
+            }
             if (res.data.status === 'ended' || res.data.status === 'closed_bin') {
               try {
                 const log = await publicGet<{ events: AuditLogEvent[] }>(
@@ -297,7 +320,7 @@ export function Component() {
         server_time: p.server_time ?? prev.server_time,
       }
     })
-    message.info('Kết quả sealed bid đã được công bố')
+    message.info('Kết quả đấu giá kín đã được công bố')
   }, [currentBidderLabel, currentUserId, message])
 
   useEffect(() => {
@@ -394,7 +417,7 @@ export function Component() {
             >
               <span className="room-ws-badge__dot" aria-hidden="true" />
               {isConnected
-                ? 'LIVE'
+                ? 'Đang diễn ra'
                 : connectionState === 'failed'
                   ? 'Mất kết nối'
                   : 'Đang kết nối…'}
@@ -423,10 +446,6 @@ export function Component() {
             connectionState={connectionState}
             onBidPlaced={markSelfBid}
           />
-
-          <div className="escrow-banner">
-            <strong>Escrow bảo vệ</strong> — tiền giữ lại an toàn đến khi xác nhận nhận hàng thành công.
-          </div>
 
           {authed && auction.seller && currentUserId !== auction.seller.id && (
             <button

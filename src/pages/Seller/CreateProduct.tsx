@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { Alert, App, Button, Form, Input, Select, Spin, Steps } from 'antd'
-import { privateDelete, privateGet, privatePost, privatePut } from '@/api/api'
+import { privateDelete, privateGet, privatePost, privatePut, publicGet } from '@/api/api'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import './seller.css'
 
@@ -47,15 +47,16 @@ interface BasicInfoValues {
   condition: ProductCondition
 }
 
-const CATEGORIES = [
-  { id: 1, name: 'Điện thoại' },
-  { id: 2, name: 'Laptop' },
-  { id: 3, name: 'Đồng hồ' },
-  { id: 4, name: 'Thời trang' },
-  { id: 5, name: 'Điện tử' },
-  { id: 6, name: 'Xe' },
-  { id: 7, name: 'Khác' },
-]
+interface CategoryOption {
+  id: number
+  name: string
+  slug?: string
+  sort_order?: number
+}
+
+interface HomeResponse {
+  categories?: CategoryOption[]
+}
 
 const CONDITIONS: { value: ProductCondition; label: string }[] = [
   { value: 'new', label: 'Mới' },
@@ -123,10 +124,46 @@ export function Component() {
   const [uploadingSlot, setUploadingSlot] = useState<number | null>(null)
   const [deletingId, setDeletingId] = useState<number | null>(null)
   const [settingPrimaryId, setSettingPrimaryId] = useState<number | null>(null)
+  const [categories, setCategories] = useState<CategoryOption[]>([])
+  const [categoriesLoading, setCategoriesLoading] = useState(true)
+  const [categoryLoadError, setCategoryLoadError] = useState<string | null>(null)
 
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const [form] = Form.useForm<BasicInfoValues>()
+
+  useEffect(() => {
+    let cancelled = false
+
+    async function loadCategories() {
+      setCategoriesLoading(true)
+      setCategoryLoadError(null)
+      try {
+        const res = await publicGet<HomeResponse>('/home')
+        const nextCategories = (res.data?.categories ?? [])
+          .filter((category) => Number.isFinite(category.id) && category.name.trim())
+          .sort((a, b) => (a.sort_order ?? a.id) - (b.sort_order ?? b.id))
+        if (!cancelled) {
+          setCategories(nextCategories)
+          if (nextCategories.length === 0) {
+            setCategoryLoadError('Hệ thống chưa có danh mục khả dụng để tạo sản phẩm.')
+          }
+        }
+      } catch {
+        if (!cancelled) {
+          setCategories([])
+          setCategoryLoadError('Không thể tải danh mục sản phẩm. Vui lòng thử lại trước khi tạo sản phẩm.')
+        }
+      } finally {
+        if (!cancelled) setCategoriesLoading(false)
+      }
+    }
+
+    loadCategories()
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   useEffect(() => {
     if (!editProductId) return
@@ -162,6 +199,11 @@ export function Component() {
   const isDescriptionOnly = Boolean(isEditing && product?.has_open_auction)
 
   async function handleSaveBasicInfo(values: BasicInfoValues) {
+    if (!isDescriptionOnly && categories.length === 0) {
+      message.error('Chưa có danh mục hợp lệ để tạo sản phẩm')
+      return
+    }
+
     setSubmitting(true)
     try {
       const payload = isDescriptionOnly
@@ -359,7 +401,21 @@ export function Component() {
   }
 
   const categoryName =
-    CATEGORIES.find((c) => c.id === product?.category_id)?.name ?? ''
+    categories.find((c) => c.id === product?.category_id)?.name ??
+    (product?.category_id != null ? `Danh mục #${product.category_id}` : '')
+  const categoryOptions = categories.map((c) => ({
+    value: c.id,
+    label: c.name,
+  }))
+  if (
+    product?.category_id != null &&
+    !categoryOptions.some((option) => option.value === product.category_id)
+  ) {
+    categoryOptions.push({
+      value: product.category_id,
+      label: categoryName,
+    })
+  }
   const canSubmitForReview =
     product?.status === 'draft' || product?.status === 'rejected'
   const steps = isDescriptionOnly
@@ -432,6 +488,16 @@ export function Component() {
               />
             )}
 
+            {!isDescriptionOnly && categoryLoadError && (
+              <Alert
+                type="error"
+                showIcon
+                style={{ marginBottom: 20 }}
+                message="Chưa tải được danh mục"
+                description={categoryLoadError}
+              />
+            )}
+
             <Form
               form={form}
               layout="vertical"
@@ -478,11 +544,10 @@ export function Component() {
                 <Select
                   placeholder="Chọn danh mục"
                   style={{ fontFamily: 'var(--font-mono)' }}
-                  disabled={isDescriptionOnly}
-                  options={CATEGORIES.map((c) => ({
-                    value: c.id,
-                    label: c.name,
-                  }))}
+                  disabled={isDescriptionOnly || categoriesLoading || categories.length === 0}
+                  loading={categoriesLoading}
+                  notFoundContent={categoriesLoading ? <Spin size="small" /> : 'Không có danh mục khả dụng'}
+                  options={categoryOptions}
                 />
               </Form.Item>
 

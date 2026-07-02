@@ -65,7 +65,7 @@
 }
 
 /* ── Product grid (3 columns) ── */
-.product-grid {
+.seller-product-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
   gap: 16px;
@@ -73,13 +73,13 @@
 }
 
 @media (max-width: 900px) {
-  .product-grid {
+  .seller-product-grid {
     grid-template-columns: repeat(2, 1fr);
   }
 }
 
 @media (max-width: 560px) {
-  .product-grid {
+  .seller-product-grid {
     grid-template-columns: 1fr;
   }
 }
@@ -729,30 +729,48 @@
   font-size: 16px;
 }
 
-.seller-auction-detail .ant-descriptions {
+.seller-auction-detail__schedule-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(240px, 1fr));
+  gap: 1px;
   overflow: hidden;
+  border: 1px solid var(--color-border, #e8e8e8);
+  border-radius: 6px;
+  background: var(--color-border, #e8e8e8);
 }
 
-.seller-auction-detail .ant-descriptions-item-label,
-.seller-auction-detail .ant-descriptions-item-content {
-  font-family: var(--font-mono, 'JetBrains Mono', monospace);
-  font-size: 12px;
-  line-height: 1.45;
-}
-
-.seller-auction-detail .ant-descriptions-item-label {
-  width: 34%;
-  min-width: 112px;
-  color: var(--color-muted, #8c8c8c);
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.4px;
-}
-
-.seller-auction-detail .ant-descriptions-item-content {
+.seller-auction-detail__schedule-item {
   min-width: 0;
+  display: grid;
+  grid-template-columns: minmax(132px, 0.42fr) minmax(0, 1fr);
+  gap: 14px;
+  align-items: center;
+  padding: 14px 16px;
+  background: var(--color-surface, #fff);
+  font-family: var(--font-mono, 'JetBrains Mono', monospace);
+}
+
+.seller-auction-detail__schedule-item:last-child:nth-child(odd) {
+  grid-column: 1 / -1;
+}
+
+.seller-auction-detail__schedule-item span {
+  color: var(--color-muted, #8c8c8c);
+  font-size: 11px;
   font-weight: 700;
-  overflow-wrap: anywhere;
+  letter-spacing: 0.04em;
+  line-height: 1.35;
+  text-transform: uppercase;
+}
+
+.seller-auction-detail__schedule-item strong {
+  min-width: 0;
+  color: var(--color-text, #111);
+  font-size: 13px;
+  line-height: 1.45;
+  text-align: right;
+  overflow-wrap: break-word;
+  word-break: normal;
 }
 
 /* ── Responsive ── */
@@ -808,8 +826,13 @@
     padding: 14px 16px;
   }
 
-  .seller-auction-detail .ant-descriptions-item-label {
-    width: 38%;
-    min-width: 96px;
+  .seller-auction-detail__schedule-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .seller-auction-detail__schedule-item {
+    grid-template-columns: minmax(104px, 0.42fr) minmax(0, 1fr);
+    gap: 10px;
+    padding: 12px 14px;
   }
 }
