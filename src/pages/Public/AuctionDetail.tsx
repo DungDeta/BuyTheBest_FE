@@ -2,8 +2,8 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { App, Spin } from 'antd'
-import { MessageOutlined } from '@ant-design/icons'
-import { publicGet, privateDelete, privatePost } from '@/api/api'
+import { EyeOutlined, MessageOutlined } from '@ant-design/icons'
+import { publicGet, privateDelete, privateGet, privatePost } from '@/api/api'
 import { useAuthStore } from '@/store/useAuthStore'
 import { useAuctionWebSocket } from '@/hooks/useAuctionWebSocket'
 import { ProductHero } from '@/components/auction/ProductHero'
@@ -29,6 +29,15 @@ interface ProductDetailResponse {
   images?: NonNullable<Auction['product']>['images']
 }
 
+interface WatchStatusResponse {
+  watching: boolean
+}
+
+interface WatchToggleResponse {
+  added: boolean
+  auction_id: string
+}
+
 export function Component() {
   const { id } = useParams<{ id: string }>()
   const { message } = App.useApp()
@@ -46,6 +55,8 @@ export function Component() {
   const [currentBidderLabel, setCurrentBidderLabel] = useState<string | null>(null)
   const [currentParticipantId, setCurrentParticipantId] = useState<number | null>(null)
   const [roomParticipantCount, setRoomParticipantCount] = useState(0)
+  const [watching, setWatching] = useState(false)
+  const [watchLoading, setWatchLoading] = useState(false)
   const pendingSelfBidAmountRef = useRef<number | null>(null)
 
   const wsAuctionId = auction?.status === 'active' ? (auction.id ?? null) : null
@@ -140,6 +151,34 @@ export function Component() {
     fetchAuction()
     return () => { cancelled = true }
   }, [id])
+
+  useEffect(() => {
+    if (!id || !isAuthenticated()) {
+      setWatching(false)
+      return
+    }
+
+    let cancelled = false
+    setWatchLoading(true)
+    privateGet<WatchStatusResponse>(`/watchlist/${id}/status`)
+      .then((res) => {
+        if (!cancelled) {
+          setWatching(Boolean(res.data?.watching))
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setWatching(false)
+        }
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setWatchLoading(false)
+        }
+      })
+
+    return () => { cancelled = true }
+  }, [id, isAuthenticated])
 
   useEffect(() => {
     if (!wsAuctionId || !isAuthenticated()) return
@@ -323,6 +362,41 @@ export function Component() {
     message.info('Kết quả đấu giá kín đã được công bố')
   }, [currentBidderLabel, currentUserId, message])
 
+  const handleToggleWatch = useCallback(async () => {
+    if (!auction) return
+    if (!isAuthenticated()) {
+      message.info('Vui lòng đăng nhập để theo dõi phiên đấu giá')
+      navigate('/login')
+      return
+    }
+
+    setWatchLoading(true)
+    try {
+      const res = await privatePost<WatchToggleResponse>(`/watchlist/${auction.id}`)
+      const nextWatching = Boolean(res.data?.added)
+      setWatching(nextWatching)
+      setAuction((prev) => {
+        if (!prev) return prev
+        const current = prev.watcher_count ?? 0
+        const delta = nextWatching ? 1 : -1
+        return {
+          ...prev,
+          watcher_count: Math.max(0, current + delta),
+        }
+      })
+      message.success(
+        nextWatching
+          ? 'Đã thêm phiên vào danh sách theo dõi'
+          : 'Đã bỏ theo dõi phiên đấu giá',
+      )
+    } catch (err) {
+      const e = err as { error?: string }
+      message.error(e?.error ?? 'Không thể cập nhật trạng thái theo dõi')
+    } finally {
+      setWatchLoading(false)
+    }
+  }, [auction, isAuthenticated, message, navigate])
+
   useEffect(() => {
     subscribe('bid.placed', handleBidPlaced)
     subscribe('auction.extended', handleAuctionExtended)
@@ -368,6 +442,10 @@ export function Component() {
   const isActive = auction.status === 'active'
   const authed = isAuthenticated()
   const visibleParticipantCount = participantCount > 0 ? participantCount : roomParticipantCount
+  const canToggleWatch =
+    auction.status === 'active' ||
+    auction.status === 'scheduled' ||
+    watching
 
   return (
     <>
@@ -436,6 +514,19 @@ export function Component() {
               auction.status === 'cancelled'
             }
           />
+
+          <button
+            type="button"
+            className={`watch-toggle-btn${watching ? ' watch-toggle-btn--active' : ''}`}
+            onClick={handleToggleWatch}
+            disabled={watchLoading || !canToggleWatch}
+            aria-pressed={watching}
+          >
+            <span>
+              <EyeOutlined aria-hidden="true" /> {watching ? 'Đang theo dõi' : 'Theo dõi phiên này'}
+            </span>
+            <small>{auction.watcher_count ?? 0} người theo dõi</small>
+          </button>
 
           <BidPanel
             auction={auction}

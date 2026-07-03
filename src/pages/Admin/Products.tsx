@@ -13,7 +13,13 @@ import {
   Tag,
 } from 'antd'
 import type { ColumnsType } from 'antd/es/table'
-import { CheckOutlined, CloseOutlined, PictureOutlined } from '@ant-design/icons'
+import {
+  CheckOutlined,
+  CloseOutlined,
+  LeftOutlined,
+  PictureOutlined,
+  RightOutlined,
+} from '@ant-design/icons'
 import dayjs from 'dayjs'
 import { privateGet, privatePost } from '@/api/api'
 import type { ErrorResponse } from '@/types/api'
@@ -39,6 +45,21 @@ interface ProductListItem {
   status: ProductStatus
   category_id: number
   seller_id: number
+  category?: {
+    id: number
+    name: string
+    slug: string
+  }
+  seller?: {
+    id: number
+    public_id?: string
+    display_name: string
+    email?: string
+    shop_name?: string
+    description?: string
+    avg_rating?: number
+    total_sales?: number
+  }
   cover: ProductCover | null
   created_at: string
 }
@@ -46,11 +67,6 @@ interface ProductListItem {
 interface ProductDetail extends ProductListItem {
   description: string
   images: ProductCover[]
-  seller?: {
-    id: number
-    username: string
-    email: string
-  }
 }
 
 interface ProductsPage {
@@ -90,6 +106,14 @@ const TAB_ITEMS = [
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
+function sellerName(product: ProductListItem): string {
+  return product.seller?.shop_name || product.seller?.display_name || `Người bán #${product.seller_id}`
+}
+
+function categoryName(product: ProductListItem): string {
+  return product.category?.name || `Danh mục #${product.category_id}`
+}
+
 export function Component() {
   useDocumentTitle('Quản trị · Sản phẩm')
   const { message } = App.useApp()
@@ -102,6 +126,7 @@ export function Component() {
   const [drawerOpen, setDrawerOpen] = useState(false)
   const [selected, setSelected] = useState<ProductDetail | null>(null)
   const [detailLoading, setDetailLoading] = useState(false)
+  const [activeImageIndex, setActiveImageIndex] = useState(0)
 
   const [rejecting, setRejecting] = useState(false)
   const [rejectReason, setRejectReason] = useState('')
@@ -133,6 +158,15 @@ export function Component() {
     fetchList(status, page)
   }, [status, page, fetchList])
 
+  useEffect(() => {
+    const count = selected?.images?.length ?? 0
+    if (count === 0) {
+      setActiveImageIndex(0)
+      return
+    }
+    setActiveImageIndex((idx) => Math.min(idx, count - 1))
+  }, [selected?.id, selected?.images?.length])
+
   function handleTabChange(key: string) {
     setStatus(key as ProductStatus)
     setPage(1)
@@ -141,6 +175,7 @@ export function Component() {
   async function openDrawer(record: ProductListItem) {
     setDrawerOpen(true)
     setSelected(null)
+    setActiveImageIndex(0)
     setRejecting(false)
     setRejectReason('')
     setDetailLoading(true)
@@ -161,6 +196,7 @@ export function Component() {
   function closeDrawer() {
     setDrawerOpen(false)
     setSelected(null)
+    setActiveImageIndex(0)
     setRejecting(false)
     setRejectReason('')
   }
@@ -231,9 +267,10 @@ export function Component() {
       render: (c: string) => CONDITION_LABELS[c] ?? c,
     },
     {
-      title: 'Mã người bán',
-      dataIndex: 'seller_id',
-      width: 100,
+      title: 'Người bán',
+      dataIndex: 'seller',
+      width: 180,
+      render: (_: unknown, record) => sellerName(record),
     },
     {
       title: 'Ngày tạo',
@@ -255,6 +292,12 @@ export function Component() {
       },
     },
   ]
+
+  const selectedImages = selected?.images
+    ? selected.images.slice().sort((a, b) => a.sort_order - b.sort_order)
+    : []
+  const activeImage = selectedImages[activeImageIndex] ?? selectedImages[0] ?? null
+  const canReviewSelected = selected?.status === 'pending_review'
 
   return (
     <div className="admin-page">
@@ -338,7 +381,7 @@ export function Component() {
                   <span className="product-mobile-card__main">
                     <span className="product-mobile-card__title">{product.title}</span>
                     <span className="product-mobile-card__meta-line">
-                      Mã người bán: {product.seller_id}
+                      Người bán: {sellerName(product)}
                     </span>
                   </span>
                   <Tag color={statusConfig?.color}>
@@ -400,22 +443,52 @@ export function Component() {
         {selected && (
           <div className="review-drawer product-review-drawer">
             {/* Gallery */}
-            {selected.images && selected.images.length > 0 && (
+            {activeImage && (
               <div>
                 <p className="review-drawer__section-title">Hình ảnh</p>
-                <div className="review-gallery">
-                  {selected.images
-                    .slice()
-                    .sort((a, b) => a.sort_order - b.sort_order)
-                    .map((img, idx) => (
-                      <img
-                        key={img.id}
-                        src={img.url}
-                        alt={`${selected.title} ${idx + 1}`}
-                        className={`review-gallery__img${img.is_primary ? ' review-gallery__img--primary' : ''}`}
-                      />
-                    ))}
+                <div className="review-gallery-carousel">
+                  <button
+                    type="button"
+                    className="review-gallery-carousel__nav"
+                    onClick={() => setActiveImageIndex((idx) => (idx - 1 + selectedImages.length) % selectedImages.length)}
+                    disabled={selectedImages.length < 2}
+                    aria-label="Xem ảnh trước"
+                  >
+                    <LeftOutlined />
+                  </button>
+                  <img
+                    src={activeImage.url}
+                    alt={`${selected.title} ${activeImageIndex + 1}`}
+                    className="review-gallery-carousel__img"
+                  />
+                  <button
+                    type="button"
+                    className="review-gallery-carousel__nav"
+                    onClick={() => setActiveImageIndex((idx) => (idx + 1) % selectedImages.length)}
+                    disabled={selectedImages.length < 2}
+                    aria-label="Xem ảnh tiếp theo"
+                  >
+                    <RightOutlined />
+                  </button>
+                  <span className="review-gallery-carousel__counter">
+                    {activeImageIndex + 1}/{selectedImages.length}
+                  </span>
                 </div>
+                {selectedImages.length > 1 && (
+                  <div className="review-gallery-thumbs" aria-label="Danh sách ảnh sản phẩm">
+                    {selectedImages.map((img, idx) => (
+                      <button
+                        key={img.id}
+                        type="button"
+                        className={`review-gallery-thumb${idx === activeImageIndex ? ' review-gallery-thumb--active' : ''}`}
+                        onClick={() => setActiveImageIndex(idx)}
+                        aria-label={`Xem ảnh ${idx + 1}`}
+                      >
+                        <img src={img.url} alt="" />
+                      </button>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
 
@@ -438,7 +511,7 @@ export function Component() {
               </div>
               <div className="review-product-fact">
                 <span>Danh mục</span>
-                <strong>ID: {selected.category_id}</strong>
+                <strong>{categoryName(selected)}</strong>
               </div>
               <div className="review-product-fact">
                 <span>Ngày tạo</span>
@@ -456,24 +529,20 @@ export function Component() {
             {/* Seller */}
             <section className="review-seller-card">
               <span className="review-drawer__section-title">Người bán</span>
-              {selected.seller ? (
-                <div className="review-seller-card__body">
-                  <div>
-                    <span>Username</span>
-                    <strong>{selected.seller.username}</strong>
-                  </div>
+              <div className="review-seller-card__body">
+                <div>
+                  <span>Tên hiển thị</span>
+                  <strong>{sellerName(selected)}</strong>
+                </div>
+                {selected.seller?.email && (
                   <div>
                     <span>Email</span>
                     <strong>{selected.seller.email}</strong>
                   </div>
-                </div>
-              ) : (
-                <div className="review-seller-card__body">
-                  <div>
-                    <span>Mã người bán</span>
-                    <strong>{selected.seller_id}</strong>
-                  </div>
-                </div>
+                )}
+              </div>
+              {selected.seller?.description && (
+                <p className="review-seller-card__description">{selected.seller.description}</p>
               )}
             </section>
 
@@ -516,7 +585,7 @@ export function Component() {
             )}
 
             {/* Actions */}
-            {!rejecting && (
+            {!rejecting && canReviewSelected && (
               <div className="review-actions">
                 <Button
                   type="primary"
@@ -535,6 +604,11 @@ export function Component() {
                 >
                   Từ chối
                 </Button>
+              </div>
+            )}
+            {!rejecting && !canReviewSelected && (
+              <div className="review-state-note">
+                Sản phẩm này đã được xử lý, không còn cần duyệt hoặc từ chối.
               </div>
             )}
           </div>

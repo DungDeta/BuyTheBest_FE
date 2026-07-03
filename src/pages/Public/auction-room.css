@@ -567,6 +567,52 @@
 
 /* ── Room tabs placeholder ───────────────────────────── */
 
+.watch-toggle-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--fg);
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.watch-toggle-btn > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.watch-toggle-btn small {
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  white-space: nowrap;
+}
+
+.watch-toggle-btn:hover:not(:disabled) {
+  background: var(--accent-soft, #f0f7ff);
+  border-color: var(--accent, #2563eb);
+}
+
+.watch-toggle-btn--active {
+  background: #f0f7ff;
+  border-color: var(--accent, #2563eb);
+  color: var(--accent, #2563eb);
+}
+
+.watch-toggle-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
 .room-tabs {
   background: var(--surface);
   border: 2px solid var(--border-strong);
@@ -764,7 +810,8 @@
   font-family: var(--font-mono);
   font-size: 10px;
   color: var(--muted);
-  margin-top: -6px;
+  margin: 5px 0 0;
+  line-height: 1.4;
 }
 
 /* ── Primary action button ───────────────────────────── */
@@ -841,6 +888,7 @@
 }
 
 .increment-btn {
+  flex: 1 1 112px;
   font-family: var(--font-mono);
   font-size: 10px;
   font-weight: 700;
@@ -852,6 +900,7 @@
   cursor: pointer;
   transition: background 0.1s, border-color 0.1s;
   white-space: nowrap;
+  text-align: center;
 }
 
 .increment-btn:hover {

@@ -482,6 +482,16 @@
 
 /* ─── Review gallery ──────────────────────────────────────────── */
 
+.review-seller-card__description {
+  margin: 0;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+  color: var(--fg);
+  font-size: 13px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
 .review-gallery {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -505,12 +515,103 @@
 
 /* ─── Review actions ──────────────────────────────────────────── */
 
+.review-gallery-carousel {
+  position: relative;
+  display: grid;
+  grid-template-columns: 40px 1fr 40px;
+  align-items: center;
+  gap: 8px;
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+
+.review-gallery-carousel__img {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: contain;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--paper-2);
+}
+
+.review-gallery-carousel__nav {
+  width: 36px;
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--fg);
+  cursor: pointer;
+}
+
+.review-gallery-carousel__nav:disabled {
+  cursor: not-allowed;
+  opacity: 0.35;
+}
+
+.review-gallery-carousel__counter {
+  position: absolute;
+  right: 58px;
+  bottom: 18px;
+  padding: 2px 7px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.9);
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 700;
+}
+
+.review-gallery-thumbs {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(64px, 1fr));
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.review-gallery-thumb {
+  padding: 0;
+  border: 2px solid transparent;
+  border-radius: var(--radius);
+  background: transparent;
+  cursor: pointer;
+}
+
+.review-gallery-thumb img {
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  border-radius: calc(var(--radius) - 2px);
+  border: 1px solid var(--border);
+  display: block;
+}
+
+.review-gallery-thumb--active {
+  border-color: var(--accent);
+}
+
 .review-actions {
   display: flex;
   gap: 12px;
   padding-top: 16px;
   border-top: 1px solid var(--border);
   flex-wrap: wrap;
+}
+
+.review-state-note {
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--paper-2);
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.5;
 }
 
 .review-reject-form {

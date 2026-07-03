@@ -251,7 +251,7 @@ export function BidPanel({
 
       <div className="bid-panel-footer">
         <span>
-          {bidCount} lượt đặt · {watcherCount} đang xem
+          {bidCount} lượt đặt · {watcherCount} theo dõi
         </span>
         {isActive && (
           <span

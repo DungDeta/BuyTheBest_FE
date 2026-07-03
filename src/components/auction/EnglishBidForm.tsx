@@ -20,15 +20,7 @@ function formatVnd(amount: number): string {
 }
 
 function formatIncrement(amount: number): string {
-  if (amount >= 1_000_000) {
-    const m = amount / 1_000_000
-    return `+${Number.isInteger(m) ? m : m.toFixed(1)}M`
-  }
-  if (amount >= 1_000) {
-    const k = amount / 1_000
-    return `+${Number.isInteger(k) ? k : k.toFixed(0)}K`
-  }
-  return `+${amount.toLocaleString('vi-VN')}`
+  return `+${formatVnd(amount)}`
 }
 
 export function EnglishBidForm({
@@ -160,7 +152,7 @@ export function EnglishBidForm({
           <span className="bid-current__price">{formatVnd(auction.current_price)}</span>
           {delta > 0 && (
             <span className="bid-current__delta">
-              +{formatVnd(delta)} vs khởi điểm
+              Cao hơn giá khởi điểm {formatVnd(delta)}
             </span>
           )}
         </div>

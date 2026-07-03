@@ -15,6 +15,17 @@ interface ChatMessagePayload {
   sent_at: string
 }
 
+interface ChatSendResponse {
+  id: number
+  auction_id: number
+  user_id: number | null
+  message_type?: 'user' | 'system_bid' | 'system_extension' | 'system_end'
+  content: string
+  sender_label?: string | null
+  sent_at?: string
+  created_at?: string
+}
+
 interface RoomChatProps {
   auctionId: string
   auctionStatus: string
@@ -25,6 +36,15 @@ interface RoomChatProps {
 
 function isSystem(msg: ChatMessage): boolean {
   return msg.message_type !== 'user'
+}
+
+function appendUniqueMessage(next: ChatMessage) {
+  return (prev: ChatMessage[]) => {
+    if (prev.some((msg) => msg.id === next.id)) {
+      return prev
+    }
+    return [...prev, next]
+  }
 }
 
 export function RoomChat({ auctionId, auctionStatus, isLoggedIn, subscribe, unsubscribe }: RoomChatProps) {
@@ -79,7 +99,7 @@ export function RoomChat({ auctionId, auctionStatus, isLoggedIn, subscribe, unsu
       sent_at: p.sent_at,
     }
 
-    setMessages((prev) => [...prev, msg])
+    setMessages(appendUniqueMessage(msg))
   }, [])
 
   useEffect(() => {
@@ -99,7 +119,18 @@ export function RoomChat({ auctionId, auctionStatus, isLoggedIn, subscribe, unsu
 
     setSending(true)
     try {
-      await privatePost(`/auctions/${auctionId}/chat`, { content })
+      const res = await privatePost<ChatSendResponse>(`/auctions/${auctionId}/chat`, { content })
+      if (res.data) {
+        setMessages(appendUniqueMessage({
+          id: res.data.id,
+          auction_id: res.data.auction_id,
+          user_id: res.data.user_id,
+          message_type: res.data.message_type ?? 'user',
+          content: res.data.content,
+          sender_label: res.data.sender_label ?? 'Bạn',
+          sent_at: res.data.sent_at ?? res.data.created_at ?? res.timestamp,
+        }))
+      }
       setInputValue('')
       inputRef.current?.focus()
     } catch (err) {
