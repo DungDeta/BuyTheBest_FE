@@ -4,6 +4,7 @@ import { BidderList } from '@/components/auction/BidderList'
 import { RoomChat } from '@/components/auction/RoomChat'
 import { AuctionLog } from '@/components/auction/AuctionLog'
 import { DescriptionTab } from '@/components/auction/DescriptionTab'
+import { publicGet } from '@/api/api'
 import type { Auction, BidHistoryItem, WsEventType } from '@/types/auction'
 
 interface RoomTabsProps {
@@ -47,8 +48,31 @@ export function RoomTabs({
     auction.status === 'ended' || auction.status === 'closed_bin'
 
   useEffect(() => {
-    setResolvedParticipantCount(bidFeedParticipantCount)
-  }, [auction.id, bidFeedParticipantCount])
+    let cancelled = false
+
+    async function resolveBidderCount() {
+      try {
+        const res = await publicGet<{ items: Array<{ bid_count: number }> }>(
+          `/auctions/${auction.id}/participants?limit=50`,
+        )
+        if (cancelled) return
+
+        const apiBidderCount = (res.data?.items ?? [])
+          .filter((participant) => participant.bid_count > 0)
+          .length
+        setResolvedParticipantCount(Math.max(apiBidderCount, bidFeedParticipantCount))
+      } catch {
+        if (!cancelled) {
+          setResolvedParticipantCount(bidFeedParticipantCount)
+        }
+      }
+    }
+
+    resolveBidderCount()
+    return () => {
+      cancelled = true
+    }
+  }, [auction.id, bidFeedParticipantCount, participantCount])
 
   const handleBidderCountLoaded = useCallback((count: number) => {
     setResolvedParticipantCount(Math.max(count, bidFeedParticipantCount))
