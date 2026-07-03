@@ -38,12 +38,13 @@ export function BidderList({
       setLoading(true)
       try {
         const res = await publicGet<{ items: Participant[]; participant_count: number }>(
-          `/auctions/${auctionId}/participants`
+          `/auctions/${auctionId}/participants?limit=50`
         )
         if (!cancelled && res.data) {
           const items = res.data.items ?? []
-          const nextTotal = res.data.participant_count ?? items.length
-          setParticipants(items)
+          const bidders = items.filter((participant) => participant.bid_count > 0)
+          const nextTotal = bidders.length
+          setParticipants(bidders)
           setTotal(nextTotal)
           onCountLoaded?.(nextTotal)
         }
@@ -68,7 +69,7 @@ export function BidderList({
   if (participants.length === 0) {
     return (
       <div className="tab-content tab-content--empty">
-        <span>Chưa có người tham gia</span>
+        <span>Chưa có người đặt giá</span>
       </div>
     )
   }

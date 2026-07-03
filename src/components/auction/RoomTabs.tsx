@@ -34,18 +34,25 @@ export function RoomTabs({
   unsubscribe,
 }: RoomTabsProps) {
   const [activeTab, setActiveTab] = useState<TabKey>('feed')
-  const [resolvedParticipantCount, setResolvedParticipantCount] = useState(participantCount)
+  const bidFeedParticipantCount = new Set(
+    bidFeed.map((bid) => String(
+      bid.bidder_id ?? bid.participant_id ?? bid.bidder_label,
+    )),
+  ).size
+  const [resolvedParticipantCount, setResolvedParticipantCount] = useState(
+    bidFeedParticipantCount,
+  )
 
   const showLog =
     auction.status === 'ended' || auction.status === 'closed_bin'
 
   useEffect(() => {
-    setResolvedParticipantCount(participantCount)
-  }, [participantCount])
+    setResolvedParticipantCount(bidFeedParticipantCount)
+  }, [auction.id, bidFeedParticipantCount])
 
   const handleBidderCountLoaded = useCallback((count: number) => {
-    setResolvedParticipantCount(count)
-  }, [])
+    setResolvedParticipantCount(Math.max(count, bidFeedParticipantCount))
+  }, [bidFeedParticipantCount])
 
   const tabs: { key: TabKey; label: string }[] = [
     { key: 'feed', label: `Hoạt động (${bidFeed.length > 0 ? bidFeed.length : '…'})` },
