@@ -3,6 +3,7 @@ export type AuctionStatus = 'scheduled' | 'active' | 'ended' | 'closed_bin' | 'c
 export type BidType = 'manual' | 'auto' | 'buy_now'
 export type AutoBidStatus = 'active' | 'cancelled' | 'exhausted' | 'won'
 export type AuctionConnectionState = 'idle' | 'connecting' | 'connected' | 'reconnecting' | 'failed'
+export type AuctionRoomMembershipState = 'guest' | 'joining' | 'joined' | 'failed'
 
 export interface Auction {
   id: string
@@ -136,6 +137,8 @@ export interface AuditLogEvent {
 }
 
 export type WsEventType =
+  | 'room.joined'
+  | 'room.join_failed'
   | 'bid.placed'
   | 'autobid.triggered'
   | 'auction.extended'
@@ -212,6 +215,18 @@ export interface SealedRevealedPayload {
 export interface ParticipantPayload {
   auction_id: string
   participant_count: number
+}
+
+export interface RoomJoinedPayload extends ParticipantPayload {
+  participant_id?: number | null
+  bidder_label?: string | null
+  official_participant?: boolean
+  server_time?: string | null
+}
+
+export interface RoomJoinFailedPayload {
+  auction_id?: string
+  message?: string
 }
 
 export interface RoomPresenceResponse {

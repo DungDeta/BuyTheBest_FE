@@ -9,6 +9,7 @@ interface BidderListProps {
   currentUserId: string | null
   currentBidderLabel: string | null
   currentParticipantId: number | null
+  realtimeCount: number
   onCountLoaded?: (count: number) => void
 }
 
@@ -23,6 +24,7 @@ export function BidderList({
   currentUserId,
   currentBidderLabel,
   currentParticipantId,
+  realtimeCount,
   onCountLoaded,
 }: BidderListProps) {
   const [participants, setParticipants] = useState<Participant[]>([])
@@ -53,7 +55,7 @@ export function BidderList({
 
     fetchParticipants()
     return () => { cancelled = true }
-  }, [auctionId, onCountLoaded])
+  }, [auctionId, onCountLoaded, realtimeCount])
 
   if (loading) {
     return (

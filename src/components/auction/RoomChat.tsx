@@ -30,6 +30,7 @@ interface RoomChatProps {
   auctionId: string
   auctionStatus: string
   isLoggedIn: boolean
+  roomReady: boolean
   subscribe: (eventType: WsEventType, callback: (payload: unknown) => void) => void
   unsubscribe: (eventType: WsEventType, callback: (payload: unknown) => void) => void
 }
@@ -47,7 +48,14 @@ function appendUniqueMessage(next: ChatMessage) {
   }
 }
 
-export function RoomChat({ auctionId, auctionStatus, isLoggedIn, subscribe, unsubscribe }: RoomChatProps) {
+export function RoomChat({
+  auctionId,
+  auctionStatus,
+  isLoggedIn,
+  roomReady,
+  subscribe,
+  unsubscribe,
+}: RoomChatProps) {
   const { message } = App.useApp()
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [loading, setLoading] = useState(true)
@@ -115,7 +123,7 @@ export function RoomChat({ auctionId, auctionStatus, isLoggedIn, subscribe, unsu
 
   async function handleSend() {
     const content = inputValue.trim()
-    if (!content || sending) return
+    if (!content || sending || !roomReady) return
 
     setSending(true)
     try {
@@ -228,7 +236,7 @@ export function RoomChat({ auctionId, auctionStatus, isLoggedIn, subscribe, unsu
       </div>
 
       <div className="chat-footer">
-        {isLoggedIn ? (
+        {isLoggedIn && roomReady ? (
           <>
             <div className="chat-input" role="form" aria-label="Gửi tin nhắn">
               <input
@@ -256,7 +264,9 @@ export function RoomChat({ auctionId, auctionStatus, isLoggedIn, subscribe, unsu
             <div className="chat-rate-note">Tối đa 30 tin/phút</div>
           </>
         ) : (
-          <div className="chat-gate">Đăng nhập để chat</div>
+          <div className="chat-gate">
+            {isLoggedIn ? 'Đang kết nối vào phòng đấu giá…' : 'Đăng nhập để chat'}
+          </div>
         )}
       </div>
     </div>

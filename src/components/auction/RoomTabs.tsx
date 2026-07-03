@@ -14,6 +14,7 @@ interface RoomTabsProps {
   currentParticipantId: number | null
   isLoggedIn: boolean
   participantCount: number
+  roomReady: boolean
   subscribe: (eventType: WsEventType, callback: (payload: unknown) => void) => void
   unsubscribe: (eventType: WsEventType, callback: (payload: unknown) => void) => void
 }
@@ -28,6 +29,7 @@ export function RoomTabs({
   currentParticipantId,
   isLoggedIn,
   participantCount,
+  roomReady,
   subscribe,
   unsubscribe,
 }: RoomTabsProps) {
@@ -38,7 +40,7 @@ export function RoomTabs({
     auction.status === 'ended' || auction.status === 'closed_bin'
 
   useEffect(() => {
-    setResolvedParticipantCount((prev) => Math.max(prev, participantCount))
+    setResolvedParticipantCount(participantCount)
   }, [participantCount])
 
   const handleBidderCountLoaded = useCallback((count: number) => {
@@ -112,6 +114,7 @@ export function RoomTabs({
             currentUserId={currentUserId}
             currentBidderLabel={currentBidderLabel}
             currentParticipantId={currentParticipantId}
+            realtimeCount={participantCount}
             onCountLoaded={handleBidderCountLoaded}
           />
         )}
@@ -128,6 +131,7 @@ export function RoomTabs({
             auctionId={auction.id}
             auctionStatus={auction.status}
             isLoggedIn={isLoggedIn}
+            roomReady={roomReady}
             subscribe={subscribe}
             unsubscribe={unsubscribe}
           />

@@ -231,6 +231,15 @@ export function BidPanel({
       )
     }
 
+    if (connectionState !== 'connected') {
+      return (
+        <div className="bid-gate" role="status">
+          <span className="bid-gate__msg">Đang kết nối vào phòng đấu giá…</span>
+          <span className="bid-gate__date">Biểu mẫu đặt giá sẽ mở khi kết nối hoàn tất.</span>
+        </div>
+      )
+    }
+
     return (
       <ModeForm
         auction={auction}

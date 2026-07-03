@@ -3,7 +3,7 @@ import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { App, Spin } from 'antd'
 import { EyeOutlined, MessageOutlined } from '@ant-design/icons'
-import { publicGet, privateDelete, privateGet, privatePost } from '@/api/api'
+import { publicGet, privateGet, privatePost } from '@/api/api'
 import { useAuthStore } from '@/store/useAuthStore'
 import { useAuctionWebSocket } from '@/hooks/useAuctionWebSocket'
 import { ProductHero } from '@/components/auction/ProductHero'
@@ -19,7 +19,6 @@ import type {
   BidHistoryItem,
   BidPlacedPayload,
   DutchPriceTickPayload,
-  RoomPresenceResponse,
   SealedRevealedPayload,
 } from '@/types/auction'
 import './auction-room.css'
@@ -63,7 +62,12 @@ export function Component() {
   const {
     isConnected,
     connectionState,
+    membershipState,
+    joinError,
     participantCount,
+    currentParticipantId: joinedParticipantId,
+    currentBidderLabel: joinedBidderLabel,
+    serverNow: joinedServerNow,
     subscribe,
     unsubscribe,
   } = useAuctionWebSocket(wsAuctionId)
@@ -181,42 +185,33 @@ export function Component() {
   }, [id, isAuthenticated])
 
   useEffect(() => {
-    if (!wsAuctionId || !isAuthenticated()) return
+    if (typeof joinedParticipantId === 'number') {
+      setCurrentParticipantId(joinedParticipantId)
+    }
+    if (joinedBidderLabel) {
+      setCurrentBidderLabel(joinedBidderLabel)
+    }
+    if (joinedServerNow) {
+      setServerNow(joinedServerNow)
+    }
+  }, [joinedBidderLabel, joinedParticipantId, joinedServerNow])
 
-    const auctionId = wsAuctionId
-    let joined = false
+  useEffect(() => {
+    if (!id) return
 
-    async function joinRoom() {
-      try {
-        const res = await privatePost<RoomPresenceResponse>(`/auctions/${auctionId}/join`)
-        const participant = res.data?.participant
-        const participantId = participant?.participant_id ?? participant?.id ?? null
-        const bidderLabel = participant?.bidder_label ?? participant?.label ?? null
-
-        if (typeof participantId === 'number') {
-          setCurrentParticipantId(participantId)
-        }
-        if (bidderLabel) {
-          setCurrentBidderLabel(bidderLabel)
-        }
-        if (res.data?.server_time ?? res.timestamp) {
-          setServerNow(res.data?.server_time ?? res.timestamp)
-        }
-        if (typeof res.data?.participant_count === 'number') {
+    let cancelled = false
+    publicGet<{ participant_count: number }>(`/auctions/${id}/participants?limit=1`)
+      .then((res) => {
+        if (!cancelled && typeof res.data?.participant_count === 'number') {
           setRoomParticipantCount(res.data.participant_count)
         }
-        joined = true
-      } catch {
-      }
-    }
-
-    joinRoom()
+      })
+      .catch(() => undefined)
 
     return () => {
-      if (!joined) return
-      privateDelete(`/auctions/${auctionId}/join`).catch(() => undefined)
+      cancelled = true
     }
-  }, [wsAuctionId, isAuthenticated])
+  }, [id])
 
   const handleBidPlaced = useCallback((payload: unknown) => {
     const p = payload as BidPlacedPayload
@@ -441,7 +436,16 @@ export function Component() {
   const title = auction.product?.title ?? `Auction #${auction.id.slice(0, 8)}`
   const isActive = auction.status === 'active'
   const authed = isAuthenticated()
-  const visibleParticipantCount = participantCount > 0 ? participantCount : roomParticipantCount
+  const roomConnectionState =
+    membershipState === 'failed'
+      ? 'failed'
+      : authed && connectionState === 'connected' && membershipState !== 'joined'
+        ? 'connecting'
+        : connectionState
+  const roomReady =
+    roomConnectionState === 'connected' &&
+    (!authed || membershipState === 'joined')
+  const visibleParticipantCount = participantCount ?? roomParticipantCount
   const canToggleWatch =
     auction.status === 'active' ||
     auction.status === 'scheduled' ||
@@ -469,6 +473,7 @@ export function Component() {
             currentParticipantId={currentParticipantId}
             isLoggedIn={authed}
             participantCount={visibleParticipantCount}
+            roomReady={roomReady}
             subscribe={subscribe}
             unsubscribe={unsubscribe}
           />
@@ -478,27 +483,31 @@ export function Component() {
           {isActive && (
             <div
               className={`room-ws-badge${
-                isConnected
+                roomReady
                   ? ' room-ws-badge--live'
-                  : connectionState === 'failed'
+                  : roomConnectionState === 'failed'
                     ? ' room-ws-badge--error'
                     : ''
               }`}
               aria-label={
-                isConnected
+                roomReady
                   ? 'Đang kết nối trực tiếp'
-                  : connectionState === 'failed'
-                    ? 'Không thể kết nối phòng đấu giá'
-                    : 'Đang kết nối lại'
+                  : roomConnectionState === 'failed'
+                    ? joinError ?? 'Không thể kết nối phòng đấu giá'
+                    : authed && isConnected
+                      ? 'Đang ghi nhận người tham gia'
+                      : 'Đang kết nối lại'
               }
-              role={connectionState === 'failed' ? 'alert' : 'status'}
+              role={roomConnectionState === 'failed' ? 'alert' : 'status'}
             >
               <span className="room-ws-badge__dot" aria-hidden="true" />
-              {isConnected
+              {roomReady
                 ? 'Đang diễn ra'
-                : connectionState === 'failed'
+                : roomConnectionState === 'failed'
                   ? 'Mất kết nối'
-                  : 'Đang kết nối…'}
+                  : authed && isConnected
+                    ? 'Đang tham gia phòng…'
+                    : 'Đang kết nối…'}
             </div>
           )}
 
@@ -534,7 +543,7 @@ export function Component() {
             currentUserId={currentUserId}
             currentBidderLabel={currentBidderLabel}
             currentParticipantId={currentParticipantId}
-            connectionState={connectionState}
+            connectionState={roomConnectionState}
             onBidPlaced={markSelfBid}
           />
 
