@@ -264,14 +264,12 @@ export function Component() {
   const hasActiveDispute = Boolean(order.dispute) || order.payment?.escrow_status === 'disputed'
   const disputeReferenceAt =
     order.shipment?.delivered_at ??
-    order.delivered_at ??
-    order.shipment?.shipped_at ??
-    order.shipped_at
+    order.delivered_at
   const canOpenDispute = Boolean(
     buyer &&
       !hasActiveDispute &&
       order.payment?.escrow_status === 'held' &&
-      (order.status === 'shipped' || order.status === 'delivered') &&
+      order.status === 'delivered' &&
       disputeReferenceAt &&
       dayjs().diff(dayjs(disputeReferenceAt), 'day', true) <= 30,
   )

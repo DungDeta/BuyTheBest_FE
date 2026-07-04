@@ -77,7 +77,7 @@ export function EnglishBidForm({
   async function handlePlaceBid() {
     const parsed = parseInt(bidInput.replace(/\D/g, ''), 10)
     if (isNaN(parsed) || parsed < minBid) {
-      message.error(`Bid tối thiểu là ${formatVnd(minBid)}`)
+      message.error(`Giá tối thiểu là ${formatVnd(minBid)}`)
       return
     }
     const result = await placeBid(parsed)

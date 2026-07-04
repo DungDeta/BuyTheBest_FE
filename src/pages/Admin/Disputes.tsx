@@ -156,7 +156,8 @@ function shortDisputeId(id: string | undefined): string {
 
 function msgRole(msg: DisputeMessage): 'admin' | 'buyer' | 'seller' {
   if (msg.is_admin) return 'admin'
-  return 'buyer' // without buyer/seller IDs we default to buyer for non-admin
+  if (msg.sender_role === 'buyer' || msg.sender_role === 'seller') return msg.sender_role
+  return 'buyer' // legacy API fallback
 }
 
 function evidenceSrc(ev: DisputeEvidence): string {

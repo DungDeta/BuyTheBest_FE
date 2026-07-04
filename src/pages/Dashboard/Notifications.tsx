@@ -45,7 +45,9 @@ const PREF_LABELS: Record<string, string> = {
   outbid: 'Bị vượt giá',
   auction_won: 'Thắng phiên đấu giá',
   auction_ended: 'Phiên đã kết thúc',
+  auto_bid_exhausted: 'Đặt giá tự động hết ngân sách',
   payment_received: 'Thanh toán đã ghi nhận',
+  order_created: 'Đơn hàng mới',
   order_paid: 'Đơn hàng đã thanh toán',
   order_shipped: 'Đơn hàng đã gửi',
   order_cancelled: 'Đơn hàng đã hủy',
@@ -69,6 +71,8 @@ const PREF_LABELS: Record<string, string> = {
 const MANDATORY_EVENT_TYPES = new Set([
   'auction_won',
   'payment_received',
+  'auto_bid_exhausted',
+  'order_created',
   'order_paid',
   'order_cancelled',
   'dispute_opened',

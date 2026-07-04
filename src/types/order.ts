@@ -128,6 +128,7 @@ export interface OrderReview {
 export interface DisputeMessage {
   id: number
   sender_id: number
+  sender_role?: 'buyer' | 'seller' | 'admin'
   content: string
   is_admin: boolean
   sent_at: string
