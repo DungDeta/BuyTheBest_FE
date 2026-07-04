@@ -9,13 +9,14 @@ interface ChatMessagePayload {
   id: number
   auction_id: number
   user_id: number | null
-  message_type: 'user' | 'system_bid' | 'system_extension' | 'system_end'
+  message_type?: 'user' | 'system_bid' | 'system_extension' | 'system_end'
   content: string
-  sender_label: string | null
-  sent_at: string
+  sender_label?: string | null
+  sent_at?: string
+  created_at?: string
 }
 
-interface ChatSendResponse {
+interface ChatMessageResponse {
   id: number
   auction_id: number
   user_id: number | null
@@ -25,6 +26,8 @@ interface ChatSendResponse {
   sent_at?: string
   created_at?: string
 }
+
+type ChatListResponse = ChatMessageResponse[] | { items?: ChatMessageResponse[] }
 
 interface RoomChatProps {
   auctionId: string
@@ -45,6 +48,18 @@ function appendUniqueMessage(next: ChatMessage) {
       return prev
     }
     return [...prev, next]
+  }
+}
+
+function normalizeChatMessage(raw: ChatMessageResponse | ChatMessagePayload, fallbackSentAt?: string): ChatMessage {
+  return {
+    id: raw.id,
+    auction_id: raw.auction_id,
+    user_id: raw.user_id,
+    message_type: raw.message_type ?? 'user',
+    content: raw.content,
+    sender_label: raw.sender_label ?? null,
+    sent_at: raw.sent_at ?? raw.created_at ?? fallbackSentAt ?? new Date().toISOString(),
   }
 }
 
@@ -72,11 +87,12 @@ export function RoomChat({
     async function fetchMessages() {
       setLoading(true)
       try {
-        const res = await publicGet<{ items: ChatMessage[] }>(
+        const res = await publicGet<ChatListResponse>(
           `/auctions/${auctionId}/chat`
         )
-        if (!cancelled && res.data?.items) {
-          setMessages(res.data.items)
+        if (!cancelled) {
+          const rawItems = Array.isArray(res.data) ? res.data : (res.data?.items ?? [])
+          setMessages(rawItems.map((item) => normalizeChatMessage(item, res.timestamp)))
         }
       } catch {
         // Chat not available yet — not an error for the user
@@ -97,17 +113,7 @@ export function RoomChat({
     const p = payload as ChatMessagePayload
     if (!p || typeof p !== 'object') return
 
-    const msg: ChatMessage = {
-      id: p.id,
-      auction_id: p.auction_id,
-      user_id: p.user_id,
-      message_type: p.message_type,
-      content: p.content,
-      sender_label: p.sender_label,
-      sent_at: p.sent_at,
-    }
-
-    setMessages(appendUniqueMessage(msg))
+    setMessages(appendUniqueMessage(normalizeChatMessage(p)))
   }, [])
 
   useEffect(() => {
@@ -127,16 +133,12 @@ export function RoomChat({
 
     setSending(true)
     try {
-      const res = await privatePost<ChatSendResponse>(`/auctions/${auctionId}/chat`, { content })
+      const res = await privatePost<ChatMessageResponse>(`/auctions/${auctionId}/chat`, { content })
       if (res.data) {
+        const msg = normalizeChatMessage(res.data, res.timestamp)
         setMessages(appendUniqueMessage({
-          id: res.data.id,
-          auction_id: res.data.auction_id,
-          user_id: res.data.user_id,
-          message_type: res.data.message_type ?? 'user',
-          content: res.data.content,
-          sender_label: res.data.sender_label ?? 'Bạn',
-          sent_at: res.data.sent_at ?? res.data.created_at ?? res.timestamp,
+          ...msg,
+          sender_label: msg.sender_label ?? 'Bạn',
         }))
       }
       setInputValue('')

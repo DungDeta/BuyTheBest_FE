@@ -35,6 +35,7 @@ interface WatchStatusResponse {
 interface WatchToggleResponse {
   added: boolean
   auction_id: string
+  watcher_count?: number
 }
 
 export function Component() {
@@ -369,14 +370,15 @@ export function Component() {
     try {
       const res = await privatePost<WatchToggleResponse>(`/watchlist/${auction.id}`)
       const nextWatching = Boolean(res.data?.added)
+      const watcherCount = res.data?.watcher_count
       setWatching(nextWatching)
       setAuction((prev) => {
         if (!prev) return prev
-        const current = prev.watcher_count ?? 0
-        const delta = nextWatching ? 1 : -1
         return {
           ...prev,
-          watcher_count: Math.max(0, current + delta),
+          watcher_count: typeof watcherCount === 'number'
+            ? Math.max(0, watcherCount)
+            : Math.max(0, (prev.watcher_count ?? 0) + (nextWatching ? 1 : -1)),
         }
       })
       message.success(
