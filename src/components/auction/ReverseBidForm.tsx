@@ -21,7 +21,14 @@ export function ReverseBidForm({ auction, onBidPlaced }: ReverseBidFormProps) {
 
   const budget = auction.budget_cap ?? auction.starting_price
   const minDecrement = auction.min_decrement ?? 0
-  const maxAllowed = auction.current_price - minDecrement
+  const hasExistingBid = auction.bid_count > 0
+  const currentBestPrice = hasExistingBid ? auction.current_price : null
+  const maxAllowed = hasExistingBid
+    ? Math.max(auction.current_price - minDecrement, 1)
+    : budget
+  const priceHint = hasExistingBid
+    ? `Giá báo tối đa ${formatVnd(maxAllowed)}`
+    : `Lượt đầu có thể báo tối đa ${formatVnd(maxAllowed)}`
 
   async function handleSubmit() {
     const parsed = parseInt(bidInput.replace(/\D/g, ''), 10)
@@ -31,8 +38,8 @@ export function ReverseBidForm({ auction, onBidPlaced }: ReverseBidFormProps) {
       message.error('Vui lòng nhập mã sản phẩm hợp lệ')
       return
     }
-    if (isNaN(parsed) || parsed >= auction.current_price) {
-      message.error(`Giá báo phải thấp hơn ${formatVnd(auction.current_price)}`)
+    if (isNaN(parsed) || parsed <= 0 || parsed > maxAllowed) {
+      message.error(`Giá báo không được vượt quá ${formatVnd(maxAllowed)}`)
       return
     }
 
@@ -55,9 +62,13 @@ export function ReverseBidForm({ auction, onBidPlaced }: ReverseBidFormProps) {
         Người mua đặt yêu cầu và ngân sách. Người bán cạnh tranh bằng mức giá phù hợp nhất.
       </div>
 
-      <div className="reverse-lowest" aria-label="Bid thấp nhất hiện tại">
-        <span className="reverse-lowest__label">Bid thấp nhất hiện tại</span>
-        <span className="reverse-lowest__price">{formatVnd(auction.current_price)}</span>
+      <div className="reverse-lowest" aria-label="Giá tốt nhất hiện tại">
+        <span className="reverse-lowest__label">
+          {currentBestPrice === null ? 'Chưa có báo giá' : 'Giá tốt nhất hiện tại'}
+        </span>
+        <span className="reverse-lowest__price">
+          {currentBestPrice === null ? formatVnd(budget) : formatVnd(currentBestPrice)}
+        </span>
       </div>
 
       <div>
@@ -82,7 +93,7 @@ export function ReverseBidForm({ auction, onBidPlaced }: ReverseBidFormProps) {
             value={bidInput}
             onChange={(e) => setBidInput(e.target.value.replace(/\D/g, ''))}
             placeholder="Giá của bạn…"
-            aria-label={`Nhập giá báo, phải thấp hơn ${formatVnd(maxAllowed)}`}
+            aria-label={`Nhập giá báo, tối đa ${formatVnd(maxAllowed)}`}
           />
           <button
             type="button"
@@ -94,7 +105,12 @@ export function ReverseBidForm({ auction, onBidPlaced }: ReverseBidFormProps) {
             {loading ? '…' : 'Gửi →'}
           </button>
         </div>
-        <p className="bid-input-hint">Phải thấp hơn {formatVnd(auction.current_price)}</p>
+        <p className="bid-input-hint">
+          {priceHint}
+          {hasExistingBid && minDecrement > 0
+            ? ` · thấp hơn giá tốt nhất ít nhất ${formatVnd(minDecrement)}`
+            : ''}
+        </p>
       </div>
 
       {auction.bid_count > 0 && (

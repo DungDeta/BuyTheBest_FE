@@ -162,6 +162,7 @@ export function RoomTabs({
             auctionId={auction.id}
             auctionStatus={auction.status}
             isLoggedIn={isLoggedIn}
+            currentUserId={currentUserId}
             roomReady={roomReady}
             subscribe={subscribe}
             unsubscribe={unsubscribe}

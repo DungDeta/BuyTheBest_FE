@@ -33,13 +33,23 @@ interface RoomChatProps {
   auctionId: string
   auctionStatus: string
   isLoggedIn: boolean
+  currentUserId: string | null
   roomReady: boolean
   subscribe: (eventType: WsEventType, callback: (payload: unknown) => void) => void
   unsubscribe: (eventType: WsEventType, callback: (payload: unknown) => void) => void
 }
 
-function isSystem(msg: ChatMessage): boolean {
-  return msg.message_type !== 'user'
+function isUserMessage(msg: ChatMessage): boolean {
+  return msg.message_type === 'user'
+}
+
+function sortMessages(items: ChatMessage[]): ChatMessage[] {
+  return [...items].sort((a, b) => {
+    const timeA = dayjs(a.sent_at).valueOf()
+    const timeB = dayjs(b.sent_at).valueOf()
+    if (timeA !== timeB) return timeA - timeB
+    return a.id - b.id
+  })
 }
 
 function appendUniqueMessage(next: ChatMessage) {
@@ -47,7 +57,7 @@ function appendUniqueMessage(next: ChatMessage) {
     if (prev.some((msg) => msg.id === next.id)) {
       return prev
     }
-    return [...prev, next]
+    return sortMessages([...prev, next])
   }
 }
 
@@ -63,16 +73,22 @@ function normalizeChatMessage(raw: ChatMessageResponse | ChatMessagePayload, fal
   }
 }
 
-function getSenderLabel(msg: ChatMessage): string {
-  if (msg.sender_label) return msg.sender_label
+function isOwnMessage(msg: ChatMessage, currentUserId: string | null): boolean {
+  return currentUserId !== null && msg.user_id !== null && String(msg.user_id) === currentUserId
+}
+
+function getSenderLabel(msg: ChatMessage, currentUserId: string | null): string {
+  if (isOwnMessage(msg, currentUserId)) return 'Bạn'
+  if (msg.sender_label && !/^(system|hệ thống)$/i.test(msg.sender_label.trim())) return msg.sender_label
   if (msg.user_id) return `Người dùng #${msg.user_id}`
-  return 'Hệ thống'
+  return 'Người tham gia'
 }
 
 export function RoomChat({
   auctionId,
   auctionStatus,
   isLoggedIn,
+  currentUserId,
   roomReady,
   subscribe,
   unsubscribe,
@@ -98,7 +114,11 @@ export function RoomChat({
         )
         if (!cancelled) {
           const rawItems = Array.isArray(res.data) ? res.data : (res.data?.items ?? [])
-          setMessages(rawItems.map((item) => normalizeChatMessage(item, res.timestamp)))
+          setMessages(sortMessages(
+            rawItems
+              .map((item) => normalizeChatMessage(item, res.timestamp))
+              .filter(isUserMessage),
+          ))
         }
       } catch {
         // Chat not available yet — not an error for the user
@@ -119,7 +139,9 @@ export function RoomChat({
     const p = payload as ChatMessagePayload
     if (!p || typeof p !== 'object') return
 
-    setMessages(appendUniqueMessage(normalizeChatMessage(p)))
+    const next = normalizeChatMessage(p)
+    if (!isUserMessage(next)) return
+    setMessages(appendUniqueMessage(next))
   }, [])
 
   useEffect(() => {
@@ -142,10 +164,12 @@ export function RoomChat({
       const res = await privatePost<ChatMessageResponse>(`/auctions/${auctionId}/chat`, { content })
       if (res.data) {
         const msg = normalizeChatMessage(res.data, res.timestamp)
-        setMessages(appendUniqueMessage({
-          ...msg,
-          sender_label: msg.sender_label ?? 'Bạn',
-        }))
+        if (isUserMessage(msg)) {
+          setMessages(appendUniqueMessage({
+            ...msg,
+            sender_label: msg.sender_label ?? 'Bạn',
+          }))
+        }
       }
       setInputValue('')
       inputRef.current?.focus()
@@ -183,18 +207,11 @@ export function RoomChat({
         <div className="tab-content auction-chat-messages" role="log" aria-live="polite">
           {messages.length > 0 ? (
             messages.map((msg) => {
-              const sys = isSystem(msg)
               const time = dayjs(msg.sent_at).format('HH:mm')
-              const label = getSenderLabel(msg)
-              if (sys) {
-                return (
-                  <div key={msg.id} className="chat-msg chat-msg--system">
-                    <span className="chat-msg__content">{msg.content}</span>
-                  </div>
-                )
-              }
+              const label = getSenderLabel(msg, currentUserId)
+              const mine = isOwnMessage(msg, currentUserId)
               return (
-                <div key={msg.id} className="chat-msg">
+                <div key={msg.id} className={`chat-msg${mine ? ' chat-msg--mine' : ' chat-msg--other'}`}>
                   <span className="chat-msg__sender">{label}</span>
                   <span className="chat-msg__content">{msg.content}</span>
                   <span className="chat-msg__time">{time}</span>
@@ -220,20 +237,16 @@ export function RoomChat({
           <div className="tab-content--empty">Chưa có tin nhắn nào</div>
         )}
         {messages.map((msg) => {
-          const sys = isSystem(msg)
           const time = dayjs(msg.sent_at).format('HH:mm')
-          const label = getSenderLabel(msg)
-
-          if (sys) {
-            return (
-              <div key={msg.id} className="chat-msg chat-msg--system" aria-label={`Tin hệ thống lúc ${time}`}>
-                <span className="chat-msg__content">{msg.content}</span>
-              </div>
-            )
-          }
+          const label = getSenderLabel(msg, currentUserId)
+          const mine = isOwnMessage(msg, currentUserId)
 
           return (
-            <div key={msg.id} className="chat-msg" aria-label={`Tin nhắn từ ${label} lúc ${time}`}>
+            <div
+              key={msg.id}
+              className={`chat-msg${mine ? ' chat-msg--mine' : ' chat-msg--other'}`}
+              aria-label={`Tin nhắn từ ${label} lúc ${time}`}
+            >
               <span className="chat-msg__sender">{label}</span>
               <span className="chat-msg__content">{msg.content}</span>
               <span className="chat-msg__time">{time}</span>

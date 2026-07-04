@@ -37,20 +37,29 @@ const MODE_SUMMARY = {
 
 function ReadOnlyBidSummary({ auction }: { auction: Auction }) {
   const mode = MODE_SUMMARY[auction.mode]
+  const displayPrice = auction.mode === 'reverse'
+    ? (auction.budget_cap ?? auction.starting_price)
+    : auction.current_price
+  const displayLabel = auction.mode === 'reverse'
+    ? 'Ngân sách tối đa'
+    : mode.priceLabel
+  const gateMsg = auction.mode === 'reverse'
+    ? 'Đăng nhập bằng tài khoản người bán để báo giá'
+    : 'Đăng nhập để đặt giá'
 
   return (
     <div className="bid-form">
       <div className="bid-current">
         <div className="bid-current__left">
-          <span className="bid-current__label">{mode.priceLabel}</span>
-          <span className="bid-current__price">{formatVnd(auction.current_price)}</span>
+          <span className="bid-current__label">{displayLabel}</span>
+          <span className="bid-current__price">{formatVnd(displayPrice)}</span>
         </div>
         <span className={`mode-badge ${mode.code}`}>
           {mode.label}
         </span>
       </div>
       <div className="bid-gate">
-        <span className="bid-gate__msg">Đăng nhập để đặt giá</span>
+        <span className="bid-gate__msg">{gateMsg}</span>
         <Link to="/login" className="bid-gate__login-btn" aria-label="Đến trang đăng nhập">
           Đăng nhập →
         </Link>
@@ -180,12 +189,16 @@ export function BidPanel({
   const isEnded = auction.status === 'ended' || auction.status === 'closed_bin'
   const isCancelled = auction.status === 'cancelled'
   const isScheduled = auction.status === 'scheduled'
+  const isReverseOwner =
+    auction.mode === 'reverse' &&
+    currentUserId !== null &&
+    String(auction.creator_id) === currentUserId
 
   const isSeller =
     currentUserId !== null &&
     (String(auction.seller?.id) === currentUserId ||
       String(auction.seller_id) === currentUserId ||
-      String(auction.creator_id) === currentUserId)
+      (auction.mode !== 'reverse' && String(auction.creator_id) === currentUserId))
 
   function renderBody() {
     if (isEnded || isCancelled) {
@@ -221,6 +234,14 @@ export function BidPanel({
 
     if (!isLoggedIn) {
       return <ReadOnlyBidSummary auction={auction} />
+    }
+
+    if (isReverseOwner) {
+      return (
+        <div className="bid-gate">
+          <span className="bid-gate__msg">Bạn là người tạo yêu cầu — không thể báo giá cho chính mình</span>
+        </div>
+      )
     }
 
     if (isSeller) {

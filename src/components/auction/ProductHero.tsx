@@ -31,13 +31,19 @@ function sellerInitials(name: string): string {
   return name.slice(0, 2).toUpperCase()
 }
 
+function formatVnd(amount: number): string {
+  return amount.toLocaleString('vi-VN') + ' ₫'
+}
+
 export function ProductHero({ auction }: ProductHeroProps) {
   const { product, seller, mode, bid_count, id, starts_at } = auction
 
   const images = product?.images ?? []
   const sortedImages = [...images].sort((a, b) => a.sort_order - b.sort_order)
   const primaryImage = sortedImages.find((img) => img.is_primary) ?? sortedImages[0] ?? null
-  const title = product?.title ?? `Auction #${id.slice(0, 8)}`
+  const title = product?.title ?? (mode === 'reverse'
+    ? `Yêu cầu đấu giá ngược #${id.slice(0, 8)}`
+    : `Phiên đấu giá #${id.slice(0, 8)}`)
 
   const [activeIndex, setActiveIndex] = useState(0)
   const displayImage = sortedImages[activeIndex] ?? primaryImage
@@ -45,6 +51,27 @@ export function ProductHero({ auction }: ProductHeroProps) {
 
   const publicLabel = `Mã phiên ${id.slice(0, 8).toUpperCase()}`
   const isHot = bid_count > 10
+  const reverseBudget = auction.budget_cap ?? auction.starting_price
+  const productSpecs = mode === 'reverse'
+    ? [
+        { label: 'Phương thức', value: modeBadgeLabel(mode) },
+        { label: 'Ngân sách tối đa', value: formatVnd(reverseBudget) },
+        {
+          label: 'Giá tốt nhất hiện tại',
+          value: auction.bid_count > 0 ? formatVnd(auction.current_price) : 'Chưa có báo giá',
+        },
+        { label: 'Bước giảm tối thiểu', value: formatVnd(auction.min_decrement ?? 0) },
+      ]
+    : [
+        ...(product?.condition
+          ? [{ label: 'Tình trạng', value: getProductConditionLabel(product.condition) }]
+          : []),
+        { label: 'Phương thức', value: modeBadgeLabel(mode) },
+        { label: 'Giá khởi điểm', value: formatVnd(auction.starting_price) },
+        ...(auction.buy_now_price != null
+          ? [{ label: 'Mua ngay', value: formatVnd(auction.buy_now_price) }]
+          : []),
+      ]
 
   return (
     <div className="product-hero">
@@ -124,30 +151,12 @@ export function ProductHero({ auction }: ProductHeroProps) {
           </div>
 
           <div className="product-specs">
-            <div className="product-spec">
-              <span className="product-spec__label">Tình trạng</span>
-              <span className="product-spec__value">
-                {getProductConditionLabel(product?.condition)}
-              </span>
-            </div>
-            <div className="product-spec">
-              <span className="product-spec__label">Phương thức</span>
-              <span className="product-spec__value">{modeBadgeLabel(mode)}</span>
-            </div>
-            <div className="product-spec">
-              <span className="product-spec__label">Giá khởi điểm</span>
-              <span className="product-spec__value">
-                {auction.starting_price.toLocaleString('vi-VN')} ₫
-              </span>
-            </div>
-            {auction.buy_now_price != null && (
-              <div className="product-spec">
-                <span className="product-spec__label">Mua ngay</span>
-                <span className="product-spec__value">
-                  {auction.buy_now_price.toLocaleString('vi-VN')} ₫
-                </span>
+            {productSpecs.map((spec) => (
+              <div className="product-spec" key={spec.label}>
+                <span className="product-spec__label">{spec.label}</span>
+                <span className="product-spec__value">{spec.value}</span>
               </div>
-            )}
+            ))}
           </div>
 
           {seller && (
