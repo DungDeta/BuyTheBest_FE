@@ -213,7 +213,7 @@ export function Component() {
     if (!order) return
     modal.confirm({
       title: 'Xác nhận nhận hàng',
-      content: 'Xác nhận bạn đã nhận được hàng? Tiền sẽ được giải phóng cho người bán.',
+      content: 'Xác nhận bạn đã nhận được hàng? Đơn hàng sẽ chuyển sang trạng thái đã giao, bạn vẫn có thể mở khiếu nại trong 30 ngày trước khi escrow tự động giải ngân.',
       okText: 'Xác nhận',
       cancelText: 'Chưa',
       onOk: async () => {
@@ -535,7 +535,7 @@ export function Component() {
                   lineHeight: 1.6,
                 }}
               >
-                Tiền sẽ được chuyển vào tài khoản sau khi buyer xác nhận hoặc sau 7 ngày.
+                Tiền sẽ được giữ trong escrow sau khi người mua xác nhận nhận hàng và tự động giải ngân khi hết thời hạn khiếu nại.
               </div>
             </div>
           </div>
@@ -630,6 +630,7 @@ export function Component() {
         isBuyer={buyer}
         isSeller={seller}
         orderStatus={order.status}
+        escrowStatus={order.payment?.escrow_status}
         sellerName={sellerName ?? 'Người bán'}
         onUpdate={fetchOrder}
       />

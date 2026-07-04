@@ -50,6 +50,7 @@ const PREF_LABELS: Record<string, string> = {
   order_created: 'Đơn hàng mới',
   order_paid: 'Đơn hàng đã thanh toán',
   order_shipped: 'Đơn hàng đã gửi',
+  order_delivered: 'Người mua đã xác nhận nhận hàng',
   order_cancelled: 'Đơn hàng đã hủy',
   dispute_opened: 'Khiếu nại đã mở',
   dispute_seller_responded: 'Người bán đã phản hồi khiếu nại',

@@ -1,7 +1,7 @@
 import { ReviewDisplay } from '@/components/order/ReviewDisplay'
 import { ReviewForm } from '@/components/order/ReviewForm'
 import { SellerReplyForm } from '@/components/order/SellerReplyForm'
-import type { OrderReview, OrderStatus } from '@/types/order'
+import type { EscrowStatus, OrderReview, OrderStatus } from '@/types/order'
 
 interface ReviewSectionProps {
   orderId: string
@@ -9,6 +9,7 @@ interface ReviewSectionProps {
   isBuyer: boolean
   isSeller: boolean
   orderStatus: OrderStatus
+  escrowStatus?: EscrowStatus | null
   sellerName: string
   onUpdate: () => void
 }
@@ -19,10 +20,15 @@ export function ReviewSection({
   isBuyer,
   isSeller,
   orderStatus,
+  escrowStatus,
   sellerName,
   onUpdate,
 }: ReviewSectionProps) {
-  const showReviewForm = !review && isBuyer && (orderStatus === 'delivered' || orderStatus === 'completed')
+  const showReviewForm =
+    !review &&
+    isBuyer &&
+    escrowStatus === 'released' &&
+    (orderStatus === 'delivered' || orderStatus === 'completed')
   const showReplyForm = !!review && isSeller && !review.seller_reply
   const showDisplay = !!review
 
