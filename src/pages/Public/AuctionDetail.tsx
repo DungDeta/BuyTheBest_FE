@@ -48,7 +48,10 @@ export function Component() {
   const [auction, setAuction] = useState<Auction | null>(null)
   const [loading, setLoading] = useState(true)
 
-  useDocumentTitle(auction?.product?.title ?? 'Chi tiết phiên đấu giá')
+  const documentTitle = auction?.mode === 'reverse'
+    ? `Yêu cầu đấu giá ngược tài sản ${auction.product?.title ?? `#${auction.id.slice(0, 8).toUpperCase()}`}`
+    : auction?.product?.title ?? 'Chi tiết phiên đấu giá'
+  useDocumentTitle(documentTitle)
   const [notFound, setNotFound] = useState(false)
   const [bidFeed, setBidFeed] = useState<BidHistoryItem[]>([])
   const [serverNow, setServerNow] = useState<string | null>(null)
@@ -435,7 +438,9 @@ export function Component() {
     )
   }
 
-  const title = auction.product?.title ?? `Auction #${auction.id.slice(0, 8)}`
+  const title = auction.mode === 'reverse'
+    ? `Yêu cầu đấu giá ngược tài sản ${auction.product?.title ?? `#${auction.id.slice(0, 8).toUpperCase()}`}`
+    : auction.product?.title ?? `Phiên đấu giá #${auction.id.slice(0, 8).toUpperCase()}`
   const isActive = auction.status === 'active'
   const authed = isAuthenticated()
   const roomConnectionState =
