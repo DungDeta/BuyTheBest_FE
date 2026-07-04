@@ -63,6 +63,12 @@ function normalizeChatMessage(raw: ChatMessageResponse | ChatMessagePayload, fal
   }
 }
 
+function getSenderLabel(msg: ChatMessage): string {
+  if (msg.sender_label) return msg.sender_label
+  if (msg.user_id) return `Người dùng #${msg.user_id}`
+  return 'Hệ thống'
+}
+
 export function RoomChat({
   auctionId,
   auctionStatus,
@@ -179,7 +185,7 @@ export function RoomChat({
             messages.map((msg) => {
               const sys = isSystem(msg)
               const time = dayjs(msg.sent_at).format('HH:mm')
-              const label = msg.sender_label ?? 'system'
+              const label = getSenderLabel(msg)
               if (sys) {
                 return (
                   <div key={msg.id} className="chat-msg chat-msg--system">
@@ -216,7 +222,7 @@ export function RoomChat({
         {messages.map((msg) => {
           const sys = isSystem(msg)
           const time = dayjs(msg.sent_at).format('HH:mm')
-          const label = msg.sender_label ?? 'system'
+          const label = getSenderLabel(msg)
 
           if (sys) {
             return (
