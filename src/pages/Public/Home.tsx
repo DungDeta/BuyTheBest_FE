@@ -5,6 +5,7 @@ import { Spin } from 'antd'
 import { publicGet } from '@/api/api'
 import type { PageResponse } from '@/types/api'
 import { getDemoProductImage } from '@/utils/demoProductImages'
+import { getAuctionDisplayTitle } from '@/utils/auctionDisplay'
 import './home.css'
 
 interface Auction {
@@ -246,7 +247,7 @@ function AuctionCard({ auction }: AuctionCardProps) {
   const isDutch  = auction.mode === 'dutch'
   const isReverse = auction.mode === 'reverse'
 
-  const title = auction.product?.title ?? auction.title ?? `Auction #${auction.id}`
+  const title = getAuctionDisplayTitle(auction)
   const imageUrl = productImageUrl(auction.product, title)
 
   return (

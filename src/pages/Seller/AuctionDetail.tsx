@@ -19,6 +19,7 @@ import type { Auction } from '@/types/auction'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import { getDemoProductImage } from '@/utils/demoProductImages'
 import { getProductConditionLabel } from '@/utils/productDisplay'
+import { getAuctionDisplayTitle } from '@/utils/auctionDisplay'
 import './seller.css'
 
 const STATUS_INFO: Record<
@@ -58,7 +59,7 @@ export function Component() {
   const [notFound, setNotFound] = useState(false)
   const [cancelling, setCancelling] = useState(false)
 
-  const title = auction?.product?.title ?? (auction ? `Phiên ${auction.id.slice(0, 8)}` : '')
+  const title = auction ? getAuctionDisplayTitle(auction) : ''
   useDocumentTitle(title || 'Chi tiết phiên đấu giá')
 
   useEffect(() => {

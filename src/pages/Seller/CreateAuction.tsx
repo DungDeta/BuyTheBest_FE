@@ -15,6 +15,7 @@ import { privateGet, privatePost } from '@/api/api'
 import type { Auction, AuctionMode } from '@/types/auction'
 import type { ErrorResponse } from '@/types/api'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
+import { getProductConditionLabel } from '@/utils/productDisplay'
 import './seller.css'
 
 interface ProductListItem {
@@ -86,6 +87,13 @@ const VND_FORMATTER = (val: number | undefined) =>
 
 const VND_PARSER = (val: string | undefined) =>
   Number((val ?? '').replace(/,/g, ''))
+
+function productOptionLabel(product: ProductListItem): string {
+  const title = product.title?.trim() || 'Sản phẩm chưa đặt tên'
+  const condition = getProductConditionLabel(product.condition, '')
+  const suffix = product.has_open_auction ? 'đã có phiên đang mở' : condition
+  return suffix ? `${title} (${suffix})` : title
+}
 
 export function Component() {
   useDocumentTitle('Tạo phiên đấu giá')
@@ -295,13 +303,13 @@ export function Component() {
             <Select
               placeholder="Chọn sản phẩm"
               loading={loadingProducts}
-              style={{ fontFamily: 'var(--font-mono)' }}
+              showSearch
+              optionFilterProp="label"
+              optionLabelProp="label"
               onChange={() => setShowPreview(false)}
               options={products.map((product) => ({
                 value: product.id,
-                label: product.has_open_auction
-                  ? `${product.title} — đã có phiên đang mở`
-                  : product.title,
+                label: productOptionLabel(product),
                 disabled: product.has_open_auction,
               }))}
               notFoundContent="Chưa có sản phẩm nào được duyệt"

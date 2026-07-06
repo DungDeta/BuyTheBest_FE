@@ -7,6 +7,7 @@ import { publicGet, privateGet, privatePost } from '@/api/api'
 import type { PageResponse } from '@/types/api'
 import { useAuthStore } from '@/store/useAuthStore'
 import { getDemoProductImage } from '@/utils/demoProductImages'
+import { getAuctionDisplayTitle } from '@/utils/auctionDisplay'
 import './home.css'
 import './auction-list.css'
 
@@ -211,7 +212,7 @@ function modeBadgeShort(mode: AuctionItem['mode']): AuctionMode {
 }
 
 function auctionTitle(item: AuctionItem): string {
-  return item.product?.title ?? item.title ?? `Auction #${item.id}`
+  return getAuctionDisplayTitle(item)
 }
 
 function auctionImageUrl(item: AuctionItem): string | null {

@@ -3,6 +3,7 @@ import { App } from 'antd'
 import { privateGet } from '@/api/api'
 import { useBid } from '@/hooks/useBid'
 import type { Auction, BidActionResponse } from '@/types/auction'
+import { getProductConditionLabel } from '@/utils/productDisplay'
 
 interface ReverseBidFormProps {
   auction: Auction
@@ -22,6 +23,12 @@ interface ProductsResponse {
 
 function formatVnd(amount: number): string {
   return amount.toLocaleString('vi-VN') + ' ₫'
+}
+
+function productOptionLabel(product: SellerProduct): string {
+  const title = product.title?.trim() || 'Sản phẩm chưa đặt tên'
+  const condition = getProductConditionLabel(product.condition, '')
+  return condition ? `${title} (${condition})` : title
 }
 
 export function ReverseBidForm({ auction, onBidPlaced }: ReverseBidFormProps) {
@@ -127,7 +134,7 @@ export function ReverseBidForm({ auction, onBidPlaced }: ReverseBidFormProps) {
             </option>
             {products.map((product) => (
               <option key={product.id} value={product.id}>
-                {product.title}
+                {productOptionLabel(product)}
               </option>
             ))}
           </select>
@@ -156,7 +163,7 @@ export function ReverseBidForm({ auction, onBidPlaced }: ReverseBidFormProps) {
             disabled={loading || loadingProducts || bidInput === '' || selectedProductId === ''}
             aria-label="Gửi báo giá"
           >
-            {loading ? '…' : 'Gửi →'}
+            {loading ? '…' : 'Gửi báo giá'}
           </button>
         </div>
         <p className="bid-input-hint">

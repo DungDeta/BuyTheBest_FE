@@ -10,6 +10,7 @@ import { ProductHero } from '@/components/auction/ProductHero'
 import { CountdownBox } from '@/components/auction/CountdownBox'
 import { BidPanel } from '@/components/auction/BidPanel'
 import { RoomTabs } from '@/components/auction/RoomTabs'
+import { getAuctionDisplayTitle } from '@/utils/auctionDisplay'
 import type {
   Auction,
   AuctionEndedPayload,
@@ -48,9 +49,7 @@ export function Component() {
   const [auction, setAuction] = useState<Auction | null>(null)
   const [loading, setLoading] = useState(true)
 
-  const documentTitle = auction?.mode === 'reverse'
-    ? `Yêu cầu đấu giá ngược tài sản ${auction.product?.title ?? `#${auction.id.slice(0, 8).toUpperCase()}`}`
-    : auction?.product?.title ?? 'Chi tiết phiên đấu giá'
+  const documentTitle = auction ? getAuctionDisplayTitle(auction) : 'Chi tiết phiên đấu giá'
   useDocumentTitle(documentTitle)
   const [notFound, setNotFound] = useState(false)
   const [bidFeed, setBidFeed] = useState<BidHistoryItem[]>([])
@@ -438,9 +437,7 @@ export function Component() {
     )
   }
 
-  const title = auction.mode === 'reverse'
-    ? `Yêu cầu đấu giá ngược tài sản ${auction.product?.title ?? `#${auction.id.slice(0, 8).toUpperCase()}`}`
-    : auction.product?.title ?? `Phiên đấu giá #${auction.id.slice(0, 8).toUpperCase()}`
+  const title = getAuctionDisplayTitle(auction)
   const isActive = auction.status === 'active'
   const authed = isAuthenticated()
   const roomConnectionState =

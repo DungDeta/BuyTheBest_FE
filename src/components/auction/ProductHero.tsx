@@ -4,6 +4,7 @@ import dayjs from 'dayjs'
 import type { Auction } from '@/types/auction'
 import { getDemoProductImage } from '@/utils/demoProductImages'
 import { getProductConditionLabel } from '@/utils/productDisplay'
+import { getAuctionDisplayTitle } from '@/utils/auctionDisplay'
 
 interface ProductHeroProps {
   auction: Auction
@@ -41,10 +42,7 @@ export function ProductHero({ auction }: ProductHeroProps) {
   const images = product?.images ?? []
   const sortedImages = [...images].sort((a, b) => a.sort_order - b.sort_order)
   const primaryImage = sortedImages.find((img) => img.is_primary) ?? sortedImages[0] ?? null
-  const assetLabel = product?.title ?? `#${id.slice(0, 8).toUpperCase()}`
-  const title = mode === 'reverse'
-    ? `Yêu cầu đấu giá ngược tài sản ${assetLabel}`
-    : product?.title ?? `Phiên đấu giá #${id.slice(0, 8)}`
+  const title = getAuctionDisplayTitle(auction)
 
   const [activeIndex, setActiveIndex] = useState(0)
   const displayImage = sortedImages[activeIndex] ?? primaryImage
