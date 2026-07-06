@@ -91,7 +91,7 @@ export function ProductHero({ auction }: ProductHeroProps) {
               />
             ) : (
               <div className="gallery__placeholder">
-                <span className="gallery__placeholder-title">{title}</span>
+                <span className="gallery__placeholder-title">Không có ảnh</span>
                 <span className="gallery__placeholder-sub">
                   {getProductConditionLabel(product?.condition, '')}
                 </span>
