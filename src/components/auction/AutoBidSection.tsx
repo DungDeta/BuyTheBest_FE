@@ -68,7 +68,7 @@ export function AutoBidSection({ auctionId, minPrice, minIncrement }: AutoBidSec
           onChange={handleToggle}
           aria-label="Bật đặt giá tự động"
         />
-        Đặt giá tự động — hệ thống tăng vừa đủ để dẫn đầu
+        Đặt giá tự động, hệ thống tăng vừa đủ để dẫn đầu
       </label>
 
       {(expanded || isActive) && (

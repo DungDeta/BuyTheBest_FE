@@ -471,7 +471,7 @@ export function Component() {
             method="vnpay"
             selected={payMethod === 'vnpay'}
             label="VNPay"
-            desc="Thanh toán qua cổng VNPay — thẻ ATM, Visa, QR"
+            desc="Thanh toán qua cổng VNPay, hỗ trợ thẻ ATM, Visa và QR"
             iconClass="pay-card__icon--vnpay"
             iconText="VNP"
             onSelect={() => setPayMethod('vnpay')}

@@ -79,7 +79,7 @@ export function Component() {
               className="auth-submit-btn"
               onClick={() => navigate('/login')}
             >
-              Đăng nhập →
+              Đăng nhập
             </Button>
           </div>
         )}
@@ -120,7 +120,7 @@ export function Component() {
                   loading={resendLoading}
                   className="auth-submit-btn"
                 >
-                  Gửi lại →
+                  Gửi lại
                 </Button>
               </Form>
             )}

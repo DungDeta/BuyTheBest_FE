@@ -67,7 +67,7 @@ export function Component() {
 
               <Form.Item style={{ marginBottom: 0, marginTop: 8 }}>
                 <Button htmlType="submit" loading={loading} className="auth-submit-btn">
-                  Gửi link đặt lại →
+                  Gửi link đặt lại
                 </Button>
               </Form.Item>
             </Form>

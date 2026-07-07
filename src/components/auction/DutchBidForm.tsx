@@ -87,7 +87,7 @@ export function DutchBidForm({ auction, onBidPlaced }: DutchBidFormProps) {
         disabled={loading}
         aria-label={`Chấp nhận giá hiện tại ${formatVnd(auction.current_price)}`}
       >
-        {loading ? 'Đang xử lý…' : 'Chấp nhận giá hiện tại →'}
+        {loading ? 'Đang xử lý…' : 'Chấp nhận giá hiện tại'}
       </button>
 
       <div className="bid-input-hint" style={{ display: 'flex', justifyContent: 'space-between' }}>

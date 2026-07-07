@@ -142,7 +142,7 @@ function WatchingTab() {
       <div className="my-auctions-empty" role="status">
         <span className="my-auctions-empty__icon" aria-hidden="true">Theo dõi</span>
         Chưa theo dõi phiên nào.{' '}
-        <Link to="/auctions">Khám phá ngay →</Link>
+        <Link to="/auctions">Khám phá ngay</Link>
       </div>
     )
   }
@@ -197,7 +197,7 @@ function WatchingTab() {
 
       {total > 20 && (
         <div style={{ marginTop: 16, textAlign: 'center' }}>
-          <Link to="/watchlist">Xem tất cả {total} phiên →</Link>
+          <Link to="/watchlist">Xem tất cả {total} phiên</Link>
         </div>
       )}
     </>
@@ -302,7 +302,7 @@ function BoughtTab() {
 
       {total > 20 && (
         <div style={{ marginTop: 16, textAlign: 'center' }}>
-          <Link to="/orders">Xem tất cả {total} đơn →</Link>
+          <Link to="/orders">Xem tất cả {total} đơn</Link>
         </div>
       )}
     </>

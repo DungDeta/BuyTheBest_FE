@@ -317,7 +317,7 @@ export function Component() {
                 role="listitem"
                 className={`notif-item${notif.is_read ? '' : ' notif-item--unread'}`}
                 onClick={() => handleItemClick(notif)}
-                aria-label={`${notif.title}${notif.is_read ? '' : ' — chưa đọc'}`}
+                aria-label={`${notif.title}${notif.is_read ? '' : ', chưa đọc'}`}
               >
                 <span className="notif-item__icon" aria-hidden="true">
                   {getIcon(notif.event_type)}

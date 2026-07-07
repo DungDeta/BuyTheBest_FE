@@ -234,7 +234,7 @@ export function Component() {
       <section className="dashboard-welcome" aria-label="Lời chào">
         <h1 className="dashboard-welcome__title">Xin chào, {displayName}!</h1>
         <p className="dashboard-welcome__sub">
-          Hôm nay là {dayjs().format('DD/MM/YYYY')} — chúc bạn đấu giá vui vẻ.
+          Hôm nay là {dayjs().format('DD/MM/YYYY')}, chúc bạn đấu giá vui vẻ.
         </p>
       </section>
 
@@ -262,14 +262,14 @@ export function Component() {
             Phiên sắp kết thúc
           </h2>
           <Link to="/watchlist" className="section-header__link">
-            Xem tất cả →
+            Xem tất cả
           </Link>
         </div>
 
         {data.endingSoon.length === 0 ? (
           <p style={{ color: 'var(--color-muted)', fontSize: '0.85rem' }}>
             Không có phiên đang theo dõi nào sắp kết thúc.{' '}
-            <Link to="/auctions">Khám phá ngay →</Link>
+            <Link to="/auctions">Khám phá ngay</Link>
           </p>
         ) : (
           <div className="overview-grid" role="list" aria-label="Phiên sắp kết thúc">
@@ -288,7 +288,7 @@ export function Component() {
             Đơn hàng gần đây
           </h2>
           <Link to="/orders" className="section-header__link">
-            Xem tất cả →
+            Xem tất cả
           </Link>
         </div>
 

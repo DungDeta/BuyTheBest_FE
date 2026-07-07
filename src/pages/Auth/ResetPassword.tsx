@@ -146,7 +146,7 @@ export function Component() {
               loading={loading}
               className="auth-submit-btn"
             >
-              Đặt lại mật khẩu →
+              Đặt lại mật khẩu
             </Button>
           </Form.Item>
         </Form>

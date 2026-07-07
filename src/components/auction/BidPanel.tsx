@@ -61,7 +61,7 @@ function ReadOnlyBidSummary({ auction }: { auction: Auction }) {
       <div className="bid-gate">
         <span className="bid-gate__msg">{gateMsg}</span>
         <Link to="/login" className="bid-gate__login-btn" aria-label="Đến trang đăng nhập">
-          Đăng nhập →
+          Đăng nhập
         </Link>
       </div>
     </div>
@@ -135,17 +135,17 @@ function ResultPanel({
       )}
       {isWinner && isExternalUrl(checkoutHref) && (
         <a href={checkoutHref} className="result-panel__cta result-panel__cta--pay">
-          Thanh toán ngay →
+          Thanh toán ngay
         </a>
       )}
       {isWinner && !isExternalUrl(checkoutHref) && (
         <Link to={checkoutHref} className="result-panel__cta result-panel__cta--pay">
-          Thanh toán ngay →
+          Thanh toán ngay
         </Link>
       )}
       {!isWinner && (
         <Link to="/auctions?sort=ending_soon" className="result-panel__cta">
-          Xem phiên tương tự →
+          Xem phiên tương tự
         </Link>
       )}
     </div>
@@ -239,7 +239,7 @@ export function BidPanel({
     if (isReverseOwner) {
       return (
         <div className="bid-gate">
-          <span className="bid-gate__msg">Bạn là người tạo yêu cầu — không thể báo giá cho chính mình</span>
+          <span className="bid-gate__msg">Bạn là người tạo yêu cầu, không thể báo giá cho chính mình</span>
         </div>
       )
     }
@@ -247,7 +247,7 @@ export function BidPanel({
     if (isSeller) {
       return (
         <div className="bid-gate">
-          <span className="bid-gate__msg">Bạn là người bán — không thể đặt giá</span>
+          <span className="bid-gate__msg">Bạn là người bán, không thể đặt giá</span>
         </div>
       )
     }

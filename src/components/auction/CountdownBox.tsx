@@ -59,7 +59,7 @@ export function CountdownBox({
       <div className="countdown-box__timer">{timerDisplay}</div>
       {!hasEnded && (
         <div className="countdown-box__snipe">
-          Bid trong {antiSnipeSeconds}s cuối sẽ gia hạn tự động
+          Đặt giá trong {antiSnipeSeconds}s cuối sẽ gia hạn tự động
         </div>
       )}
       {isServerSynced && (

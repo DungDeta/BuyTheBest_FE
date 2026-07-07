@@ -84,7 +84,7 @@ export function EscrowTimeline({ status }: EscrowTimelineProps) {
               {step.label}
             </span>
             {idx < steps.length - 1 && (
-              <span className="escrow-step__arrow" aria-hidden="true">→</span>
+              <span className="escrow-step__arrow" aria-hidden="true">Tiếp theo</span>
             )}
           </div>
         )

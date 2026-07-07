@@ -293,7 +293,7 @@ function AuctionCard({ auction }: AuctionCardProps) {
       <div className="listing-title">{title}</div>
 
       {isSealed ? (
-        <div className="listing-price sealed">— ẩn — Sealed</div>
+        <div className="listing-price sealed">Giá đang được giữ kín</div>
       ) : isReverse ? (
         <div className="listing-price">≤ {formatPrice(auction.current_price)}</div>
       ) : isDutch ? (
@@ -307,9 +307,9 @@ function AuctionCard({ auction }: AuctionCardProps) {
 
       <div className="listing-details">
         {isSealed ? (
-          <span>—</span>
+          <span>Giá kín</span>
         ) : isReverse ? (
-          <span>{auction.bid_count} sellers</span>
+          <span>{auction.bid_count} người bán</span>
         ) : (
           <span>{auction.bid_count} lượt đặt</span>
         )}
@@ -342,7 +342,7 @@ function AuctionListRow({ auction }: AuctionListRowProps) {
         </div>
       </div>
       <div className="num">
-        {isSealed ? '— ẩn —' : formatPrice(auction.current_price)}
+        {isSealed ? 'Giá được giữ kín' : formatPrice(auction.current_price)}
       </div>
       <div className="num">{auction.bid_count} lượt đặt</div>
       <div className="num">

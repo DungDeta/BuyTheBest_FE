@@ -43,7 +43,7 @@ function FeedItem({ item, delta, isCurrentUser, isOutbid }: FeedItemProps) {
       <div className="feed-item feed-item--system" aria-label={`Sự kiện hệ thống lúc ${time}`}>
         <span className="feed-item__time">{time}</span>
         <span className="feed-item__content feed-item__content--system">
-          — {formatParticipantLabel(item.bidder_label)} · {formatVnd(item.amount)} —
+          {formatParticipantLabel(item.bidder_label)} đặt {formatVnd(item.amount)}
         </span>
       </div>
     )
@@ -64,7 +64,7 @@ function FeedItem({ item, delta, isCurrentUser, isOutbid }: FeedItemProps) {
         <span className="feed-item__amount">{formatVnd(item.amount)}</span>
         {delta && <span className="feed-item__delta"> · {delta}</span>}
         {typeTag && <span className="feed-item__tag">{typeTag}</span>}
-        {isOutbid && <span className="feed-item__outbid-note"> → đã bị vượt giá</span>}
+        {isOutbid && <span className="feed-item__outbid-note">Đã bị vượt giá</span>}
       </span>
     </div>
   )

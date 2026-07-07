@@ -135,7 +135,7 @@ export function AuthPanel({ initialTab = 'login', variant = 'page', onSuccess }:
             <span className="auth-side-logo">Buy<em>The</em>Best</span>
             <h1>Đấu giá<br /><em>thời gian thực.</em></h1>
             <p className="auth-side-desc">
-              30 giây để có tài khoản. Không cần thẻ. Bid được phiên đầu tiên trong vòng 1 phút sau khi verify email.
+              30 giây để có tài khoản. Không cần thẻ. Có thể đặt giá phiên đầu tiên trong vòng 1 phút sau khi xác thực email.
             </p>
           </div>
         </div>
@@ -194,7 +194,7 @@ export function AuthPanel({ initialTab = 'login', variant = 'page', onSuccess }:
                   />
                   {loginErrors.password && <div className="auth-form-error">{loginErrors.password}</div>}
                 </div>
-                <button type="submit" className="auth-submit-btn">Đăng nhập →</button>
+                <button type="submit" className="auth-submit-btn">Đăng nhập</button>
               </form>
             </Spin>
           )}
@@ -251,7 +251,7 @@ export function AuthPanel({ initialTab = 'login', variant = 'page', onSuccess }:
                   <span>Tôi đồng ý <a href="/terms">Điều khoản dịch vụ</a> và <a href="/privacy">Chính sách bảo mật</a></span>
                 </label>
                 {regErrors.terms && <div className="auth-form-error" style={{ marginTop: -8, marginBottom: 12 }}>{regErrors.terms}</div>}
-                <button type="submit" className="auth-submit-btn">Tạo tài khoản →</button>
+                <button type="submit" className="auth-submit-btn">Tạo tài khoản</button>
               </form>
             </Spin>
           )}
@@ -284,7 +284,7 @@ export function AuthPanel({ initialTab = 'login', variant = 'page', onSuccess }:
           disabled={forgotLoading}
           style={{ marginTop: 8 }}
         >
-          {forgotLoading ? 'Đang gửi...' : 'Gửi link đặt lại →'}
+          {forgotLoading ? 'Đang gửi...' : 'Gửi link đặt lại'}
         </button>
       </Modal>
     </>

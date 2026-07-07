@@ -284,7 +284,7 @@ function AuctionCard({ auction }: AuctionCardProps) {
         ) : isDutch ? (
           <span>giảm mỗi 30s</span>
         ) : isReverse ? (
-          <span>{auction.bid_count} sellers</span>
+          <span>{auction.bid_count} người bán</span>
         ) : (
           <span>{auction.bid_count} lượt đặt</span>
         )}
@@ -413,9 +413,9 @@ export default function Home() {
           </h1>
           <p>
             4 hình thức đấu giá. Thanh toán escrow. Truy vết mọi giao dịch.
-            Tranh chấp minh bạch — quyền lợi của người mua và người bán đều được bảo vệ.
+            Tranh chấp minh bạch, quyền lợi của người mua và người bán đều được bảo vệ.
           </p>
-          <Link to="/register" className="hero-cta">Bắt đầu ngay →</Link>
+          <Link to="/register" className="hero-cta">Bắt đầu ngay</Link>
         </div>
 
         <div className="hero-right">
@@ -542,9 +542,9 @@ export default function Home() {
       <section className="cta-section">
         <div>
           <h2>Bắt đầu.</h2>
-          <p>30 giây đăng ký. Không cần thẻ. Bid ngay phiên đầu tiên.</p>
+          <p>30 giây đăng ký. Không cần thẻ. Đặt giá ngay phiên đầu tiên.</p>
         </div>
-        <Link to="/register" className="cta-btn">Tạo tài khoản →</Link>
+        <Link to="/register" className="cta-btn">Tạo tài khoản</Link>
       </section>
     </>
   )

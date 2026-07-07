@@ -182,7 +182,7 @@ export function ProductHero({ auction }: ProductHeroProps) {
                 className="seller-card__link"
                 aria-label={`Xem shop của ${seller.display_name}`}
               >
-                Xem shop →
+                Xem shop
               </Link>
             </div>
           )}

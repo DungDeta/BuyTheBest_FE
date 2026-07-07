@@ -184,7 +184,7 @@ export function EnglishBidForm({
             disabled={loading}
             aria-label="Đặt giá"
           >
-            {loading ? '…' : 'Đặt giá →'}
+            {loading ? '…' : 'Đặt giá'}
           </button>
         </div>
         <p className="bid-input-hint">Tối thiểu {formatVnd(minBid)}</p>
@@ -218,7 +218,7 @@ export function EnglishBidForm({
           disabled={loading}
           aria-label={`Mua ngay với giá ${formatVnd(auction.buy_now_price)}`}
         >
-          {loading ? '…' : `Mua ngay — ${formatVnd(auction.buy_now_price)}`}
+          {loading ? '…' : `Mua ngay với giá ${formatVnd(auction.buy_now_price)}`}
         </button>
       )}
 

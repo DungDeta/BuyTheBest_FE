@@ -278,7 +278,7 @@ export function Component() {
       ? dayjs(banner.start_at).format('DD/MM/YY')
       : '∞'
     const end = banner.end_at ? dayjs(banner.end_at).format('DD/MM/YY') : '∞'
-    return `${start} → ${end}`
+    return `${start} đến ${end}`
   }
 
   function bannerTitle(banner: BannerResponse): string {
@@ -430,7 +430,7 @@ export function Component() {
                     <UploadOutlined style={{ fontSize: 24, marginBottom: 8 }} />
                     <span>Nhấn để chọn ảnh</span>
                     <span className="banner-upload__hint">
-                      JPEG, PNG, WebP — tối đa 2MB
+                      JPEG, PNG, WebP, tối đa 2MB
                     </span>
                   </>
                 )}
