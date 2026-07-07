@@ -31,15 +31,6 @@ interface ProductResponse {
   updated_at: string
 }
 
-interface PresignResponse {
-  object_key: string
-  upload_url: string
-  form_fields: Record<string, string>
-  http_method?: string
-  max_size: number
-  expires_at: string
-}
-
 interface BasicInfoValues {
   title: string
   description: string
@@ -74,7 +65,6 @@ const CONDITION_LABELS: Record<ProductCondition, string> = {
 
 const MAX_IMAGES = 6
 const MAX_PRODUCT_IMAGE_BYTES = 5 * 1024 * 1024
-const PRODUCT_IMAGE_UPLOAD_TIMEOUT_MS = 20_000
 const PRODUCT_IMAGE_MESSAGE_KEY = 'product-image-upload'
 const PRODUCT_IMAGE_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp'])
 
@@ -252,7 +242,7 @@ export function Component() {
 
     if (images.length >= MAX_IMAGES) {
       message.warning({
-        content: `Tối đa ${MAX_IMAGES} ảnh`,
+        content: `T\u1ed1i \u0111a ${MAX_IMAGES} \u1ea3nh`,
         key: PRODUCT_IMAGE_MESSAGE_KEY,
       })
       return
@@ -261,14 +251,14 @@ export function Component() {
     const contentType = getProductImageContentType(file)
     if (!contentType) {
       message.error({
-        content: 'Chỉ hỗ trợ ảnh JPG, PNG hoặc WEBP',
+        content: 'Ch\u1ec9 h\u1ed7 tr\u1ee3 \u1ea3nh JPG, PNG ho\u1eb7c WEBP',
         key: PRODUCT_IMAGE_MESSAGE_KEY,
       })
       return
     }
     if (file.size > MAX_PRODUCT_IMAGE_BYTES) {
       message.error({
-        content: `Ảnh tối đa ${formatFileSize(MAX_PRODUCT_IMAGE_BYTES)}`,
+        content: `\u1ea2nh t\u1ed1i \u0111a ${formatFileSize(MAX_PRODUCT_IMAGE_BYTES)}`,
         key: PRODUCT_IMAGE_MESSAGE_KEY,
       })
       return
@@ -278,90 +268,20 @@ export function Component() {
     setUploadingSlot(slotIndex)
 
     try {
-      const presignRes = await privatePost<PresignResponse>(
-        `/products/${product.id}/images/presign`,
-        { content_type: contentType },
-      )
-      if (!presignRes.data) throw new Error('Presign failed')
-
-      const { object_key, upload_url, form_fields } = presignRes.data
-      const maxSize = presignRes.data.max_size ?? MAX_PRODUCT_IMAGE_BYTES
-      if (file.size > maxSize) {
-        message.error({
-          content: `Ảnh tối đa ${formatFileSize(maxSize)}`,
-          key: PRODUCT_IMAGE_MESSAGE_KEY,
-        })
-        return
-      }
-
-      const isPrimary = images.length === 0
-      const uploadViaBackend = async () => {
-        const fallback = new FormData()
-        fallback.append('file', file)
-        fallback.append('sort_order', String(images.length))
-        fallback.append('is_primary', String(isPrimary))
-        const fallbackRes = await privatePostForm<ProductImageResponse>(
-          `/products/${product.id}/images/upload`,
-          fallback,
-        )
-        if (!fallbackRes.data) throw new Error('Upload fallback failed')
-        return fallbackRes.data
-      }
-
       const formData = new FormData()
-      for (const [key, val] of Object.entries(form_fields)) {
-        formData.append(key, val)
-      }
       formData.append('file', file)
+      formData.append('sort_order', String(slotIndex))
+      formData.append('is_primary', String(images.length === 0))
 
-      const uploadController = new AbortController()
-      const uploadTimeout = window.setTimeout(
-        () => uploadController.abort(),
-        PRODUCT_IMAGE_UPLOAD_TIMEOUT_MS,
+      const uploadRes = await privatePostForm<ProductImageResponse>(
+        `/products/${product.id}/images/upload`,
+        formData,
       )
-      let uploadRes: Response
-      try {
-        uploadRes = await fetch(upload_url, {
-          method: 'POST',
-          body: formData,
-          signal: uploadController.signal,
-        })
-      } catch {
-        const fallbackImage = await uploadViaBackend()
-        setImages((prev) => [...prev, fallbackImage])
-        message.success({
-          content: 'ÄÃ£ táº£i lÃªn áº£nh',
-          key: PRODUCT_IMAGE_MESSAGE_KEY,
-          duration: 1.5,
-        })
-        return
-      } finally {
-        window.clearTimeout(uploadTimeout)
-      }
-      if (!uploadRes.ok) {
-        const fallbackImage = await uploadViaBackend()
-        setImages((prev) => [...prev, fallbackImage])
-        message.success({
-          content: 'ÄÃ£ táº£i lÃªn áº£nh',
-          key: PRODUCT_IMAGE_MESSAGE_KEY,
-          duration: 1.5,
-        })
-        return
-      }
+      if (!uploadRes.data) throw new Error('Upload failed')
 
-      const attachRes = await privatePost<ProductImageResponse>(
-        `/products/${product.id}/images`,
-        {
-          object_key,
-          sort_order: images.length,
-          is_primary: isPrimary,
-        },
-      )
-      if (!attachRes.data) throw new Error('Attach failed')
-
-      setImages((prev) => [...prev, attachRes.data!])
+      setImages((prev) => [...prev, uploadRes.data!])
       message.success({
-        content: 'Đã tải lên ảnh',
+        content: '\u0110\u00e3 t\u1ea3i l\u00ean \u1ea3nh',
         key: PRODUCT_IMAGE_MESSAGE_KEY,
         duration: 1.5,
       })
@@ -369,7 +289,7 @@ export function Component() {
       message.error({
         content: getApiErrorMessage(
           error,
-          'Tải ảnh thất bại. Vui lòng thử lại.',
+          'T\u1ea3i \u1ea3nh th\u1ea5t b\u1ea1i. Vui l\u00f2ng th\u1eed l\u1ea1i.',
         ),
         key: PRODUCT_IMAGE_MESSAGE_KEY,
       })
