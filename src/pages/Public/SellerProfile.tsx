@@ -6,6 +6,7 @@ import { privatePost, publicGet } from '@/api/api'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import { useAuthStore } from '@/store/useAuthStore'
 import type { ErrorResponse } from '@/types/api'
+import { getAuctionDisplayTitle } from '@/utils/auctionDisplay'
 import './seller-profile.css'
 
 interface ProductImage {
@@ -127,7 +128,7 @@ function primaryImage(product?: AuctionProduct): string | undefined {
 
 function AuctionCard({ auction }: { auction: Auction }) {
   const [imageFailed, setImageFailed] = useState(false)
-  const title = auction.product?.title ?? `Phiên #${auction.id.slice(0, 8)}`
+  const title = getAuctionDisplayTitle(auction)
   const imageURL = primaryImage(auction.product)
   const price = auction.mode === 'sealed_bid'
     ? 'Giá được bảo mật'

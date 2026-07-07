@@ -8,6 +8,7 @@ import type { Auction } from '@/types/auction'
 import type { Order } from '@/types/order'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import { getOrderProductImageUrl, getOrderProductTitle } from '@/utils/orderDisplay'
+import { getAuctionDisplayTitle } from '@/utils/auctionDisplay'
 import { getDemoProductImage } from '@/utils/demoProductImages'
 import './dashboard.css'
 
@@ -417,7 +418,7 @@ function CreatedTab() {
           ) : (
             <div className="my-auctions-list" role="list" aria-label="Phiên đấu giá đã tạo">
               {groupedAuctions.map((auction) => {
-                const title = auction.product?.title ?? `Phiên ${auction.id.slice(0, 8)}`
+                const title = getAuctionDisplayTitle(auction)
                 const primaryImage = auction.product?.images?.find((image) => image.is_primary)
                 const imageUrl = resolveProductImage(
                   title,
