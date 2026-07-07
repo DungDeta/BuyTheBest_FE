@@ -48,7 +48,9 @@ export async function privatePost<T>(url: string, data?: unknown): Promise<ApiRe
 
 export async function privatePostForm<T>(url: string, data: FormData): Promise<ApiResponse<T>> {
   try {
-    const res = await apiPrivate.post<ApiResponse<T>>(url, data)
+    const res = await apiPrivate.post<ApiResponse<T>>(url, data, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    })
     return res.data
   } catch (err) {
     return handleError(err)
