@@ -46,6 +46,15 @@ export async function privatePost<T>(url: string, data?: unknown): Promise<ApiRe
   }
 }
 
+export async function privatePostForm<T>(url: string, data: FormData): Promise<ApiResponse<T>> {
+  try {
+    const res = await apiPrivate.post<ApiResponse<T>>(url, data)
+    return res.data
+  } catch (err) {
+    return handleError(err)
+  }
+}
+
 export async function privatePut<T>(url: string, data?: unknown): Promise<ApiResponse<T>> {
   try {
     const res = await apiPrivate.put<ApiResponse<T>>(url, data)

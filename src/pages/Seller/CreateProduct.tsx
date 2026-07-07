@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { Alert, App, Button, Form, Input, Select, Spin, Steps } from 'antd'
-import { privateDelete, privateGet, privatePost, privatePut, publicGet } from '@/api/api'
+import { privateDelete, privateGet, privatePost, privatePostForm, privatePut, publicGet } from '@/api/api'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import './seller.css'
 
@@ -294,6 +294,20 @@ export function Component() {
         return
       }
 
+      const isPrimary = images.length === 0
+      const uploadViaBackend = async () => {
+        const fallback = new FormData()
+        fallback.append('file', file)
+        fallback.append('sort_order', String(images.length))
+        fallback.append('is_primary', String(isPrimary))
+        const fallbackRes = await privatePostForm<ProductImageResponse>(
+          `/products/${product.id}/images/upload`,
+          fallback,
+        )
+        if (!fallbackRes.data) throw new Error('Upload fallback failed')
+        return fallbackRes.data
+      }
+
       const formData = new FormData()
       for (const [key, val] of Object.entries(form_fields)) {
         formData.append(key, val)
@@ -312,12 +326,29 @@ export function Component() {
           body: formData,
           signal: uploadController.signal,
         })
+      } catch {
+        const fallbackImage = await uploadViaBackend()
+        setImages((prev) => [...prev, fallbackImage])
+        message.success({
+          content: 'ÄÃ£ táº£i lÃªn áº£nh',
+          key: PRODUCT_IMAGE_MESSAGE_KEY,
+          duration: 1.5,
+        })
+        return
       } finally {
         window.clearTimeout(uploadTimeout)
       }
-      if (!uploadRes.ok) throw new Error('Upload failed')
+      if (!uploadRes.ok) {
+        const fallbackImage = await uploadViaBackend()
+        setImages((prev) => [...prev, fallbackImage])
+        message.success({
+          content: 'ÄÃ£ táº£i lÃªn áº£nh',
+          key: PRODUCT_IMAGE_MESSAGE_KEY,
+          duration: 1.5,
+        })
+        return
+      }
 
-      const isPrimary = images.length === 0
       const attachRes = await privatePost<ProductImageResponse>(
         `/products/${product.id}/images`,
         {
