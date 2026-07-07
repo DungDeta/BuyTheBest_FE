@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { App } from 'antd'
 import { useAutoBid } from '@/hooks/useAutoBid'
 
@@ -18,6 +18,10 @@ export function AutoBidSection({ auctionId, minPrice, minIncrement }: AutoBidSec
 
   const [expanded, setExpanded] = useState(false)
   const [maxPriceInput, setMaxPriceInput] = useState('')
+
+  useEffect(() => {
+    void refresh()
+  }, [refresh, minPrice])
 
   const isActive = autoBid !== null && autoBid.status === 'active'
   const isExhausted = autoBid !== null && autoBid.status === 'exhausted'
