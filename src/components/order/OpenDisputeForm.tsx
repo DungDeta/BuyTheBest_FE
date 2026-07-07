@@ -30,7 +30,7 @@ export function OpenDisputeForm({ orderId, onSuccess }: OpenDisputeFormProps) {
   const [description, setDescription] = useState('')
   const [submitting, setSubmitting] = useState(false)
 
-  const descLen = description.length
+  const descLen = description.trim().length
   const descValid = descLen >= MIN_DESC && descLen <= MAX_DESC
   const canSubmit = reason !== null && descValid
 
@@ -42,6 +42,7 @@ export function OpenDisputeForm({ orderId, onSuccess }: OpenDisputeFormProps) {
       content: 'Sau khi mở khiếu nại, đơn hàng sẽ bị tạm dừng cho đến khi được giải quyết. Bạn chắc chắn muốn tiếp tục?',
       okText: 'Mở khiếu nại',
       okType: 'danger',
+      okButtonProps: { 'data-testid': 'confirm-open-dispute' },
       cancelText: 'Huỷ',
       onOk: async () => {
         setSubmitting(true)
@@ -62,6 +63,7 @@ export function OpenDisputeForm({ orderId, onSuccess }: OpenDisputeFormProps) {
   return (
     <div
       id="open-dispute-form"
+      data-testid="open-dispute-form"
       className="detail-section"
       style={{ border: '2px dashed #cc6d00', background: '#fff8e1' }}
     >
@@ -89,6 +91,7 @@ export function OpenDisputeForm({ orderId, onSuccess }: OpenDisputeFormProps) {
         </label>
         <Select<DisputeReason>
           id="dispute-reason"
+          data-testid="open-dispute-reason"
           placeholder="Chọn lý do"
           style={{ width: '100%', fontFamily: 'var(--font-mono)' }}
           value={reason ?? undefined}
@@ -115,6 +118,7 @@ export function OpenDisputeForm({ orderId, onSuccess }: OpenDisputeFormProps) {
         </label>
         <textarea
           id="dispute-desc"
+          data-testid="open-dispute-description"
           rows={5}
           value={description}
           onChange={(e) => setDescription(e.target.value)}
@@ -161,6 +165,7 @@ export function OpenDisputeForm({ orderId, onSuccess }: OpenDisputeFormProps) {
           onClick={handleSubmit}
           loading={submitting}
           disabled={!canSubmit}
+          data-testid="open-dispute-submit"
         >
           Mở khiếu nại
         </Button>

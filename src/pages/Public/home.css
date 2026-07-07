@@ -643,10 +643,18 @@
     aspect-ratio: 1.85 / 1;
   }
   .banner-slide__copy {
-    left: 16px;
-    right: 16px;
-    bottom: 16px;
+    left: 12px;
+    right: 12px;
+    bottom: 12px;
     max-width: none;
+    padding: 10px 12px;
+    background: #0f172a;
+    border: 1px solid rgba(255, 255, 255, 0.35);
+  }
+
+  .banner-slide__title {
+    font-size: 18px;
+    line-height: 1.15;
   }
   .trust-bar {
     flex-direction: column;

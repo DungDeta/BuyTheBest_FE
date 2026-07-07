@@ -87,6 +87,12 @@ export default function Header() {
     navigateToSearch(q)
   }
 
+  function handleSearchKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+    if (e.key !== 'Enter') return
+    e.preventDefault()
+    navigateToSearch(e.currentTarget.value)
+  }
+
   const userMenuItems: MenuProps['items'] = [
     { key: 'profile', label: <Link to="/profile">Hồ sơ</Link> },
     { key: 'orders', label: <Link to="/orders">Đơn hàng</Link> },
@@ -108,7 +114,14 @@ export default function Header() {
         </div>
 
         <form className="header-search" onSubmit={handleSearch} onBlur={closeSearchHistory}>
-          <SearchOutlined className="header-search__icon" />
+          <button
+            type="submit"
+            className="header-search__icon"
+            aria-label="Tìm kiếm"
+            title="Tìm kiếm"
+          >
+            <SearchOutlined />
+          </button>
           <input
             ref={searchRef}
             type="search"
@@ -119,6 +132,7 @@ export default function Header() {
             aria-controls="header-search-history"
             aria-expanded={historyOpen && searchHistory.length > 0}
             onFocus={openSearchHistory}
+            onKeyDown={handleSearchKeyDown}
           />
           {historyOpen && searchHistory.length > 0 && (
             <div

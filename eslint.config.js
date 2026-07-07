@@ -11,6 +11,8 @@ export default tseslint.config(
       '**/dist/**',
       'node_modules',
       'docs/**',
+      'test-artifacts/**',
+      '.codegraph/**',
       '.codex-artifacts',
       '.playwright-mcp',
     ],

@@ -42,7 +42,7 @@ interface OrdersResponse {
 }
 
 interface UnreadCountResponse {
-  count: number
+  unread_count: number
 }
 
 interface DashboardData {
@@ -178,7 +178,9 @@ export function Component() {
             : 0
 
         const notifCount =
-          notifRes.status === 'fulfilled' ? (notifRes.value.data?.count ?? 0) : 0
+          notifRes.status === 'fulfilled'
+            ? (notifRes.value.data?.unread_count ?? 0)
+            : 0
 
         setData({
           orderCount: orderTotal,
