@@ -956,6 +956,25 @@
   gap: 8px;
 }
 
+.auto-bid-alert {
+  border: 1px solid #ef4444;
+  background: #fff1f2;
+  color: #991b1b;
+  border-radius: 2px;
+  padding: 8px 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  line-height: 1.5;
+}
+
+.auto-bid-alert strong {
+  font-size: 11px;
+  color: #7f1d1d;
+}
+
 .auto-bid-status {
   background: var(--paper-2);
   border: 1px solid var(--border-strong);
