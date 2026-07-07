@@ -3,6 +3,7 @@ import { App } from 'antd'
 import { privateGet } from '@/api/api'
 import { useBid } from '@/hooks/useBid'
 import type { Auction, BidActionResponse } from '@/types/auction'
+import { getReadableProductTitle } from '@/utils/auctionDisplay'
 import { getProductConditionLabel } from '@/utils/productDisplay'
 
 interface ReverseBidFormProps {
@@ -13,6 +14,7 @@ interface ReverseBidFormProps {
 interface SellerProduct {
   id: string
   title: string
+  slug?: string
   condition?: string
   status: string
 }
@@ -26,7 +28,7 @@ function formatVnd(amount: number): string {
 }
 
 function productOptionLabel(product: SellerProduct): string {
-  const title = product.title?.trim() || 'Sản phẩm chưa đặt tên'
+  const title = getReadableProductTitle(product)
   const condition = getProductConditionLabel(product.condition, '')
   return condition ? `${title} (${condition})` : title
 }

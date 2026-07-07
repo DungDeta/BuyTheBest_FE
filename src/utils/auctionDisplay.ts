@@ -3,7 +3,9 @@ interface AuctionDisplaySource {
   mode?: string | null
   title?: string | null
   product?: {
+    id?: string | null
     title?: string | null
+    slug?: string | null
   } | null
 }
 
@@ -12,7 +14,13 @@ function trimText(value?: string | null): string {
 }
 
 function compactCode(value: string): string {
-  return value.replace(/[^a-zA-Z0-9]/g, '').toLowerCase()
+  return value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/đ/g, 'd')
+    .replace(/Đ/g, 'd')
+    .replace(/[^a-zA-Z0-9]/g, '')
+    .toLowerCase()
 }
 
 function isSyntheticAuctionTitle(value: string, auctionId?: string | null): boolean {
@@ -23,13 +31,47 @@ function isSyntheticAuctionTitle(value: string, auctionId?: string | null): bool
   if (shortId && normalized.includes(shortId)) return true
   if (/^#?[0-9a-f]{6,}$/i.test(value.trim())) return true
   if (/^phiên\s+#?[0-9a-f-]{6,}$/i.test(value.trim())) return true
-  if (normalized.startsWith('yêu cầu đấu giá ngược')) return true
+  if (/^yêu cầu đấu giá ngược(?:\s+tài sản)?(?:\s+#?[0-9a-f-]{6,})?$/i.test(value.trim())) return true
+  if (compact.startsWith('yeucaudaugianguoc')) return true
   return compact === 'phien' || compact === 'phiendaugia'
 }
 
+export function getReadableProductTitle(
+  product?: { id?: string | null; title?: string | null; slug?: string | null } | null,
+  fallback = 'Sản phẩm chưa đặt tên',
+): string {
+  const title = trimText(product?.title)
+  const id = trimText(product?.id)
+  if (
+    title &&
+    !isSyntheticAuctionTitle(title, id) &&
+    compactCode(title) !== compactCode(id)
+  ) {
+    return title
+  }
+
+  const slug = trimText(product?.slug)
+  if (
+    slug &&
+    compactCode(slug) !== compactCode(id) &&
+    !isSyntheticAuctionTitle(slug, id)
+  ) {
+    return slug
+      .split('-')
+      .filter(Boolean)
+      .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+      .join(' ')
+  }
+
+  return fallback
+}
+
 export function getAuctionAssetTitle(auction: AuctionDisplaySource): string {
-  const productTitle = trimText(auction.product?.title)
-  if (productTitle) return productTitle
+  if (auction.product) {
+    const fallback = auction.mode === 'reverse' ? '' : 'Sản phẩm chưa đặt tên'
+    const productTitle = getReadableProductTitle(auction.product, fallback)
+    if (productTitle) return productTitle
+  }
 
   const title = trimText(auction.title)
   if (auction.mode === 'reverse' && isSyntheticAuctionTitle(title, auction.id)) {

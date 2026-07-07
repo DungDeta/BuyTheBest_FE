@@ -15,6 +15,7 @@ import { privateGet, privatePost } from '@/api/api'
 import type { Auction, AuctionMode } from '@/types/auction'
 import type { ErrorResponse } from '@/types/api'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
+import { getReadableProductTitle } from '@/utils/auctionDisplay'
 import { getProductConditionLabel } from '@/utils/productDisplay'
 import './seller.css'
 
@@ -89,7 +90,7 @@ const VND_PARSER = (val: string | undefined) =>
   Number((val ?? '').replace(/,/g, ''))
 
 function productOptionLabel(product: ProductListItem): string {
-  const title = product.title?.trim() || 'Sản phẩm chưa đặt tên'
+  const title = getReadableProductTitle(product)
   const condition = getProductConditionLabel(product.condition, '')
   const suffix = product.has_open_auction ? 'đã có phiên đang mở' : condition
   return suffix ? `${title} (${suffix})` : title
