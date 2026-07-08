@@ -273,6 +273,15 @@ export function Component() {
       disputeReferenceAt &&
       dayjs().diff(dayjs(disputeReferenceAt), 'day', true) <= 30,
   )
+  const isDeliveredEscrowHeld = Boolean(
+    buyer &&
+      order.status === 'delivered' &&
+      order.payment?.escrow_status === 'held' &&
+      !hasActiveDispute,
+  )
+  const autoReleaseText = order.payment?.auto_release_at
+    ? dayjs(order.payment.auto_release_at).format('DD/MM/YYYY HH:mm')
+    : null
   const hasShipmentActivity = Boolean(
     order.shipment &&
       (
@@ -485,7 +494,7 @@ export function Component() {
             </div>
             {order.payment.auto_release_at && (
               <div className="shipment-info__item">
-                <div className="shipment-info__label">Tự động giải phóng</div>
+                <div className="shipment-info__label">Tự động giải ngân</div>
                 <div className="shipment-info__value">
                   {dayjs(order.payment.auto_release_at).format('DD/MM/YYYY HH:mm')}
                 </div>
@@ -598,6 +607,20 @@ export function Component() {
           </Button>
         )}
       </div>
+
+      {isDeliveredEscrowHeld && (
+        <Alert
+          type="info"
+          showIcon
+          style={{ marginBottom: 16 }}
+          message="Escrow đang được giữ trong thời hạn khiếu nại"
+          description={
+            autoReleaseText
+              ? `Bạn có thể mở khiếu nại trong thời hạn cho phép. Nếu không có khiếu nại, hệ thống sẽ tự động giải ngân cho người bán vào ${autoReleaseText}; sau đó bạn có thể đánh giá người bán.`
+              : 'Bạn có thể mở khiếu nại trong thời hạn cho phép. Sau khi escrow được giải ngân, bạn có thể đánh giá người bán.'
+          }
+        />
+      )}
 
       {order.payment?.escrow_status === 'disputed' && !order.dispute && (
         <Alert
