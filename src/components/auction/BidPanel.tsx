@@ -5,12 +5,15 @@ import { DutchBidForm } from '@/components/auction/DutchBidForm'
 import { SealedBidForm } from '@/components/auction/SealedBidForm'
 import { ReverseBidForm } from '@/components/auction/ReverseBidForm'
 import { formatParticipantLabel, isSelfBidder } from '@/utils/auctionIdentity'
+import { getReadableProductTitle } from '@/utils/auctionDisplay'
+import { resolveReverseViewer, reverseOfferCount } from '@/utils/reverseAuction'
 import type { Auction, AuctionConnectionState, BidActionResponse } from '@/types/auction'
 
 interface BidPanelProps {
   auction: Auction
   isLoggedIn: boolean
   currentUserId: string | null
+  currentUserIsSeller: boolean
   currentBidderLabel: string | null
   currentParticipantId: number | null
   connectionState: AuctionConnectionState
@@ -72,22 +75,141 @@ function isExternalUrl(url: string): boolean {
   return /^https?:\/\//.test(url)
 }
 
+function ReverseResultPanel({
+  auction,
+  currentUserId,
+  currentUserIsSeller,
+}: {
+  auction: Auction
+  currentUserId: string | null
+  currentUserIsSeller: boolean
+}) {
+  const viewer = resolveReverseViewer(auction, currentUserId, currentUserIsSeller)
+  const winningOffer = auction.winning_offer
+  const winningProduct = winningOffer?.product ?? auction.product
+  const hasWinner = winningOffer != null || reverseOfferCount(auction) > 0
+  const winnerLabel = viewer.isWinningSeller
+    ? 'Bạn'
+    : winningOffer?.seller?.display_name ??
+      winningOffer?.seller_label ??
+      auction.winner_label ??
+      null
+  const finalPrice = winningOffer?.amount ?? auction.current_price
+  const buyerCheckoutHref =
+    auction.checkout_url ??
+    (auction.order_id != null ? `/orders/${auction.order_id}/checkout` : '/orders?role=buyer')
+  const sellerOrderHref = auction.order_id != null
+    ? `/orders/${auction.order_id}?role=seller`
+    : '/orders?role=seller'
+
+  return (
+    <div className="result-panel" data-testid="reverse-result-panel">
+      <span className="result-panel__ended-badge">Phiên đã kết thúc</span>
+      <div>
+        <div className="result-panel__label">Giá trúng báo giá</div>
+        <div className="result-panel__price" data-testid="reverse-result-price">
+          {hasWinner ? formatVnd(finalPrice) : '—'}
+        </div>
+      </div>
+      <div>
+        <div className="result-panel__label">Người bán thắng</div>
+        {hasWinner ? (
+          <div className="result-panel__winner" data-testid="reverse-result-winner">
+            {winnerLabel ? formatParticipantLabel(winnerLabel, 'seller') : 'Đang đồng bộ kết quả'}
+          </div>
+        ) : (
+          <div className="result-panel__no-winner">Không có báo giá hợp lệ</div>
+        )}
+      </div>
+
+      {hasWinner && winningProduct?.id && (
+        <div>
+          <div className="result-panel__label">Sản phẩm được chọn</div>
+          <Link
+            to={`/products/${winningProduct.id}`}
+            className="result-panel__product"
+            data-testid="reverse-result-product"
+          >
+            {getReadableProductTitle(winningProduct)}
+          </Link>
+        </div>
+      )}
+
+      {viewer.canPay && auction.payment_deadline && (
+        <div className="result-panel__deadline">
+          Thanh toán trước {dayjs(auction.payment_deadline).format('DD/MM/YYYY HH:mm')}
+        </div>
+      )}
+
+      {viewer.canPay && isExternalUrl(buyerCheckoutHref) && (
+        <a
+          href={buyerCheckoutHref}
+          className="result-panel__cta result-panel__cta--pay"
+          data-testid="reverse-buyer-checkout"
+        >
+          Thanh toán đơn hàng
+        </a>
+      )}
+      {viewer.canPay && !isExternalUrl(buyerCheckoutHref) && (
+        <Link
+          to={buyerCheckoutHref}
+          className="result-panel__cta result-panel__cta--pay"
+          data-testid="reverse-buyer-checkout"
+        >
+          Thanh toán đơn hàng
+        </Link>
+      )}
+      {viewer.isWinningSeller && (
+        <Link
+          to={sellerOrderHref}
+          className="result-panel__cta"
+          data-testid="reverse-seller-order"
+        >
+          Xem đơn bán
+        </Link>
+      )}
+      {viewer.isCreator && hasWinner && !viewer.canPay && (
+        <Link to="/orders?role=buyer" className="result-panel__cta" data-testid="reverse-buyer-orders">
+          Xem đơn mua
+        </Link>
+      )}
+      {!viewer.isCreator && !viewer.isWinningSeller && (
+        <Link to="/auctions?mode=reverse&sort=ending_soon" className="result-panel__cta">
+          Xem nhu cầu tương tự
+        </Link>
+      )}
+    </div>
+  )
+}
+
 function ResultPanel({
   auction,
   currentUserId,
   currentBidderLabel,
   currentParticipantId,
+  currentUserIsSeller,
 }: {
   auction: Auction
   currentUserId: string | null
   currentBidderLabel: string | null
   currentParticipantId: number | null
+  currentUserIsSeller: boolean
 }) {
   if (auction.status === 'cancelled') {
     return (
       <div className="result-panel">
         <span className="result-panel__cancelled-badge">Phiên đã bị huỷ</span>
       </div>
+    )
+  }
+
+  if (auction.mode === 'reverse') {
+    return (
+      <ReverseResultPanel
+        auction={auction}
+        currentUserId={currentUserId}
+        currentUserIsSeller={currentUserIsSeller}
+      />
     )
   }
 
@@ -181,6 +303,7 @@ export function BidPanel({
   auction,
   isLoggedIn,
   currentUserId,
+  currentUserIsSeller,
   currentBidderLabel,
   currentParticipantId,
   connectionState,
@@ -189,10 +312,7 @@ export function BidPanel({
   const isEnded = auction.status === 'ended' || auction.status === 'closed_bin'
   const isCancelled = auction.status === 'cancelled'
   const isScheduled = auction.status === 'scheduled'
-  const isReverseOwner =
-    auction.mode === 'reverse' &&
-    currentUserId !== null &&
-    String(auction.creator_id) === currentUserId
+  const reverseViewer = resolveReverseViewer(auction, currentUserId, currentUserIsSeller)
 
   const isSeller =
     currentUserId !== null &&
@@ -208,6 +328,7 @@ export function BidPanel({
           currentUserId={currentUserId}
           currentBidderLabel={currentBidderLabel}
           currentParticipantId={currentParticipantId}
+          currentUserIsSeller={currentUserIsSeller}
         />
       )
     }
@@ -236,7 +357,7 @@ export function BidPanel({
       return <ReadOnlyBidSummary auction={auction} />
     }
 
-    if (isReverseOwner) {
+    if (auction.mode === 'reverse' && reverseViewer.isCreator) {
       return (
         <div className="bid-gate">
           <span className="bid-gate__msg">Bạn là người tạo yêu cầu, không thể báo giá cho chính mình</span>
@@ -244,7 +365,24 @@ export function BidPanel({
       )
     }
 
-    if (isSeller) {
+    if (auction.mode === 'reverse' && !reverseViewer.isSeller) {
+      return (
+        <div className="bid-gate" data-testid="reverse-seller-required">
+          <span className="bid-gate__msg">Bạn cần tài khoản người bán để gửi báo giá</span>
+          <Link to="/profile" className="bid-gate__login-btn">Mở hồ sơ</Link>
+        </div>
+      )
+    }
+
+    if (auction.mode === 'reverse' && !reverseViewer.canOffer) {
+      return (
+        <div className="bid-gate" data-testid="reverse-offer-not-allowed">
+          <span className="bid-gate__msg">Tài khoản của bạn hiện không thể gửi báo giá cho phiên này</span>
+        </div>
+      )
+    }
+
+    if (auction.mode !== 'reverse' && isSeller) {
       return (
         <div className="bid-gate">
           <span className="bid-gate__msg">Bạn là người bán, không thể đặt giá</span>
@@ -281,7 +419,11 @@ export function BidPanel({
 
       <div className="bid-panel-footer">
         <span>
-          {bidCount} lượt đặt · {watcherCount} theo dõi
+          {auction.mode === 'reverse'
+            ? `${auction.offer_count ?? bidCount} báo giá${
+                typeof auction.seller_count === 'number' ? ` · ${auction.seller_count} người bán` : ''
+              } · ${watcherCount} theo dõi`
+            : `${bidCount} lượt đặt · ${watcherCount} theo dõi`}
         </span>
         {isActive && (
           <span

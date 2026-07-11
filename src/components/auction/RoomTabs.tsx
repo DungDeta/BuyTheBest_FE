@@ -41,11 +41,13 @@ export function RoomTabs({
     )),
   ).size
   const [resolvedParticipantCount, setResolvedParticipantCount] = useState(
-    bidFeedParticipantCount,
+    Math.max(auction.seller_count ?? 0, bidFeedParticipantCount),
   )
 
   const showLog =
     auction.status === 'ended' || auction.status === 'closed_bin'
+  const hidesSealedParticipants =
+    auction.mode === 'sealed_bid' && !showLog
 
   useEffect(() => {
     let cancelled = false
@@ -60,10 +62,14 @@ export function RoomTabs({
         const apiBidderCount = (res.data?.items ?? [])
           .filter((participant) => participant.bid_count > 0)
           .length
-        setResolvedParticipantCount(Math.max(apiBidderCount, bidFeedParticipantCount))
+        setResolvedParticipantCount(Math.max(
+          auction.seller_count ?? 0,
+          apiBidderCount,
+          bidFeedParticipantCount,
+        ))
       } catch {
         if (!cancelled) {
-          setResolvedParticipantCount(bidFeedParticipantCount)
+          setResolvedParticipantCount(Math.max(auction.seller_count ?? 0, bidFeedParticipantCount))
         }
       }
     }
@@ -72,16 +78,32 @@ export function RoomTabs({
     return () => {
       cancelled = true
     }
-  }, [auction.id, bidFeedParticipantCount, participantCount])
+  }, [auction.id, auction.seller_count, bidFeedParticipantCount, participantCount])
 
   const handleBidderCountLoaded = useCallback((count: number) => {
-    setResolvedParticipantCount(Math.max(count, bidFeedParticipantCount))
-  }, [bidFeedParticipantCount])
+    setResolvedParticipantCount(Math.max(
+      auction.seller_count ?? 0,
+      count,
+      bidFeedParticipantCount,
+    ))
+  }, [auction.seller_count, bidFeedParticipantCount])
 
   const tabs: { key: TabKey; label: string }[] = [
-    { key: 'feed', label: `Hoạt động (${bidFeed.length > 0 ? bidFeed.length : '…'})` },
-    { key: 'desc', label: 'Mô tả' },
-    { key: 'bidders', label: `Người đặt (${resolvedParticipantCount})` },
+    {
+      key: 'feed',
+      label: auction.mode === 'reverse'
+        ? `Báo giá (${auction.offer_count ?? auction.bid_count})`
+        : auction.mode === 'sealed_bid'
+          ? `Giá kín (${auction.bid_count})`
+          : `Hoạt động (${bidFeed.length > 0 ? bidFeed.length : auction.bid_count})`,
+    },
+    { key: 'desc', label: auction.mode === 'reverse' ? 'Yêu cầu' : 'Mô tả' },
+    {
+      key: 'bidders',
+      label: hidesSealedParticipants
+        ? 'Người đặt (đã ẩn)'
+        : `${auction.mode === 'reverse' ? 'Người bán' : 'Người đặt'} (${resolvedParticipantCount})`,
+    },
     { key: 'chat', label: 'Tin nhắn' },
     ...(showLog ? [{ key: 'log' as TabKey, label: 'Nhật ký' }] : []),
   ]
@@ -118,6 +140,8 @@ export function RoomTabs({
             currentUserId={currentUserId}
             currentBidderLabel={currentBidderLabel}
             currentParticipantId={currentParticipantId}
+            mode={auction.mode}
+            recordedCount={auction.bid_count}
           />
         )}
       </div>
@@ -140,14 +164,23 @@ export function RoomTabs({
         hidden={activeTab !== 'bidders'}
       >
         {activeTab === 'bidders' && (
-          <BidderList
-            auctionId={auction.id}
-            currentUserId={currentUserId}
-            currentBidderLabel={currentBidderLabel}
-            currentParticipantId={currentParticipantId}
-            realtimeCount={participantCount}
-            onCountLoaded={handleBidderCountLoaded}
-          />
+          hidesSealedParticipants
+            ? (
+              <div className="tab-content tab-content--empty">
+                Danh tính người đặt được giữ kín đến khi phiên kết thúc.
+              </div>
+            )
+            : (
+              <BidderList
+                auctionId={auction.id}
+                currentUserId={currentUserId}
+                currentBidderLabel={currentBidderLabel}
+                currentParticipantId={currentParticipantId}
+                mode={auction.mode}
+                realtimeCount={participantCount}
+                onCountLoaded={handleBidderCountLoaded}
+              />
+            )
         )}
       </div>
 

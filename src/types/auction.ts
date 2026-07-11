@@ -7,6 +7,8 @@ export type AuctionRoomMembershipState = 'guest' | 'joining' | 'joined' | 'faile
 
 export interface Auction {
   id: string
+  title?: string | null
+  description?: string | null
   product_id?: number | null
   seller_id?: number | null
   creator_id: number
@@ -30,6 +32,8 @@ export interface Auction {
   bid_count: number
   view_count?: number
   watcher_count?: number
+  offer_count?: number
+  seller_count?: number
   starts_at: string
   ends_at: string
   original_ends_at: string
@@ -50,6 +54,54 @@ export interface Auction {
   server_time?: string | null
   product?: ProductSummary | null
   seller?: SellerSummary | null
+  creator?: AuctionCreatorSummary | null
+  demand?: ReverseDemand | null
+  winning_offer?: ReverseOffer | null
+  reverse_contract_version?: number | null
+  viewer?: AuctionViewerCapabilities | null
+  viewer_capabilities?: AuctionViewerCapabilities | null
+  viewer_is_creator?: boolean
+  viewer_is_winning_seller?: boolean
+  viewer_can_offer?: boolean
+  viewer_can_pay?: boolean
+  viewer_can_cancel?: boolean
+}
+
+export interface AuctionCreatorSummary {
+  id: string
+  display_name: string
+  avatar_url?: string | null
+}
+
+export interface ReverseDemand {
+  title: string
+  description: string
+  category_id: number
+}
+
+export interface AuctionViewerCapabilities {
+  is_creator?: boolean
+  is_seller?: boolean
+  can_offer?: boolean
+  can_cancel?: boolean
+  is_leading_offer_seller?: boolean
+  is_winning_seller?: boolean
+  is_winner?: boolean
+  can_checkout?: boolean
+  can_pay?: boolean
+  order_role?: 'buyer' | 'seller' | null
+}
+
+export interface ReverseOffer {
+  id?: number
+  bid_id: number
+  amount: number
+  seller_label?: string | null
+  seller?: SellerSummary | null
+  product: ProductSummary
+  is_leading?: boolean
+  is_self?: boolean
+  placed_at?: string | null
 }
 
 export interface ProductSummary {
@@ -88,6 +140,7 @@ export interface BidHistoryItem {
   is_winning: boolean
   is_self?: boolean
   placed_at: string
+  product?: ProductSummary | null
 }
 
 export interface AutoBid {
@@ -123,7 +176,8 @@ export interface Participant {
   label: string
   user_id?: number | string | null
   bid_count: number
-  highest_amount: number
+  highest_amount?: number | null
+  best_amount?: number | null
   last_bid_at: string
   is_active: boolean
   is_self?: boolean
@@ -157,15 +211,17 @@ export interface WsEvent<T = unknown> {
 
 export interface BidPlacedPayload {
   auction_id: string
-  bid_id: number
-  bidder_label: string
+  bid_id?: number
+  bidder_label?: string
   bidder_id?: number | string | null
   participant_id?: number | null
   is_self?: boolean
-  amount: number
-  current_price: number
+  amount?: number
+  current_price?: number
   bid_count: number
-  bid_type: BidType
+  bid_type?: BidType
+  masked?: boolean
+  product?: ProductSummary | null
   server_time?: string | null
 }
 
@@ -221,6 +277,14 @@ export interface RoomJoinedPayload extends ParticipantPayload {
   participant_id?: number | null
   bidder_label?: string | null
   official_participant?: boolean
+  server_time?: string | null
+  product?: ProductSummary | null
+}
+
+export interface AuctionStartedPayload {
+  auction_id: string
+  starts_at?: string | null
+  status?: AuctionStatus
   server_time?: string | null
 }
 

@@ -14,6 +14,7 @@ export default function Footer() {
           <h5>Khám phá</h5>
           <ul>
             <li><Link to="/auctions">Tất cả phiên</Link></li>
+            <li><Link to="/products">Sản phẩm đã duyệt</Link></li>
             <li><Link to="/auctions?mode=english">Đấu giá tăng dần</Link></li>
             <li><Link to="/auctions?mode=dutch">Đấu giá giảm dần</Link></li>
             <li><Link to="/auctions?mode=sealed">Đấu giá kín</Link></li>

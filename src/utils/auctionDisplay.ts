@@ -81,13 +81,23 @@ export function getAuctionAssetTitle(auction: AuctionDisplaySource): string {
 }
 
 export function getAuctionDisplayTitle(auction: AuctionDisplaySource): string {
-  const assetTitle = getAuctionAssetTitle(auction)
-
   if (auction.mode === 'reverse') {
-    return assetTitle
-      ? `Yêu cầu đấu giá ngược tài sản ${assetTitle}`
+    // Reverse V2 is a buyer demand. Settlement attaches the winning product to
+    // the auction, but that product must never replace the original demand in
+    // titles, breadcrumbs, or owner lists.
+    const demandTitle = trimText(auction.title)
+    if (demandTitle && !isSyntheticAuctionTitle(demandTitle, auction.id)) {
+      return `Yêu cầu đấu giá ngược tài sản ${demandTitle}`
+    }
+
+    // Compatibility fallback for legacy Reverse rows that predate demand_title.
+    const legacyProductTitle = getReadableProductTitle(auction.product, '')
+    return legacyProductTitle
+      ? `Yêu cầu đấu giá ngược tài sản ${legacyProductTitle}`
       : 'Yêu cầu đấu giá ngược'
   }
+
+  const assetTitle = getAuctionAssetTitle(auction)
 
   if (assetTitle) return assetTitle
 

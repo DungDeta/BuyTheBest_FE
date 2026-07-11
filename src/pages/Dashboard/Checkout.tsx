@@ -305,6 +305,10 @@ export function Component() {
         const res = await privateGet<OrderDetailResponse>(`/orders/${id}`)
       const fetched = extractOrder(res.data)
       if (fetched) {
+        if (fetched.viewer_role && fetched.viewer_role !== 'buyer') {
+          navigate(`/orders/${fetched.id}?role=seller`, { replace: true })
+          return
+        }
         if (fetched.status !== 'pending_payment') {
           navigate(`/orders/${fetched.id}`, { replace: true })
           return

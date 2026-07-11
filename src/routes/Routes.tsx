@@ -15,6 +15,8 @@ export const router = createBrowserRouter([
     hydrateFallbackElement: routeHydrateFallback,
     children: [
       { path: '/', element: <Home /> },
+      { path: '/products', lazy: () => import('@/pages/Public/ProductList') },
+      { path: '/products/:id', lazy: () => import('@/pages/Public/ProductDetail') },
       { path: '/auctions', lazy: () => import('@/pages/Public/AuctionList') },
       { path: '/auctions/ending-soon', lazy: () => import('@/pages/Public/AuctionList') },
       { path: '/auctions/hot', lazy: () => import('@/pages/Public/AuctionList') },
@@ -54,6 +56,8 @@ export const router = createBrowserRouter([
           { path: '/dashboard', lazy: () => import('@/pages/Dashboard/Overview') },
           { path: '/watchlist', lazy: () => import('@/pages/Dashboard/Watchlist') },
           { path: '/my-auctions', lazy: () => import('@/pages/Dashboard/MyAuctions') },
+          { path: '/my-auctions/:id', lazy: () => import('@/pages/Seller/AuctionDetail') },
+          { path: '/reverse/new', lazy: () => import('@/pages/Dashboard/CreateReverseAuction') },
           { path: '/notifications', lazy: () => import('@/pages/Dashboard/Notifications') },
           { path: '/account/notifications', lazy: () => import('@/pages/Dashboard/Notifications') },
           { path: '/profile', lazy: () => import('@/pages/Dashboard/Profile') },

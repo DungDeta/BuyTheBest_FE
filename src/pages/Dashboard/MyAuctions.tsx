@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { App, Button, Segmented, Spin, Tabs } from 'antd'
+import { Alert, App, Button, Segmented, Spin, Tabs } from 'antd'
 import dayjs from 'dayjs'
 import { privateGet } from '@/api/api'
 import { useAuthStore } from '@/store/useAuthStore'
@@ -309,19 +309,22 @@ function BoughtTab() {
   )
 }
 
-function CreatedTab() {
+function CreatedTab({ sellerAccount }: { sellerAccount: boolean }) {
   const { message } = App.useApp()
   const navigate = useNavigate()
   const [auctions, setAuctions] = useState<Auction[]>([])
   const [total, setTotal] = useState(0)
   const [group, setGroup] = useState<'scheduled' | 'active' | 'finished'>('scheduled')
   const [loading, setLoading] = useState(false)
+  const [loadError, setLoadError] = useState(false)
+  const [reloadKey, setReloadKey] = useState(0)
 
   useEffect(() => {
     let cancelled = false
 
     async function load() {
       setLoading(true)
+      setLoadError(false)
       try {
         const res = await privateGet<AuctionsResponse>('/me/auctions', {
           limit: 100,
@@ -337,7 +340,10 @@ function CreatedTab() {
           }
         }
       } catch {
-        if (!cancelled) message.error('Không thể tải danh sách phiên đấu giá')
+        if (!cancelled) {
+          setLoadError(true)
+          message.error('Không thể tải danh sách phiên đấu giá')
+        }
       } finally {
         if (!cancelled) setLoading(false)
       }
@@ -347,13 +353,26 @@ function CreatedTab() {
     return () => {
       cancelled = true
     }
-  }, [message])
+  }, [message, reloadKey])
 
   if (loading) {
     return (
       <div style={{ display: 'flex', justifyContent: 'center', padding: 40 }}>
         <Spin />
       </div>
+    )
+  }
+
+  if (loadError) {
+    return (
+      <Alert
+        type="error"
+        showIcon
+        message="Không thể tải danh sách phiên đấu giá"
+        description="Dữ liệu chưa được tải nên hệ thống không hiển thị trạng thái trống thay cho lỗi."
+        action={<Button onClick={() => setReloadKey((value) => value + 1)}>Thử lại</Button>}
+        data-testid="created-auctions-load-error"
+      />
     )
   }
 
@@ -380,21 +399,34 @@ function CreatedTab() {
         >
           {total} phiên đấu giá
         </span>
-        <Button
-          type="primary"
-          size="small"
-          onClick={() => navigate('/seller/auctions/new')}
-        >
-          Tạo phiên mới
-        </Button>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+          <Button
+            type={sellerAccount ? 'default' : 'primary'}
+            size="small"
+            onClick={() => navigate('/reverse/new')}
+            data-testid="create-reverse-demand"
+          >
+            Đăng nhu cầu mua
+          </Button>
+          {sellerAccount && (
+            <Button
+              type="primary"
+              size="small"
+              onClick={() => navigate('/seller/auctions/new')}
+              data-testid="create-seller-auction"
+            >
+              Tạo phiên bán
+            </Button>
+          )}
+        </div>
       </div>
 
       {auctions.length === 0 ? (
         <div className="my-auctions-empty" role="status">
           <span className="my-auctions-empty__icon" aria-hidden="true">Đấu giá</span>
           <p>Bạn chưa tạo phiên đấu giá nào.</p>
-          <Button type="primary" onClick={() => navigate('/seller/auctions/new')}>
-            Tạo phiên đấu giá đầu tiên
+          <Button type="primary" onClick={() => navigate('/reverse/new')}>
+            Đăng nhu cầu đầu tiên
           </Button>
         </div>
       ) : (
@@ -440,7 +472,7 @@ function CreatedTab() {
                   <button
                     key={auction.id}
                     className="my-auctions-item"
-                    onClick={() => navigate(`/seller/auctions/${auction.id}`)}
+                    onClick={() => navigate(`/my-auctions/${auction.id}`)}
                     type="button"
                     role="listitem"
                     aria-label={title}
@@ -449,7 +481,7 @@ function CreatedTab() {
                       <img src={imageUrl} alt={title} className="my-auctions-item__thumb" />
                     ) : (
                       <div className="my-auctions-item__thumb--placeholder" aria-hidden="true">
-                        IMG
+                        {auction.mode === 'reverse' ? 'NHU CẦU' : 'IMG'}
                       </div>
                     )}
                     <div className="my-auctions-item__info">
@@ -461,13 +493,27 @@ function CreatedTab() {
                     </div>
                     <div className="my-auctions-item__right">
                       <AuctionListFact
-                        label="Giá hiện tại"
-                        value={`${auction.current_price.toLocaleString('vi-VN')} ₫`}
+                        label={
+                          auction.mode === 'reverse'
+                            ? auction.bid_count > 0 ? 'Giá tốt nhất' : 'Ngân sách'
+                            : 'Giá hiện tại'
+                        }
+                        value={`${(
+                          auction.mode === 'reverse' && auction.bid_count === 0
+                            ? (auction.budget_cap ?? auction.starting_price)
+                            : auction.current_price
+                        ).toLocaleString('vi-VN')} ₫`}
                       />
                       <AuctionListFact
-                        label="Lượt đặt"
-                        value={auction.bid_count.toLocaleString('vi-VN')}
+                        label={auction.mode === 'reverse' ? 'Báo giá' : 'Lượt đặt'}
+                        value={(auction.offer_count ?? auction.bid_count).toLocaleString('vi-VN')}
                       />
+                      {auction.mode === 'reverse' && typeof auction.seller_count === 'number' && (
+                        <AuctionListFact
+                          label="Người bán"
+                          value={auction.seller_count.toLocaleString('vi-VN')}
+                        />
+                      )}
                     </div>
                   </button>
                 )
@@ -487,6 +533,7 @@ function CreatedTab() {
 export function Component() {
   useDocumentTitle('Phiên của tôi')
   const isSeller = useAuthStore((s) => s.isSeller)
+  const sellerAccount = isSeller()
 
   const tabItems = [
     {
@@ -499,21 +546,17 @@ export function Component() {
       label: 'Đã mua',
       children: <BoughtTab />,
     },
-    ...(isSeller()
-      ? [
-          {
-            key: 'created',
-            label: 'Đã tạo',
-            children: <CreatedTab />,
-          },
-        ]
-      : []),
+    {
+      key: 'created',
+      label: 'Đã tạo',
+      children: <CreatedTab sellerAccount={sellerAccount} />,
+    },
   ]
 
   return (
     <div className="my-auctions-page">
       <h1 className="my-auctions-page__title">Phiên của tôi</h1>
-      <Tabs items={tabItems} defaultActiveKey={isSeller() ? 'created' : 'watching'} />
+      <Tabs items={tabItems} defaultActiveKey="created" />
     </div>
   )
 }

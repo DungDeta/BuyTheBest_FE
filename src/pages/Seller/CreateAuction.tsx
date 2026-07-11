@@ -76,11 +76,6 @@ const MODE_INFO: {
     label: 'Đấu giá kín',
     desc: 'Mỗi người đặt một lần. Công bố kết quả sau thời hạn.',
   },
-  {
-    value: 'reverse',
-    label: 'Đấu giá ngược',
-    desc: 'Người bán nhận đề xuất từ người mua, chọn giá phù hợp.',
-  },
 ]
 
 const VND_FORMATTER = (val: number | undefined) =>

@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { Spin } from 'antd'
 import { publicGet } from '@/api/api'
 import { formatParticipantLabel, isSelfBidder } from '@/utils/auctionIdentity'
-import type { Participant } from '@/types/auction'
+import type { AuctionMode, Participant } from '@/types/auction'
 
 interface BidderListProps {
   auctionId: string
@@ -11,10 +11,18 @@ interface BidderListProps {
   currentParticipantId: number | null
   realtimeCount: number
   onCountLoaded?: (count: number) => void
+  mode: AuctionMode
 }
 
 function formatVnd(amount: number): string {
   return amount.toLocaleString('vi-VN') + ' ₫'
+}
+
+function participantAmount(participant: Participant, mode: AuctionMode): string {
+  const amount = mode === 'reverse'
+    ? participant.best_amount
+    : participant.highest_amount
+  return typeof amount === 'number' ? formatVnd(amount) : '—'
 }
 
 const DISPLAY_LIMIT = 10
@@ -26,6 +34,7 @@ export function BidderList({
   currentParticipantId,
   realtimeCount,
   onCountLoaded,
+  mode,
 }: BidderListProps) {
   const [participants, setParticipants] = useState<Participant[]>([])
   const [total, setTotal] = useState(0)
@@ -69,7 +78,7 @@ export function BidderList({
   if (participants.length === 0) {
     return (
       <div className="tab-content tab-content--empty">
-        <span>Chưa có người đặt giá</span>
+        <span>{mode === 'reverse' ? 'Chưa có người bán báo giá' : 'Chưa có người đặt giá'}</span>
       </div>
     )
   }
@@ -78,10 +87,17 @@ export function BidderList({
   const remaining = total - displayed.length
 
   return (
-    <div className="tab-content bidder-list" aria-label="Danh sách người đấu giá">
+    <div
+      className="tab-content bidder-list"
+      aria-label={mode === 'reverse' ? 'Danh sách người bán báo giá' : 'Danh sách người đấu giá'}
+      data-testid={mode === 'reverse' ? 'reverse-seller-list' : 'bidder-list'}
+    >
       {displayed.map((p, index) => {
         const pos = index + 1
-        const participantLabel = formatParticipantLabel(p.label)
+        const participantLabel = formatParticipantLabel(
+          p.label,
+          mode === 'reverse' ? 'seller' : 'bidder',
+        )
         const isCurrentUser = isSelfBidder(p, {
           userId: currentUserId,
           bidderLabel: currentBidderLabel,
@@ -104,15 +120,19 @@ export function BidderList({
                 <span className="bidder-row__active-dot" aria-label="Đang trực tuyến" />
               )}
             </span>
-            <span className="bidder-row__bids">{p.bid_count} lượt đặt</span>
-            <span className="bidder-row__amount">{formatVnd(p.highest_amount)}</span>
+            <span className="bidder-row__bids">
+              {p.bid_count} {mode === 'reverse' ? 'báo giá' : 'lượt đặt'}
+            </span>
+            <span className="bidder-row__amount">
+              {participantAmount(p, mode)}
+            </span>
           </div>
         )
       })}
 
       {remaining > 0 && (
         <div className="bidder-row__more" aria-label={`Còn ${remaining} người khác`}>
-          + {remaining} người đặt giá khác
+          + {remaining} {mode === 'reverse' ? 'người bán khác' : 'người đặt giá khác'}
         </div>
       )}
     </div>

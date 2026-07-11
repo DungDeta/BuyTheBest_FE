@@ -142,11 +142,17 @@
   max-width: 460px;
   line-height: 1.6;
 }
+.hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
 .hero-cta {
   display: inline-block;
   padding: 11px 28px;
   background: var(--fg);
   color: var(--surface);
+  border: 1.5px solid var(--fg);
   border-radius: var(--radius);
   text-decoration: none;
   font-weight: 700;
@@ -157,7 +163,12 @@
 }
 .hero-cta:hover {
   background: var(--accent);
+  border-color: var(--accent);
   color: var(--surface);
+}
+.hero-cta--secondary {
+  background: transparent;
+  color: var(--fg);
 }
 .hero-right {
   display: flex;

@@ -8,13 +8,17 @@ function sameId(a: number | string | null | undefined, b: number | string | null
   return a != null && b != null && String(a) === String(b)
 }
 
-export function formatParticipantLabel(label: string | null | undefined): string {
-  if (!label) return 'Người đặt giá'
+export function formatParticipantLabel(
+  label: string | null | undefined,
+  role: 'bidder' | 'seller' = 'bidder',
+): string {
+  const anonymousLabel = role === 'seller' ? 'Người bán' : 'Người đặt giá'
+  if (!label) return anonymousLabel
 
   const normalized = label.trim()
   const bidderMatch = normalized.match(/^bidder(?:\s*#?\s*(\d+))?$/i)
   if (bidderMatch) {
-    return bidderMatch[1] ? `Người đặt giá ${bidderMatch[1]}` : 'Người đặt giá'
+    return bidderMatch[1] ? `${anonymousLabel} ${bidderMatch[1]}` : anonymousLabel
   }
   if (/^system$/i.test(normalized)) return 'Hệ thống'
   return normalized
@@ -32,7 +36,10 @@ export function isSelfBidder(
   },
   identity: CurrentBidderIdentity,
 ): boolean {
-  if (item.is_self === true) return true
+  // When the authenticated API supplies an explicit answer it is authoritative.
+  // In particular, `false` must stop anonymous room-label heuristics from
+  // marking another seller as the current user after ranking is reordered.
+  if (typeof item.is_self === 'boolean') return item.is_self
   if (sameId(item.user_id, identity.userId)) return true
   if (sameId(item.bidder_id, identity.userId)) return true
   if (sameId(item.participant_id, identity.participantId)) return true

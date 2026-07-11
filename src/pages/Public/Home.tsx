@@ -16,6 +16,8 @@ interface Auction {
   starting_price: number
   current_price: number
   bid_count: number
+  offer_count?: number
+  seller_count?: number
   starts_at: string
   ends_at: string
   title?: string
@@ -249,9 +251,16 @@ function AuctionCard({ auction }: AuctionCardProps) {
 
   const title = getAuctionDisplayTitle(auction)
   const imageUrl = productImageUrl(auction.product, title)
+  const reverseCounts = typeof auction.seller_count === 'number'
+    ? `${auction.seller_count} người bán · ${auction.offer_count ?? auction.bid_count} báo giá`
+    : `${auction.offer_count ?? auction.bid_count} báo giá`
 
   return (
-    <Link to={`/auctions/${auction.id}`} className="listing">
+    <Link
+      to={`/auctions/${auction.id}`}
+      className="listing"
+      data-testid={isReverse ? 'home-reverse-auction-card' : 'home-auction-card'}
+    >
       <div className="listing-badges">
         <span className={modeBadgeClass(auction.mode)}>
           {modeBadgeLabel(auction.mode)}
@@ -284,7 +293,7 @@ function AuctionCard({ auction }: AuctionCardProps) {
         ) : isDutch ? (
           <span>giảm mỗi 30s</span>
         ) : isReverse ? (
-          <span>{auction.bid_count} người bán</span>
+          <span>{reverseCounts}</span>
         ) : (
           <span>{auction.bid_count} lượt đặt</span>
         )}
@@ -415,7 +424,10 @@ export default function Home() {
             4 hình thức đấu giá. Thanh toán escrow. Truy vết mọi giao dịch.
             Tranh chấp minh bạch, quyền lợi của người mua và người bán đều được bảo vệ.
           </p>
-          <Link to="/register" className="hero-cta">Bắt đầu ngay</Link>
+          <div className="hero-actions">
+            <Link to="/register" className="hero-cta">Bắt đầu ngay</Link>
+            <Link to="/products" className="hero-cta hero-cta--secondary">Xem sản phẩm</Link>
+          </div>
         </div>
 
         <div className="hero-right">

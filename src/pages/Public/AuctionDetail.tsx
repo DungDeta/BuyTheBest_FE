@@ -11,10 +11,12 @@ import { CountdownBox } from '@/components/auction/CountdownBox'
 import { BidPanel } from '@/components/auction/BidPanel'
 import { RoomTabs } from '@/components/auction/RoomTabs'
 import { getAuctionDisplayTitle } from '@/utils/auctionDisplay'
+import { resolveReverseViewer } from '@/utils/reverseAuction'
 import type {
   Auction,
   AuctionEndedPayload,
   AuctionExtendedPayload,
+  AuctionStartedPayload,
   AuditLogEvent,
   BidActionResponse,
   BidHistoryItem,
@@ -39,12 +41,20 @@ interface WatchToggleResponse {
   watcher_count?: number
 }
 
+const SCHEDULED_START_MAX_ATTEMPTS = 20
+const SCHEDULED_START_FAST_ATTEMPTS = 5
+const SCHEDULED_START_FAST_INTERVAL_MS = 2_000
+const SCHEDULED_START_SLOW_INTERVAL_MS = 5_000
+const SCHEDULED_START_MAX_WAKE_DELAY_MS = 60_000
+const SCHEDULED_START_GRACE_MS = 250
+
 export function Component() {
   const { id } = useParams<{ id: string }>()
   const { message } = App.useApp()
   const navigate = useNavigate()
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated)
   const currentUserId = useAuthStore((s) => s.user?.id ?? null)
+  const currentUserIsSeller = useAuthStore((s) => s.user?.is_seller ?? false)
 
   const [auction, setAuction] = useState<Auction | null>(null)
   const [loading, setLoading] = useState(true)
@@ -61,6 +71,9 @@ export function Component() {
   const [watchLoading, setWatchLoading] = useState(false)
   const pendingSelfBidAmountRef = useRef<number | null>(null)
 
+  // Some servers reject room membership before an auction is active. The
+  // scheduled-start refresh below transitions state first, then this null -> id
+  // change starts a fresh WebSocket connection without exhausted pre-start retries.
   const wsAuctionId = auction?.status === 'active' ? (auction.id ?? null) : null
   const {
     isConnected,
@@ -124,6 +137,27 @@ export function Component() {
               } catch {
               }
             }
+            if (
+              nextAuction.mode === 'reverse' &&
+              isAuthenticated() &&
+              nextAuction.viewer_is_creator === undefined &&
+              nextAuction.viewer?.is_creator === undefined &&
+              nextAuction.viewer_capabilities?.is_creator === undefined
+            ) {
+              try {
+                const owned = await privateGet<Auction>(`/me/auctions/${id}`)
+                if (owned.data?.id === nextAuction.id) {
+                  nextAuction = {
+                    ...nextAuction,
+                    ...owned.data,
+                    product: nextAuction.product ?? owned.data.product,
+                    viewer_is_creator: true,
+                    viewer_can_offer: false,
+                  }
+                }
+              } catch {
+              }
+            }
             if (res.data.status === 'ended' || res.data.status === 'closed_bin') {
               try {
                 const log = await publicGet<{ events: AuditLogEvent[] }>(
@@ -157,7 +191,7 @@ export function Component() {
 
     fetchAuction()
     return () => { cancelled = true }
-  }, [id])
+  }, [id, isAuthenticated])
 
   useEffect(() => {
     if (!id || !isAuthenticated()) {
@@ -216,8 +250,138 @@ export function Component() {
     }
   }, [id])
 
+  const refreshAuctionSnapshot = useCallback(async (): Promise<Auction | null> => {
+    if (!id) return null
+    try {
+      const response = await publicGet<Auction>(`/auctions/${id}`)
+      let nextAuction = response.data
+      if (
+        nextAuction.mode === 'reverse' &&
+        isAuthenticated() &&
+        nextAuction.viewer_is_creator === undefined &&
+        nextAuction.viewer?.is_creator === undefined &&
+        nextAuction.viewer_capabilities?.is_creator === undefined
+      ) {
+        try {
+          const owned = await privateGet<Auction>(`/me/auctions/${id}`)
+          if (owned.data?.id === nextAuction.id) {
+            nextAuction = {
+              ...nextAuction,
+              ...owned.data,
+              viewer_is_creator: true,
+              viewer_can_offer: false,
+            }
+          }
+        } catch {
+        }
+      }
+
+      setServerNow(nextAuction.server_time ?? response.timestamp ?? null)
+      setAuction((previous) => {
+        if (!previous) return nextAuction
+        return {
+          ...previous,
+          ...nextAuction,
+          product: nextAuction.product
+            ? {
+                ...previous.product,
+                ...nextAuction.product,
+                description: nextAuction.product.description ?? previous.product?.description,
+              }
+            : previous.product,
+          viewer_is_creator: nextAuction.viewer_is_creator ?? previous.viewer_is_creator,
+          viewer_can_offer: nextAuction.viewer_can_offer ?? previous.viewer_can_offer,
+          viewer_is_winning_seller:
+            nextAuction.viewer_is_winning_seller ?? previous.viewer_is_winning_seller,
+          viewer_can_pay: nextAuction.viewer_can_pay ?? previous.viewer_can_pay,
+        }
+      })
+      return nextAuction
+    } catch {
+      return null
+    }
+  }, [id, isAuthenticated])
+
+  const scheduledAuctionId = auction?.id ?? null
+  const scheduledStartsAt = auction?.starts_at ?? null
+  const scheduledStatus = auction?.status ?? null
+
+  useEffect(() => {
+    if (!scheduledAuctionId || !scheduledStartsAt || scheduledStatus !== 'scheduled') return
+
+    const startsAtMs = Date.parse(scheduledStartsAt)
+    if (!Number.isFinite(startsAtMs)) return
+
+    let cancelled = false
+    let refreshAttempts = 0
+    let timer: ReturnType<typeof setTimeout> | null = null
+
+    const schedule = (callback: () => void, delayMs: number) => {
+      timer = setTimeout(callback, delayMs)
+    }
+
+    const pollForTransition = async () => {
+      if (cancelled) return
+      refreshAttempts += 1
+
+      const snapshot = await refreshAuctionSnapshot()
+      if (cancelled || (snapshot && snapshot.status !== 'scheduled')) return
+      if (refreshAttempts >= SCHEDULED_START_MAX_ATTEMPTS) return
+
+      const interval = refreshAttempts < SCHEDULED_START_FAST_ATTEMPTS
+        ? SCHEDULED_START_FAST_INTERVAL_MS
+        : SCHEDULED_START_SLOW_INTERVAL_MS
+      schedule(() => void pollForTransition(), interval)
+    }
+
+    const waitUntilStart = () => {
+      if (cancelled) return
+      const remainingMs = startsAtMs + SCHEDULED_START_GRACE_MS - Date.now()
+      if (remainingMs <= 0) {
+        void pollForTransition()
+        return
+      }
+
+      schedule(
+        waitUntilStart,
+        Math.min(remainingMs, SCHEDULED_START_MAX_WAKE_DELAY_MS),
+      )
+    }
+
+    waitUntilStart()
+    return () => {
+      cancelled = true
+      if (timer !== null) clearTimeout(timer)
+    }
+  }, [scheduledAuctionId, scheduledStartsAt, scheduledStatus, refreshAuctionSnapshot])
+
   const handleBidPlaced = useCallback((payload: unknown) => {
     const p = payload as BidPlacedPayload
+    if (auction?.mode === 'sealed_bid') {
+      if (p.server_time) setServerNow(p.server_time)
+      setAuction((previous) => previous
+        ? {
+            ...previous,
+            bid_count: typeof p.bid_count === 'number' ? p.bid_count : previous.bid_count,
+            server_time: p.server_time ?? previous.server_time,
+          }
+        : previous)
+      // Sealed bids are count-only until sealed.revealed, even if an older server
+      // accidentally includes bidder or amount fields in the realtime payload.
+      void refreshAuctionSnapshot()
+      return
+    }
+
+    if (
+      p.bid_id == null ||
+      p.bidder_label == null ||
+      p.amount == null ||
+      p.current_price == null ||
+      p.bid_type == null
+    ) {
+      void refreshAuctionSnapshot()
+      return
+    }
     const isSelf =
       p.is_self === true ||
       (currentUserId !== null && p.bidder_id != null && String(p.bidder_id) === currentUserId) ||
@@ -240,7 +404,7 @@ export function Component() {
       if (!prev) return prev
       return {
         ...prev,
-        current_price: p.current_price,
+        current_price: p.current_price ?? prev.current_price,
         bid_count: p.bid_count,
         highest_bidder_id: p.bidder_id ?? null,
         highest_bidder_label: p.bidder_label,
@@ -259,9 +423,13 @@ export function Component() {
       is_winning: true,
       is_self: isSelf,
       placed_at: new Date().toISOString(),
+      product: p.product,
     }
     setBidFeed((prev) => [newItem, ...prev])
-  }, [currentBidderLabel, currentParticipantId, currentUserId])
+    if (auction?.mode === 'reverse') {
+      void refreshAuctionSnapshot()
+    }
+  }, [auction?.mode, currentBidderLabel, currentParticipantId, currentUserId, refreshAuctionSnapshot])
 
   const handleAuctionExtended = useCallback((payload: unknown) => {
     const p = payload as AuctionExtendedPayload
@@ -309,9 +477,28 @@ export function Component() {
       }
     })
 
-    const winner = p.winner_label ?? 'Không có'
-    message.success(`Phiên kết thúc · Người thắng: ${winner}`)
-  }, [currentBidderLabel, currentUserId, message])
+    if (p.winner_label) {
+      message.success(`Phiên kết thúc · Người thắng: ${p.winner_label}`)
+    } else {
+      message.success('Phiên đấu giá đã kết thúc')
+    }
+    void refreshAuctionSnapshot()
+  }, [currentBidderLabel, currentUserId, message, refreshAuctionSnapshot])
+
+  const handleAuctionStarted = useCallback((payload: unknown) => {
+    const p = payload as AuctionStartedPayload
+    if (p.server_time) setServerNow(p.server_time)
+    setAuction((previous) => previous
+      ? {
+          ...previous,
+          status: 'active',
+          starts_at: p.starts_at ?? previous.starts_at,
+          server_time: p.server_time ?? previous.server_time,
+        }
+      : previous)
+    message.info('Phiên đấu giá đã bắt đầu')
+    void refreshAuctionSnapshot()
+  }, [message, refreshAuctionSnapshot])
 
   const handleDutchTick = useCallback((payload: unknown) => {
     const p = payload as DutchPriceTickPayload
@@ -400,6 +587,7 @@ export function Component() {
     subscribe('bid.placed', handleBidPlaced)
     subscribe('auction.extended', handleAuctionExtended)
     subscribe('auction.ended', handleAuctionEnded)
+    subscribe('auction.started', handleAuctionStarted)
     subscribe('dutch.price_tick', handleDutchTick)
     subscribe('sealed.revealed', handleSealedRevealed)
 
@@ -407,6 +595,7 @@ export function Component() {
       unsubscribe('bid.placed', handleBidPlaced)
       unsubscribe('auction.extended', handleAuctionExtended)
       unsubscribe('auction.ended', handleAuctionEnded)
+      unsubscribe('auction.started', handleAuctionStarted)
       unsubscribe('dutch.price_tick', handleDutchTick)
       unsubscribe('sealed.revealed', handleSealedRevealed)
     }
@@ -416,6 +605,7 @@ export function Component() {
     handleBidPlaced,
     handleAuctionExtended,
     handleAuctionEnded,
+    handleAuctionStarted,
     handleDutchTick,
     handleSealedRevealed,
   ])
@@ -440,6 +630,7 @@ export function Component() {
   const title = getAuctionDisplayTitle(auction)
   const isActive = auction.status === 'active'
   const authed = isAuthenticated()
+  const reverseViewer = resolveReverseViewer(auction, currentUserId, currentUserIsSeller)
   const roomConnectionState =
     membershipState === 'failed'
       ? 'failed'
@@ -465,7 +656,10 @@ export function Component() {
         <span className="room-breadcrumb__current" aria-current="page">{title}</span>
       </nav>
 
-      <div className="room-shell">
+      <div
+        className="room-shell"
+        data-testid={auction.mode === 'reverse' ? 'reverse-auction-detail' : 'auction-detail'}
+      >
         <div className="room-left">
           <ProductHero auction={auction} />
 
@@ -517,6 +711,7 @@ export function Component() {
 
           <CountdownBox
             endsAt={auction.ends_at}
+            startsAt={auction.starts_at}
             serverNow={serverNow ?? auction.server_time}
             antiSnipeSeconds={auction.anti_snipe_threshold_seconds}
             extensionCount={auction.extension_count}
@@ -526,6 +721,7 @@ export function Component() {
               auction.status === 'closed_bin' ||
               auction.status === 'cancelled'
             }
+            scheduled={auction.status === 'scheduled'}
           />
 
           <button
@@ -545,13 +741,17 @@ export function Component() {
             auction={auction}
             isLoggedIn={authed}
             currentUserId={currentUserId}
+            currentUserIsSeller={currentUserIsSeller}
             currentBidderLabel={currentBidderLabel}
             currentParticipantId={currentParticipantId}
             connectionState={roomConnectionState}
             onBidPlaced={markSelfBid}
           />
 
-          {authed && auction.seller && currentUserId !== auction.seller.id && (
+          {authed &&
+            auction.seller &&
+            currentUserId !== auction.seller.id &&
+            (auction.mode !== 'reverse' || reverseViewer.isCreator) && (
             <button
               className="contact-seller-btn"
               onClick={async () => {

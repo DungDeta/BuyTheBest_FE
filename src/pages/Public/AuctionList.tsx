@@ -19,6 +19,8 @@ interface AuctionItem {
   starting_price: number
   current_price: number
   bid_count: number
+  offer_count?: number
+  seller_count?: number
   starts_at: string
   ends_at: string
   title?: string
@@ -279,9 +281,16 @@ function AuctionCard({ auction }: AuctionCardProps) {
   const title     = auctionTitle(auction)
   const short     = modeBadgeShort(auction.mode)
   const imageUrl  = auctionImageUrl(auction)
+  const reverseCounts = typeof auction.seller_count === 'number'
+    ? `${auction.seller_count} người bán · ${auction.offer_count ?? auction.bid_count} báo giá`
+    : `${auction.offer_count ?? auction.bid_count} báo giá`
 
   return (
-    <Link to={`/auctions/${auction.id}`} className="listing">
+    <Link
+      to={`/auctions/${auction.id}`}
+      className="listing"
+      data-testid={isReverse ? 'reverse-auction-card' : 'auction-card'}
+    >
       <div className="listing-badges">
         <span className={modeBadgeClass(auction.mode)}>
           {short} · {MODE_LABELS[short]}
@@ -309,7 +318,7 @@ function AuctionCard({ auction }: AuctionCardProps) {
         {isSealed ? (
           <span>Giá kín</span>
         ) : isReverse ? (
-          <span>{auction.bid_count} người bán</span>
+          <span>{reverseCounts}</span>
         ) : (
           <span>{auction.bid_count} lượt đặt</span>
         )}
@@ -325,6 +334,7 @@ interface AuctionListRowProps {
 
 function AuctionListRow({ auction }: AuctionListRowProps) {
   const isSealed = auction.mode === 'sealed_bid'
+  const isReverse = auction.mode === 'reverse'
   const title    = auctionTitle(auction)
   const short    = modeBadgeShort(auction.mode)
   const imageUrl = auctionImageUrl(auction)
@@ -344,7 +354,13 @@ function AuctionListRow({ auction }: AuctionListRowProps) {
       <div className="num">
         {isSealed ? 'Giá được giữ kín' : formatPrice(auction.current_price)}
       </div>
-      <div className="num">{auction.bid_count} lượt đặt</div>
+      <div className="num">
+        {isReverse
+          ? (typeof auction.seller_count === 'number'
+              ? `${auction.seller_count} người bán · ${auction.offer_count ?? auction.bid_count} báo giá`
+              : `${auction.offer_count ?? auction.bid_count} báo giá`)
+          : `${auction.bid_count} lượt đặt`}
+      </div>
       <div className="num">
         <CountdownCell endsAt={auction.ends_at} />
       </div>

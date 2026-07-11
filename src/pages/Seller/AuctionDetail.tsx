@@ -20,6 +20,7 @@ import { useDocumentTitle } from '@/hooks/useDocumentTitle'
 import { getDemoProductImage } from '@/utils/demoProductImages'
 import { getProductConditionLabel } from '@/utils/productDisplay'
 import { getAuctionDisplayTitle } from '@/utils/auctionDisplay'
+import { getReverseDemand, reverseOfferCount } from '@/utils/reverseAuction'
 import './seller.css'
 
 const STATUS_INFO: Record<
@@ -126,7 +127,7 @@ export function Component() {
           type="error"
           showIcon
           message="Không tìm thấy phiên đấu giá"
-          description="Phiên không tồn tại hoặc không thuộc tài khoản người bán của bạn."
+          description="Phiên không tồn tại hoặc không thuộc tài khoản của bạn."
           action={<Button onClick={() => navigate('/my-auctions')}>Về Phiên của tôi</Button>}
         />
       </div>
@@ -134,13 +135,19 @@ export function Component() {
   }
 
   const status = STATUS_INFO[auction.status]
-  const imageUrl = primaryImageUrl(auction) || getDemoProductImage(title)
+  const isReverse = auction.mode === 'reverse'
+  const demand = getReverseDemand(auction)
+  const imageUrl = primaryImageUrl(auction) || (isReverse ? null : getDemoProductImage(title))
   const canCancel =
-    (auction.status === 'scheduled' || auction.status === 'active') &&
-    auction.bid_count === 0
+    auction.viewer_can_cancel ??
+    ((auction.status === 'scheduled' || auction.status === 'active') &&
+      auction.bid_count === 0)
   const scheduleFacts = [
     { label: 'Hình thức', value: MODE_LABELS[auction.mode] },
-    { label: 'Giá khởi điểm', value: formatVnd(auction.starting_price) },
+    {
+      label: isReverse ? 'Ngân sách tối đa' : 'Giá khởi điểm',
+      value: formatVnd(isReverse ? (auction.budget_cap ?? auction.starting_price) : auction.starting_price),
+    },
     { label: 'Bắt đầu', value: dayjs(auction.starts_at).format('DD/MM/YYYY HH:mm') },
     { label: 'Kết thúc', value: dayjs(auction.ends_at).format('DD/MM/YYYY HH:mm') },
     auction.min_increment != null
@@ -158,7 +165,7 @@ export function Component() {
     auction.decrement_interval_seconds != null
       ? { label: 'Chu kỳ giảm', value: `${auction.decrement_interval_seconds} giây` }
       : null,
-    auction.budget_cap != null
+    !isReverse && auction.budget_cap != null
       ? { label: 'Ngân sách tối đa', value: formatVnd(auction.budget_cap) }
       : null,
     auction.reveal_at
@@ -171,7 +178,10 @@ export function Component() {
   ].filter((fact): fact is { label: string; value: string } => Boolean(fact))
 
   return (
-    <div className="seller-page seller-auction-detail">
+    <div
+      className="seller-page seller-auction-detail"
+      data-testid={isReverse ? 'reverse-owner-detail' : 'seller-auction-detail'}
+    >
       <div className="seller-auction-detail__topbar">
         <Button
           type="text"
@@ -216,15 +226,23 @@ export function Component() {
       )}
 
       <div className="seller-auction-detail__layout">
-        <section className="seller-auction-detail__product" aria-label="Sản phẩm đấu giá">
+        <section
+          className="seller-auction-detail__product"
+          aria-label={isReverse ? 'Nhu cầu mua' : 'Sản phẩm đấu giá'}
+        >
           {imageUrl ? (
             <img src={imageUrl} alt={title} />
           ) : (
-            <div className="seller-auction-detail__image-placeholder">Không có ảnh</div>
+            <div className="seller-auction-detail__image-placeholder">
+              {isReverse ? 'NHU CẦU' : 'Không có ảnh'}
+            </div>
           )}
           <div className="seller-auction-detail__product-copy">
-            <span className="seller-auction-detail__section-label">Sản phẩm</span>
-            <h2>{title}</h2>
+            <span className="seller-auction-detail__section-label">
+              {isReverse ? 'Nhu cầu' : 'Sản phẩm'}
+            </span>
+            <h2>{isReverse ? demand.title : title}</h2>
+            {isReverse && demand.description && <p>{demand.description}</p>}
             {auction.product?.condition && (
               <div className="seller-auction-detail__product-fact">
                 <span>Tình trạng</span>
@@ -236,13 +254,23 @@ export function Component() {
 
         <section className="seller-auction-detail__stats" aria-label="Tổng quan phiên">
           <div>
-            <span>Giá hiện tại</span>
+            <span>
+              {isReverse
+                ? auction.bid_count > 0 ? 'Giá tốt nhất' : 'Ngân sách tối đa'
+                : 'Giá hiện tại'}
+            </span>
             <strong>{formatVnd(auction.current_price)}</strong>
           </div>
           <div>
-            <span>Lượt đặt giá</span>
-            <strong>{auction.bid_count}</strong>
+            <span>{isReverse ? 'Báo giá' : 'Lượt đặt giá'}</span>
+            <strong>{isReverse ? reverseOfferCount(auction) : auction.bid_count}</strong>
           </div>
+          {isReverse && typeof auction.seller_count === 'number' && (
+            <div>
+              <span>Người bán</span>
+              <strong>{auction.seller_count}</strong>
+            </div>
+          )}
           <div>
             <span>Gia hạn</span>
             <strong>{auction.extension_count}/{auction.max_extensions}</strong>

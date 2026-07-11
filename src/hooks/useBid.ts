@@ -9,7 +9,11 @@ export interface BidActionResult {
 }
 
 export interface UseBidResult {
-  placeBid: (amount: number, productRef?: number | string) => Promise<BidActionResult>
+  placeBid: (
+    amount: number,
+    productRef?: number | string,
+    clientRequestId?: string,
+  ) => Promise<BidActionResult>
   buyNow: () => Promise<BidActionResult>
   loading: boolean
   error: string | null
@@ -43,16 +47,24 @@ export function useBid(auctionId: string): UseBidResult {
   }
 
   const placeBid = useCallback(
-    async (amount: number, productRef?: number | string) => {
+    async (amount: number, productRef?: number | string, clientRequestId?: string) => {
       setLoading(true)
       setError(null)
       try {
-        const body: { amount: number; product_id?: number; product_public_id?: string } = { amount }
+        const body: {
+          amount: number
+          product_id?: number
+          product_public_id?: string
+          client_request_id?: string
+        } = { amount }
         if (typeof productRef === 'number') {
           body.product_id = productRef
         }
         if (typeof productRef === 'string' && productRef.trim() !== '') {
           body.product_public_id = productRef
+        }
+        if (clientRequestId) {
+          body.client_request_id = clientRequestId
         }
         const res = await privatePost<BidActionResponse>(`/auctions/${auctionId}/bids`, body)
         return { ok: true, data: res.data }

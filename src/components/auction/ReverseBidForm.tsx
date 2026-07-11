@@ -17,6 +17,7 @@ interface SellerProduct {
   slug?: string
   condition?: string
   status: string
+  category_id?: number | null
 }
 
 interface ProductsResponse {
@@ -61,11 +62,17 @@ export function ReverseBidForm({ auction, onBidPlaced }: ReverseBidFormProps) {
       try {
         const res = await privateGet<ProductsResponse>('/me/products', {
           status: 'approved',
+          category_id: auction.category_id,
           limit: 100,
           offset: 0,
         })
         if (!cancelled) {
-          setProducts(res.data?.items ?? [])
+          setProducts(
+            (res.data?.items ?? []).filter((product) =>
+              product.status === 'approved' &&
+              (product.category_id == null || product.category_id === auction.category_id),
+            ),
+          )
         }
       } catch {
         if (!cancelled) {
@@ -80,30 +87,41 @@ export function ReverseBidForm({ auction, onBidPlaced }: ReverseBidFormProps) {
     return () => {
       cancelled = true
     }
-  }, [message])
+  }, [auction.category_id, message])
 
   async function handleSubmit() {
     const parsed = parseInt(bidInput.replace(/\D/g, ''), 10)
 
     if (selectedProductId === '') {
-      message.error('Vui lòng chọn sản phẩm để báo giá')
+      message.error({ key: 'reverse-offer-feedback', content: 'Vui lòng chọn sản phẩm để báo giá' })
       return
     }
     if (isNaN(parsed) || parsed <= 0 || parsed > maxAllowed) {
-      message.error(`Giá báo không được vượt quá ${formatVnd(maxAllowed)}`)
+      message.error({
+        key: 'reverse-offer-feedback',
+        content: `Giá báo không được vượt quá ${formatVnd(maxAllowed)}`,
+      })
       return
     }
 
-    const result = await placeBid(parsed, selectedProductId)
-    if (result.ok && onBidPlaced) onBidPlaced(parsed, result.data)
+    // One key per explicit submit. Any transport/auth retry reuses this request body.
+    const clientRequestId = crypto.randomUUID()
+    const result = await placeBid(parsed, selectedProductId, clientRequestId)
+    if (result.ok) {
+      setBidInput('')
+      message.success({ key: 'reverse-offer-feedback', content: 'Đã gửi báo giá' })
+      onBidPlaced?.(parsed, result.data)
+    }
   }
 
   return (
-    <div className="bid-form">
+    <div className="bid-form" data-testid="reverse-offer-form">
       <div className="bid-current">
         <div className="bid-current__left">
           <span className="bid-current__label">Ngân sách người mua</span>
-          <span className="bid-current__price">{formatVnd(budget)}</span>
+          <span className="bid-current__price" data-testid="reverse-budget">
+            {formatVnd(budget)}
+          </span>
           <span className="bid-current__delta">Người bán cạnh tranh bằng mức giá thấp</span>
         </div>
         <span className="mode-badge R" aria-label="Phương thức đấu giá ngược">Đấu giá ngược</span>
@@ -117,7 +135,7 @@ export function ReverseBidForm({ auction, onBidPlaced }: ReverseBidFormProps) {
         <span className="reverse-lowest__label">
           {currentBestPrice === null ? 'Chưa có báo giá' : 'Giá tốt nhất hiện tại'}
         </span>
-        <span className="reverse-lowest__price">
+        <span className="reverse-lowest__price" data-testid="reverse-best-price">
           {currentBestPrice === null ? formatVnd(budget) : formatVnd(currentBestPrice)}
         </span>
       </div>
@@ -130,6 +148,7 @@ export function ReverseBidForm({ auction, onBidPlaced }: ReverseBidFormProps) {
             onChange={(e) => setSelectedProductId(e.target.value)}
             disabled={loadingProducts}
             aria-label="Chọn sản phẩm để báo giá"
+            data-testid="reverse-offer-product"
           >
             <option value="">
               {loadingProducts ? 'Đang tải sản phẩm…' : 'Chọn sản phẩm của bạn'}
@@ -143,8 +162,8 @@ export function ReverseBidForm({ auction, onBidPlaced }: ReverseBidFormProps) {
         </div>
         <p className="bid-input-hint">
           {products.length === 0 && !loadingProducts
-            ? 'Bạn cần có sản phẩm đã duyệt để tham gia đấu giá ngược.'
-            : 'Chọn sản phẩm bạn muốn dùng để gửi báo giá.'}
+            ? 'Bạn cần có sản phẩm cùng danh mục đã được duyệt để gửi báo giá.'
+            : 'Bạn có thể tiếp tục hạ giá bằng cùng sản phẩm ở các lượt sau.'}
         </p>
       </div>
 
@@ -157,6 +176,7 @@ export function ReverseBidForm({ auction, onBidPlaced }: ReverseBidFormProps) {
             onChange={(e) => setBidInput(e.target.value.replace(/\D/g, ''))}
             placeholder="Giá của bạn…"
             aria-label={`Nhập giá báo, tối đa ${formatVnd(maxAllowed)}`}
+            data-testid="reverse-offer-amount"
           />
           <button
             type="button"
@@ -164,6 +184,7 @@ export function ReverseBidForm({ auction, onBidPlaced }: ReverseBidFormProps) {
             onClick={handleSubmit}
             disabled={loading || loadingProducts || bidInput === '' || selectedProductId === ''}
             aria-label="Gửi báo giá"
+            data-testid="reverse-offer-submit"
           >
             {loading ? '…' : 'Gửi báo giá'}
           </button>
@@ -175,10 +196,6 @@ export function ReverseBidForm({ auction, onBidPlaced }: ReverseBidFormProps) {
             : ''}
         </p>
       </div>
-
-      {auction.bid_count > 0 && (
-        <p className="bid-input-hint">{auction.bid_count} người bán đang cạnh tranh</p>
-      )}
 
       {error !== null && (
         <div className="bid-error" role="alert">{error}</div>

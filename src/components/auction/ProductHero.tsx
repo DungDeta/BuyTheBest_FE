@@ -4,7 +4,8 @@ import dayjs from 'dayjs'
 import type { Auction } from '@/types/auction'
 import { getDemoProductImage } from '@/utils/demoProductImages'
 import { getProductConditionLabel } from '@/utils/productDisplay'
-import { getAuctionDisplayTitle } from '@/utils/auctionDisplay'
+import { getAuctionDisplayTitle, getReadableProductTitle } from '@/utils/auctionDisplay'
+import { getReverseDemand } from '@/utils/reverseAuction'
 
 interface ProductHeroProps {
   auction: Auction
@@ -37,20 +38,31 @@ function formatVnd(amount: number): string {
 }
 
 export function ProductHero({ auction }: ProductHeroProps) {
-  const { product, seller, mode, bid_count, id, starts_at } = auction
+  const { product, seller, creator, mode, bid_count, id, starts_at } = auction
 
   const images = product?.images ?? []
   const sortedImages = [...images].sort((a, b) => a.sort_order - b.sort_order)
   const primaryImage = sortedImages.find((img) => img.is_primary) ?? sortedImages[0] ?? null
   const title = getAuctionDisplayTitle(auction)
+  const isReverseSettled =
+    mode === 'reverse' &&
+    (auction.status === 'ended' || auction.status === 'closed_bin') &&
+    product != null
+  const imageAlt = isReverseSettled
+    ? `Sản phẩm thắng: ${getReadableProductTitle(product)}`
+    : title
 
   const [activeIndex, setActiveIndex] = useState(0)
   const displayImage = sortedImages[activeIndex] ?? primaryImage
-  const displayImageUrl = displayImage?.url || displayImage?.thumbnail_url || getDemoProductImage(title)
+  const displayImageUrl =
+    displayImage?.url ||
+    displayImage?.thumbnail_url ||
+    (mode === 'reverse' ? null : getDemoProductImage(title))
 
   const publicLabel = `Mã phiên ${id.slice(0, 8).toUpperCase()}`
   const isHot = bid_count > 10
   const reverseBudget = auction.budget_cap ?? auction.starting_price
+  const reverseDemand = getReverseDemand(auction)
   const productSpecs = mode === 'reverse'
     ? [
         { label: 'Phương thức', value: modeBadgeLabel(mode) },
@@ -80,41 +92,46 @@ export function ProductHero({ auction }: ProductHeroProps) {
           <div className="gallery__main" aria-label={`Hình ảnh: ${title}`}>
             <div className="gallery__badges">
               <span className={modeBadgeClass(mode)}>{modeBadgeLabel(mode)}</span>
+              {isReverseSettled && (
+                <span className="winning-product-badge">Sản phẩm thắng</span>
+              )}
               {isHot && <span className="hot-badge">HOT</span>}
             </div>
 
             {displayImageUrl ? (
               <img
                 src={displayImageUrl}
-                alt={title}
+                alt={imageAlt}
                 className="gallery__main-img"
               />
             ) : (
               <div className="gallery__placeholder">
                 <span className="gallery__placeholder-title">Không có ảnh</span>
                 <span className="gallery__placeholder-sub">
-                  {getProductConditionLabel(product?.condition, '')}
+                  {mode === 'reverse'
+                    ? 'Nhu cầu mua'
+                    : getProductConditionLabel(product?.condition, '')}
                 </span>
               </div>
             )}
           </div>
 
           {sortedImages.length > 1 && (
-            <div className="gallery__thumbs" role="list" aria-label="Ảnh thu nhỏ">
+            <ul className="gallery__thumbs" aria-label="Ảnh thu nhỏ">
               {sortedImages.slice(0, 6).map((img, i) => (
-                <button
-                  key={img.id}
-                  type="button"
-                  role="listitem"
-                  className={`gallery__thumb${activeIndex === i ? ' gallery__thumb--active' : ''}`}
-                  onClick={() => setActiveIndex(i)}
-                  aria-label={`Xem ảnh ${i + 1}`}
-                  aria-pressed={activeIndex === i}
-                >
-                  <img src={img.thumbnail_url} alt="" aria-hidden="true" />
-                </button>
+                <li key={img.id}>
+                  <button
+                    type="button"
+                    className={`gallery__thumb${activeIndex === i ? ' gallery__thumb--active' : ''}`}
+                    onClick={() => setActiveIndex(i)}
+                    aria-label={`Xem ảnh ${i + 1}`}
+                    aria-pressed={activeIndex === i}
+                  >
+                    <img src={img.thumbnail_url} alt="" aria-hidden="true" />
+                  </button>
+                </li>
               ))}
-            </div>
+            </ul>
           )}
         </div>
 
@@ -124,6 +141,12 @@ export function ProductHero({ auction }: ProductHeroProps) {
           </div>
 
           <h1 className="product-info__title">{title}</h1>
+
+          {mode === 'reverse' && reverseDemand.description && (
+            <p className="product-info__description" data-testid="reverse-demand-summary">
+              {reverseDemand.description}
+            </p>
+          )}
 
           <div className="product-info__meta">
             {product?.condition && (
@@ -158,7 +181,7 @@ export function ProductHero({ auction }: ProductHeroProps) {
             ))}
           </div>
 
-          {seller && (
+          {seller && mode !== 'reverse' && (
             <div className="seller-card">
               {seller.avatar_url ? (
                 <img
@@ -184,6 +207,26 @@ export function ProductHero({ auction }: ProductHeroProps) {
               >
                 Xem shop
               </Link>
+            </div>
+          )}
+
+          {mode === 'reverse' && creator && (
+            <div className="seller-card" data-testid="reverse-demand-creator">
+              {creator.avatar_url ? (
+                <img
+                  src={creator.avatar_url}
+                  alt={creator.display_name}
+                  className="seller-card__avatar"
+                />
+              ) : (
+                <div className="seller-card__avatar seller-card__avatar--initials" aria-hidden="true">
+                  {sellerInitials(creator.display_name)}
+                </div>
+              )}
+              <div className="seller-card__info">
+                <div className="seller-card__name">{creator.display_name}</div>
+                <div className="seller-card__meta">Người đăng nhu cầu</div>
+              </div>
             </div>
           )}
         </div>

@@ -110,6 +110,7 @@ export default function Header() {
           </Link>
           <nav className="header-nav">
             <Link to="/auctions">Khám phá</Link>
+            <Link to="/products">Sản phẩm</Link>
           </nav>
         </div>
 
