@@ -42,7 +42,9 @@ function buildItems(dispute: OrderDispute): TlItem[] {
     items.push({
       title: 'Người bán phản hồi',
       desc: 'Người bán đã gửi phản hồi khiếu nại',
-      ts: seller_response_deadline ? fmtTs(seller_response_deadline) : '',
+      // The API exposes the response deadline, not the actual response time.
+      // Omitting the timestamp is more accurate than presenting the deadline as an event time.
+      ts: null,
       state: 'done',
     })
   } else if (status === 'open' || status === 'awaiting_seller') {
