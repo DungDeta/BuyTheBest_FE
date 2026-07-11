@@ -47,6 +47,10 @@ const SCHEDULED_START_FAST_INTERVAL_MS = 2_000
 const SCHEDULED_START_SLOW_INTERVAL_MS = 5_000
 const SCHEDULED_START_MAX_WAKE_DELAY_MS = 60_000
 const SCHEDULED_START_GRACE_MS = 250
+const ACTIVE_END_GRACE_MS = 1_500
+const ACTIVE_END_POLL_INTERVAL_MS = 3_000
+const ACTIVE_END_MAX_ATTEMPTS = 80
+const ACTIVE_END_MAX_WAKE_DELAY_MS = 60_000
 
 export function Component() {
   const { id } = useParams<{ id: string }>()
@@ -354,6 +358,56 @@ export function Component() {
       if (timer !== null) clearTimeout(timer)
     }
   }, [scheduledAuctionId, scheduledStartsAt, scheduledStatus, refreshAuctionSnapshot])
+
+  const activeAuctionId = auction?.id ?? null
+  const activeEndsAt = auction?.ends_at ?? null
+  const activeStatus = auction?.status ?? null
+
+  useEffect(() => {
+    if (!activeAuctionId || !activeEndsAt || activeStatus !== 'active') return
+
+    const endsAtMs = Date.parse(activeEndsAt)
+    if (!Number.isFinite(endsAtMs)) return
+
+    let cancelled = false
+    let attempts = 0
+    let timer: ReturnType<typeof setTimeout> | null = null
+
+    const schedule = (callback: () => void, delayMs: number) => {
+      timer = setTimeout(callback, delayMs)
+    }
+
+    const pollForSettlement = async () => {
+      if (cancelled) return
+      attempts += 1
+
+      const snapshot = await refreshAuctionSnapshot()
+      if (cancelled || (snapshot && snapshot.status !== 'active')) return
+      if (attempts >= ACTIVE_END_MAX_ATTEMPTS) return
+
+      schedule(() => void pollForSettlement(), ACTIVE_END_POLL_INTERVAL_MS)
+    }
+
+    const waitUntilExpectedEnd = () => {
+      if (cancelled) return
+      const remainingMs = endsAtMs + ACTIVE_END_GRACE_MS - Date.now()
+      if (remainingMs <= 0) {
+        void pollForSettlement()
+        return
+      }
+
+      schedule(
+        waitUntilExpectedEnd,
+        Math.min(remainingMs, ACTIVE_END_MAX_WAKE_DELAY_MS),
+      )
+    }
+
+    waitUntilExpectedEnd()
+    return () => {
+      cancelled = true
+      if (timer !== null) clearTimeout(timer)
+    }
+  }, [activeAuctionId, activeEndsAt, activeStatus, refreshAuctionSnapshot])
 
   const handleBidPlaced = useCallback((payload: unknown) => {
     const p = payload as BidPlacedPayload
