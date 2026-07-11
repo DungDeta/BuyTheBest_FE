@@ -40,8 +40,9 @@ export function RoomTabs({
       bid.bidder_id ?? bid.participant_id ?? bid.bidder_label,
     )),
   ).size
+  const recordedBidderFloor = auction.bid_count > 0 ? 1 : 0
   const [resolvedParticipantCount, setResolvedParticipantCount] = useState(
-    Math.max(auction.seller_count ?? 0, bidFeedParticipantCount),
+    Math.max(auction.seller_count ?? 0, bidFeedParticipantCount, recordedBidderFloor),
   )
 
   const showLog =
@@ -66,10 +67,15 @@ export function RoomTabs({
           auction.seller_count ?? 0,
           apiBidderCount,
           bidFeedParticipantCount,
+          recordedBidderFloor,
         ))
       } catch {
         if (!cancelled) {
-          setResolvedParticipantCount(Math.max(auction.seller_count ?? 0, bidFeedParticipantCount))
+          setResolvedParticipantCount(Math.max(
+            auction.seller_count ?? 0,
+            bidFeedParticipantCount,
+            recordedBidderFloor,
+          ))
         }
       }
     }
@@ -78,15 +84,31 @@ export function RoomTabs({
     return () => {
       cancelled = true
     }
-  }, [auction.id, auction.seller_count, bidFeedParticipantCount, participantCount])
+  }, [
+    auction.id,
+    auction.seller_count,
+    auction.bid_count,
+    auction.status,
+    bidFeedParticipantCount,
+    participantCount,
+    recordedBidderFloor,
+  ])
 
   const handleBidderCountLoaded = useCallback((count: number) => {
     setResolvedParticipantCount(Math.max(
       auction.seller_count ?? 0,
       count,
       bidFeedParticipantCount,
+      recordedBidderFloor,
     ))
-  }, [auction.seller_count, bidFeedParticipantCount])
+  }, [auction.seller_count, bidFeedParticipantCount, recordedBidderFloor])
+
+  const visibleBidderCount = Math.max(
+    resolvedParticipantCount,
+    auction.seller_count ?? 0,
+    bidFeedParticipantCount,
+    recordedBidderFloor,
+  )
 
   const tabs: { key: TabKey; label: string }[] = [
     {
@@ -102,7 +124,7 @@ export function RoomTabs({
       key: 'bidders',
       label: hidesSealedParticipants
         ? 'Người đặt (đã ẩn)'
-        : `${auction.mode === 'reverse' ? 'Người bán' : 'Người đặt'} (${resolvedParticipantCount})`,
+        : `${auction.mode === 'reverse' ? 'Người bán' : 'Người đặt'} (${visibleBidderCount})`,
     },
     { key: 'chat', label: 'Tin nhắn' },
     ...(showLog ? [{ key: 'log' as TabKey, label: 'Nhật ký' }] : []),

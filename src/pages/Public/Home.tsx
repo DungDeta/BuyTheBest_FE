@@ -245,12 +245,14 @@ interface AuctionCardProps {
 }
 
 function AuctionCard({ auction }: AuctionCardProps) {
+  const [failedImageUrl, setFailedImageUrl] = useState<string | null>(null)
   const isSealed = auction.mode === 'sealed_bid'
   const isDutch  = auction.mode === 'dutch'
   const isReverse = auction.mode === 'reverse'
 
   const title = getAuctionDisplayTitle(auction)
   const imageUrl = productImageUrl(auction.product, title)
+  const visibleImageUrl = imageUrl && failedImageUrl !== imageUrl ? imageUrl : null
   const reverseCounts = typeof auction.seller_count === 'number'
     ? `${auction.seller_count} người bán · ${auction.offer_count ?? auction.bid_count} báo giá`
     : `${auction.offer_count ?? auction.bid_count} báo giá`
@@ -270,7 +272,18 @@ function AuctionCard({ auction }: AuctionCardProps) {
         )}
       </div>
       <div className="listing-img">
-        {imageUrl ? <img src={imageUrl} alt={title} /> : <span>{title}</span>}
+        {visibleImageUrl ? (
+          <img
+            src={visibleImageUrl}
+            alt={title}
+            onError={() => setFailedImageUrl(visibleImageUrl)}
+          />
+        ) : (
+          <div className="listing-img__placeholder">
+            <strong>Không có ảnh</strong>
+            {isReverse && <small>Nhu cầu mua</small>}
+          </div>
+        )}
       </div>
       <div className="listing-title">{title}</div>
 

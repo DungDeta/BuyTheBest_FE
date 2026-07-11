@@ -16,6 +16,18 @@ export function formatParticipantLabel(
   if (!label) return anonymousLabel
 
   const normalized = label.trim()
+  if (!normalized) return anonymousLabel
+
+  const roleAliasMatch = normalized.match(/^(seller|buyer|admin)(?:\s*#?\s*(\d+))?$/i)
+  if (roleAliasMatch) {
+    const normalizedRole = roleAliasMatch[1]?.toLowerCase()
+    const roleLabel = normalizedRole === 'seller'
+      ? 'Người bán'
+      : normalizedRole === 'buyer'
+        ? 'Người mua'
+        : 'Quản trị viên'
+    return roleAliasMatch[2] ? `${roleLabel} ${roleAliasMatch[2]}` : roleLabel
+  }
   const bidderMatch = normalized.match(/^bidder(?:\s*#?\s*(\d+))?$/i)
   if (bidderMatch) {
     return bidderMatch[1] ? `${anonymousLabel} ${bidderMatch[1]}` : anonymousLabel

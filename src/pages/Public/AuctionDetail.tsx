@@ -11,6 +11,7 @@ import { CountdownBox } from '@/components/auction/CountdownBox'
 import { BidPanel } from '@/components/auction/BidPanel'
 import { RoomTabs } from '@/components/auction/RoomTabs'
 import { getAuctionDisplayTitle } from '@/utils/auctionDisplay'
+import { formatParticipantLabel } from '@/utils/auctionIdentity'
 import { resolveReverseViewer } from '@/utils/reverseAuction'
 import type {
   Auction,
@@ -532,7 +533,7 @@ export function Component() {
     })
 
     if (p.winner_label) {
-      message.success(`Phiên kết thúc · Người thắng: ${p.winner_label}`)
+      message.success(`Phiên kết thúc · Người thắng: ${formatParticipantLabel(p.winner_label)}`)
     } else {
       message.success('Phiên đấu giá đã kết thúc')
     }

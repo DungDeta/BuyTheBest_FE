@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, useCallback } from 'react'
 import { App, Spin } from 'antd'
 import dayjs from 'dayjs'
 import { publicGet, privatePost } from '@/api/api'
+import { formatParticipantLabel } from '@/utils/auctionIdentity'
 import type { ChatMessage, WsEventType } from '@/types/auction'
 import type { ErrorResponse } from '@/types/api'
 
@@ -79,7 +80,9 @@ function isOwnMessage(msg: ChatMessage, currentUserId: string | null): boolean {
 
 function getSenderLabel(msg: ChatMessage, currentUserId: string | null): string {
   if (isOwnMessage(msg, currentUserId)) return 'Bạn'
-  if (msg.sender_label && !/^(system|hệ thống)$/i.test(msg.sender_label.trim())) return msg.sender_label
+  if (msg.sender_label && !/^(system|hệ thống)$/i.test(msg.sender_label.trim())) {
+    return formatParticipantLabel(msg.sender_label)
+  }
   if (msg.user_id) return `Người dùng #${msg.user_id}`
   return 'Người tham gia'
 }
