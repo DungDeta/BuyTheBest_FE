@@ -96,7 +96,7 @@ export function AuthPanel({ initialTab = 'login', variant = 'page', onSuccess }:
       await publicPost('/auth/register', { display_name: regName, email: regEmail, password: regPassword })
       message.success('Đã gửi email xác thực. Vui lòng kiểm tra email.')
       onSuccess?.()
-      navigate('/')
+      navigate('/verify-email', { state: { email: regEmail } })
     } catch (err) {
       const e = err as ErrorResponse
       message.error(e.error || 'Đăng ký thất bại')

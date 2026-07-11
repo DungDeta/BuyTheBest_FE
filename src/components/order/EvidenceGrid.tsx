@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { App, Button, Input, Modal, Spin } from 'antd'
 import { privateGet, privatePost } from '@/api/api'
 import type { DisputeEvidence } from '@/types/order'
+import { resolveEvidenceFileUrl, resolveEvidencePreviewUrl } from '@/utils/evidenceUrl'
 
 interface EvidenceGridProps {
   disputeId: string
@@ -105,16 +106,15 @@ async function uploadEvidenceBinary(presign: EvidencePresignResponse, file: File
 
 function EvidenceTile({ evidence }: { evidence: DisputeEvidence }) {
   const [mediaFailed, setMediaFailed] = useState(false)
-  const fileUrl = evidence.file_url ?? evidence.object_key ?? ''
-  const thumbnailUrl = evidence.thumbnail_url ?? evidence.thumbnail_key ?? null
-  const mediaUrl = thumbnailUrl ?? fileUrl
-  const canPreviewMedia = /^(https?:|data:|blob:)/i.test(mediaUrl)
-  const canOpenFile = /^(https?:|data:|blob:)/i.test(fileUrl)
+  const fileUrl = resolveEvidenceFileUrl(evidence)
+  const mediaUrl = resolveEvidencePreviewUrl(evidence)
+  const openUrl = fileUrl ?? mediaUrl
+  const canPreviewMedia = mediaUrl !== null
   const description = evidence.description ?? 'Evidence'
 
   function handleClick() {
-    if (canOpenFile) {
-      window.open(fileUrl, '_blank', 'noopener,noreferrer')
+    if (openUrl) {
+      window.open(openUrl, '_blank', 'noopener,noreferrer')
     }
   }
 
@@ -135,13 +135,14 @@ function EvidenceTile({ evidence }: { evidence: DisputeEvidence }) {
         type="button"
         className="evidence-tile"
         onClick={handleClick}
+        disabled={!openUrl}
         aria-label={evidence.description ?? 'Xem ảnh bằng chứng'}
         title={evidence.description ?? undefined}
         style={!canPreviewMedia || mediaFailed ? { flexDirection: 'column', gap: 4 } : undefined}
       >
         {canPreviewMedia && !mediaFailed ? (
           <img
-            src={mediaUrl}
+            src={mediaUrl ?? undefined}
             alt={description}
             onError={() => setMediaFailed(true)}
           />
@@ -156,12 +157,13 @@ function EvidenceTile({ evidence }: { evidence: DisputeEvidence }) {
         type="button"
         className="evidence-tile evidence-tile--video"
         onClick={handleClick}
+        disabled={!openUrl}
         aria-label={evidence.description ?? 'Xem video bằng chứng'}
         title={evidence.description ?? undefined}
         style={!canPreviewMedia || mediaFailed ? { flexDirection: 'column', gap: 4 } : undefined}
       >
         {canPreviewMedia && !mediaFailed ? (
-          <img src={mediaUrl} alt="" aria-hidden="true" onError={() => setMediaFailed(true)} />
+          <img src={mediaUrl ?? undefined} alt="" aria-hidden="true" onError={() => setMediaFailed(true)} />
         ) : renderFallback('VID')}
       </button>
     )
@@ -172,6 +174,7 @@ function EvidenceTile({ evidence }: { evidence: DisputeEvidence }) {
       type="button"
       className="evidence-tile"
       onClick={handleClick}
+      disabled={!openUrl}
       aria-label={evidence.description ?? 'Tải tài liệu bằng chứng'}
       title={evidence.description ?? undefined}
       style={{ flexDirection: 'column', gap: 4 }}

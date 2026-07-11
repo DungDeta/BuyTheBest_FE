@@ -18,6 +18,8 @@ interface AuctionItem {
   status: string
   starting_price: number
   current_price: number
+  end_price?: number | null
+  decrement_interval_seconds?: number | null
   bid_count: number
   offer_count?: number
   seller_count?: number
@@ -278,6 +280,7 @@ function AuctionCard({ auction }: AuctionCardProps) {
   const isSealed  = auction.mode === 'sealed_bid'
   const isDutch   = auction.mode === 'dutch'
   const isReverse = auction.mode === 'reverse'
+  const hasReachedDutchFloor = isDutch && auction.end_price != null && auction.current_price <= auction.end_price
   const title     = auctionTitle(auction)
   const short     = modeBadgeShort(auction.mode)
   const imageUrl  = auctionImageUrl(auction)
@@ -308,7 +311,11 @@ function AuctionCard({ auction }: AuctionCardProps) {
       ) : isDutch ? (
         <div className="listing-price">
           {formatPrice(auction.current_price)}{' '}
-          <span className="price-arrow-down">↓</span>
+          {hasReachedDutchFloor ? (
+            <span className="status-badge">Giá sàn</span>
+          ) : (
+            <span className="price-arrow-down">↓</span>
+          )}
         </div>
       ) : (
         <div className="listing-price">{formatPrice(auction.current_price)}</div>
@@ -319,6 +326,12 @@ function AuctionCard({ auction }: AuctionCardProps) {
           <span>Giá kín</span>
         ) : isReverse ? (
           <span>{reverseCounts}</span>
+        ) : isDutch ? (
+          <span>
+            {hasReachedDutchFloor
+              ? 'Đã chạm giá sàn'
+              : `Giảm mỗi ${auction.decrement_interval_seconds ?? 30}s`}
+          </span>
         ) : (
           <span>{auction.bid_count} lượt đặt</span>
         )}

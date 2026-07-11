@@ -100,7 +100,8 @@ export function EnglishBidForm({
       return
     }
 
-    navigate('/orders')
+    message.warning('Không đọc được mã đơn hàng. Đang mở danh sách đơn chờ thanh toán.')
+    navigate('/orders?role=buyer&status=pending_payment&page=1')
   }
 
   function handleBuyNow() {

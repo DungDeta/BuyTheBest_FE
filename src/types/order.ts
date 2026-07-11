@@ -137,9 +137,9 @@ export interface DisputeMessage {
 export interface DisputeEvidence {
   id: number
   uploader_user_id: number
-  object_key?: string
+  object_key?: string | null
   thumbnail_key?: string | null
-  file_url?: string
+  file_url?: string | null
   thumbnail_url?: string | null
   file_type: 'image' | 'video' | 'document'
   description?: string | null

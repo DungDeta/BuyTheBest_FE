@@ -15,6 +15,8 @@ interface Auction {
   status: string
   starting_price: number
   current_price: number
+  end_price?: number | null
+  decrement_interval_seconds?: number | null
   bid_count: number
   offer_count?: number
   seller_count?: number
@@ -121,12 +123,12 @@ const HOW_STEPS = [
   {
     num: '03',
     title: 'Thanh toán escrow',
-    desc: 'Thắng phiên, thanh toán qua VNPay hoặc Stripe, tiền được giữ lại đến khi người mua xác nhận nhận hàng.',
+    desc: 'Thắng phiên, thanh toán qua VNPay, tiền được escrow giữ trong suốt quá trình giao hàng và thời hạn khiếu nại.',
   },
   {
     num: '04',
     title: 'Xác nhận hoặc khiếu nại',
-    desc: 'Nếu nhận hàng thành công, tiền được chuyển cho người bán. Nếu có vấn đề, người mua mở khiếu nại để quản trị viên xử lý minh bạch.',
+    desc: 'Sau khi xác nhận nhận hàng, người mua có 30 ngày để khiếu nại. Nếu không có tranh chấp, escrow tự động giải ngân cho người bán.',
   },
 ]
 
@@ -249,6 +251,7 @@ function AuctionCard({ auction }: AuctionCardProps) {
   const isSealed = auction.mode === 'sealed_bid'
   const isDutch  = auction.mode === 'dutch'
   const isReverse = auction.mode === 'reverse'
+  const hasReachedDutchFloor = isDutch && auction.end_price != null && auction.current_price <= auction.end_price
 
   const title = getAuctionDisplayTitle(auction)
   const imageUrl = productImageUrl(auction.product, title)
@@ -294,7 +297,11 @@ function AuctionCard({ auction }: AuctionCardProps) {
       ) : isDutch ? (
         <div className="listing-price">
           {formatPrice(auction.current_price)}{' '}
-          <span className="price-arrow-down">↓</span>
+          {hasReachedDutchFloor ? (
+            <span className="status-badge">Giá sàn</span>
+          ) : (
+            <span className="price-arrow-down">↓</span>
+          )}
         </div>
       ) : (
         <div className="listing-price">{formatPrice(auction.current_price)}</div>
@@ -304,7 +311,11 @@ function AuctionCard({ auction }: AuctionCardProps) {
         {isSealed ? (
           <span>—</span>
         ) : isDutch ? (
-          <span>giảm mỗi 30s</span>
+          <span>
+            {hasReachedDutchFloor
+              ? 'đã chạm giá sàn'
+              : `giảm mỗi ${auction.decrement_interval_seconds ?? 30}s`}
+          </span>
         ) : isReverse ? (
           <span>{reverseCounts}</span>
         ) : (
@@ -559,7 +570,7 @@ export default function Home() {
           <span><span className="trust-check">✓</span> Nhật ký minh bạch</span>
           <span><span className="trust-check">✓</span> Chống đặt giá phút cuối</span>
           <span><span className="trust-check">✓</span> Tranh chấp có quản trị viên phân xử</span>
-          <span><span className="trust-check">✓</span> Auto-release sau 7 ngày</span>
+          <span><span className="trust-check">✓</span> Khiếu nại trong 30 ngày</span>
         </div>
       </div>
 

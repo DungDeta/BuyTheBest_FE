@@ -565,8 +565,9 @@ export function Component() {
           <div className="escrow-info" style={{ marginTop: 18 }}>
             <div className="escrow-info__title">Bảo vệ bởi Escrow</div>
             <p style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: 'var(--color-muted)', margin: 0 }}>
-              Tiền được giữ an toàn cho đến khi bạn xác nhận đã nhận hàng. Người bán chỉ nhận tiền
-              sau khi đơn hàng hoàn tất.
+              Tiền được giữ an toàn trong suốt quá trình giao hàng. Bạn có thể xác nhận đã nhận hàng;
+              nếu không, hệ thống tự ghi nhận giao hàng sau 7 ngày kể từ lúc người bán gửi. Từ thời
+              điểm giao hàng được ghi nhận, escrow tiếp tục giữ 30 ngày để bạn khiếu nại rồi mới giải ngân.
             </p>
             <div className="escrow-info__flow">
               <div className="escrow-info__stage escrow-info__stage--active">Bạn trả</div>

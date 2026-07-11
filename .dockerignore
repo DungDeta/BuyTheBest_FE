@@ -3,8 +3,12 @@ dist
 .git
 .codex-artifacts
 .playwright-mcp
+.codegraph
+test-artifacts
 .claude
 docs
 *.md
+*.log
 .env
 .env.local
+.env.*

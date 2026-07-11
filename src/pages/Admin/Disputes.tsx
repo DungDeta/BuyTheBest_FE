@@ -26,6 +26,7 @@ import type {
   DisputeResolution,
   DisputeStatus,
 } from '@/types/order'
+import { resolveEvidenceFileUrl, resolveEvidencePreviewUrl } from '@/utils/evidenceUrl'
 import './admin.css'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -160,11 +161,37 @@ function msgRole(msg: DisputeMessage): 'admin' | 'buyer' | 'seller' {
   return 'buyer' // legacy API fallback
 }
 
-function evidenceSrc(ev: DisputeEvidence): string {
-  if (ev.thumbnail_url) return ev.thumbnail_url
-  if (ev.thumbnail_key) return ev.thumbnail_key
-  if (ev.file_url) return ev.file_url
-  return ev.object_key ?? ''
+function AdminEvidencePreview({ evidence }: { evidence: DisputeEvidence }) {
+  const [imageFailed, setImageFailed] = useState(false)
+  const previewUrl = resolveEvidencePreviewUrl(evidence)
+  const fileUrl = resolveEvidenceFileUrl(evidence) ?? previewUrl
+
+  const preview = evidence.file_type === 'image' && previewUrl && !imageFailed ? (
+    <img
+      src={previewUrl}
+      alt={evidence.description ?? 'Bằng chứng'}
+      className="dispute-evidence-mini__img"
+      onError={() => setImageFailed(true)}
+    />
+  ) : (
+    <div className="dispute-evidence-mini__file">
+      <FileImageOutlined style={{ fontSize: 20 }} />
+      <span>{evidence.file_type}</span>
+    </div>
+  )
+
+  if (!fileUrl) return preview
+  return (
+    <a
+      href={fileUrl}
+      target="_blank"
+      rel="noreferrer"
+      aria-label={evidence.description ? `Xem bằng chứng: ${evidence.description}` : 'Xem bằng chứng'}
+      style={{ color: 'inherit', display: 'block' }}
+    >
+      {preview}
+    </a>
+  )
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -426,18 +453,7 @@ export function Component() {
             <div className="dispute-evidence-mini">
               {evidence.map((ev) => (
                 <div key={ev.id} className="dispute-evidence-mini__item">
-                  {ev.file_type === 'image' ? (
-                    <img
-                      src={evidenceSrc(ev)}
-                      alt={ev.description ?? 'evidence'}
-                      className="dispute-evidence-mini__img"
-                    />
-                  ) : (
-                    <div className="dispute-evidence-mini__file">
-                      <FileImageOutlined style={{ fontSize: 20 }} />
-                      <span>{ev.file_type}</span>
-                    </div>
-                  )}
+                  <AdminEvidencePreview evidence={ev} />
                   {ev.description && (
                     <Tooltip title={ev.description}>
                       <p className="dispute-evidence-mini__desc">{ev.description}</p>

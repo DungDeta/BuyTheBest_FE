@@ -282,6 +282,9 @@ export function Component() {
   const autoReleaseText = order.payment?.auto_release_at
     ? dayjs(order.payment.auto_release_at).format('DD/MM/YYYY HH:mm')
     : null
+  const escrowDeadlineLabel = order.status === 'shipped'
+    ? 'Tự động ghi nhận giao hàng'
+    : 'Tự động giải ngân'
   const hasShipmentActivity = Boolean(
     order.shipment &&
       (
@@ -494,7 +497,7 @@ export function Component() {
             </div>
             {order.payment.auto_release_at && (
               <div className="shipment-info__item">
-                <div className="shipment-info__label">Tự động giải ngân</div>
+                <div className="shipment-info__label">{escrowDeadlineLabel}</div>
                 <div className="shipment-info__value">
                   {dayjs(order.payment.auto_release_at).format('DD/MM/YYYY HH:mm')}
                 </div>
@@ -522,7 +525,7 @@ export function Component() {
             </div>
             {order.payment.auto_release_at && (
               <div className="shipment-info__item">
-                <div className="shipment-info__label">Giải ngân tự động</div>
+                <div className="shipment-info__label">{escrowDeadlineLabel}</div>
                 <div className="shipment-info__value">
                   {dayjs(order.payment.auto_release_at).format('DD/MM/YYYY HH:mm')}
                 </div>
@@ -544,7 +547,8 @@ export function Component() {
                   lineHeight: 1.6,
                 }}
               >
-                Tiền sẽ được giữ trong escrow sau khi người mua xác nhận nhận hàng và tự động giải ngân khi hết thời hạn khiếu nại.
+                Tiền được giữ trong escrow suốt quá trình giao hàng. Khi giao hàng được ghi nhận,
+                thời hạn khiếu nại 30 ngày bắt đầu; sau đó hệ thống mới tự động giải ngân nếu không có tranh chấp.
               </div>
             </div>
           </div>

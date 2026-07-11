@@ -25,6 +25,7 @@ export function DutchBidForm({ auction, onBidPlaced }: DutchBidFormProps) {
   const { placeBid, loading, error } = useBid(auction.id)
 
   const intervalSeconds = auction.decrement_interval_seconds ?? 30
+  const hasReachedFloor = auction.end_price != null && auction.current_price <= auction.end_price
   const [countdown, setCountdown] = useState(intervalSeconds)
 
   const prevPriceRef = useRef(auction.current_price)
@@ -36,6 +37,11 @@ export function DutchBidForm({ auction, onBidPlaced }: DutchBidFormProps) {
   }, [auction.current_price, intervalSeconds])
 
   useEffect(() => {
+    if (hasReachedFloor) {
+      setCountdown(0)
+      return
+    }
+
     const id = setInterval(() => {
       setCountdown((prev) => {
         if (prev <= 1) return intervalSeconds
@@ -43,7 +49,7 @@ export function DutchBidForm({ auction, onBidPlaced }: DutchBidFormProps) {
       })
     }, 1_000)
     return () => clearInterval(id)
-  }, [intervalSeconds])
+  }, [hasReachedFloor, intervalSeconds])
 
   async function handleAccept() {
     const result = await placeBid(auction.current_price)
@@ -56,11 +62,13 @@ export function DutchBidForm({ auction, onBidPlaced }: DutchBidFormProps) {
     <div className="bid-form">
       <div className="bid-current">
         <div className="bid-current__left">
-          <span className="bid-current__label">Giá hiện tại (đang giảm)</span>
+          <span className="bid-current__label">
+            {hasReachedFloor ? 'Giá hiện tại (đã chạm giá sàn)' : 'Giá hiện tại (đang giảm)'}
+          </span>
           <span className="bid-current__price bid-current__price--dutch">
             {formatVnd(auction.current_price)}
           </span>
-          {decrement > 0 && intervalSeconds > 0 && (
+          {!hasReachedFloor && decrement > 0 && intervalSeconds > 0 && (
             <span className="bid-current__delta">
               ↓ Giảm {formatVnd(decrement)} mỗi {intervalSeconds}s
             </span>
@@ -73,11 +81,23 @@ export function DutchBidForm({ auction, onBidPlaced }: DutchBidFormProps) {
         Giá giảm dần: người đầu tiên chấp nhận mức giá hiện tại sẽ thắng phiên đấu giá.
       </div>
 
-      <div className="dutch-timer" aria-label="Thời gian đến lần giảm giá tiếp theo">
-        <div className="dutch-timer__label">Giá giảm tiếp trong</div>
-        <div className="dutch-timer__value" aria-live="polite">
-          {formatCountdown(countdown)}
-        </div>
+      <div
+        className="dutch-timer"
+        aria-label={hasReachedFloor ? 'Phiên đã chạm giá sàn' : 'Thời gian đến lần giảm giá tiếp theo'}
+      >
+        {hasReachedFloor ? (
+          <>
+            <div className="dutch-timer__label">Đã chạm mức giá cuối cùng</div>
+            <div className="dutch-timer__value" aria-live="polite">GIÁ SÀN</div>
+          </>
+        ) : (
+          <>
+            <div className="dutch-timer__label">Giá giảm tiếp trong</div>
+            <div className="dutch-timer__value" aria-live="polite">
+              {formatCountdown(countdown)}
+            </div>
+          </>
+        )}
       </div>
 
       <button
