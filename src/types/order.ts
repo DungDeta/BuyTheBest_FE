@@ -27,6 +27,7 @@ export interface Order {
   updated_at: string
   viewer_role?: 'buyer' | 'seller'
   auction?: OrderAuction | null
+  product?: OrderProduct | null
   payment?: OrderPayment | null
   shipment?: OrderShipment | null
   dispute?: OrderDispute | null
@@ -41,14 +42,7 @@ export interface OrderAuction {
   product_title?: string
   product_image_url?: string | null
   bid_count?: number
-  product?: {
-    id: string | number
-    title: string
-    description?: string
-    slug: string
-    condition: string
-    images?: OrderProductImage[]
-  } | null
+  product?: OrderProduct | null
   seller?: {
     id: string
     display_name: string
@@ -132,6 +126,15 @@ export interface DisputeMessage {
   content: string
   is_admin: boolean
   sent_at: string
+}
+
+export interface OrderProduct {
+  id: string | number
+  title: string
+  description?: string
+  slug: string
+  condition: string
+  images?: OrderProductImage[]
 }
 
 export interface DisputeEvidence {

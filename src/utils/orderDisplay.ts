@@ -27,7 +27,7 @@ function primaryImage(images?: OrderProductImage[]): OrderProductImage | null {
 }
 
 export function getOrderProductTitle(order: Order): string {
-  return order.auction?.product?.title ?? order.auction?.product_title ?? 'Sản phẩm đấu giá'
+  return order.product?.title ?? order.auction?.product?.title ?? order.auction?.product_title ?? 'Sản phẩm đấu giá'
 }
 
 export function getOrderProductConditionLabel(condition?: string | null): string | null {
@@ -46,7 +46,7 @@ export function getOrderCancelReasonLabel(reason?: string | null): string | null
 }
 
 export function getOrderProductImageUrl(order: Order): string | null {
-  const image = primaryImage(order.auction?.product?.images)
+  const image = primaryImage(order.product?.images) ?? primaryImage(order.auction?.product?.images)
   return firstRenderableUrl([
     image?.thumbnail_url,
     image?.url,

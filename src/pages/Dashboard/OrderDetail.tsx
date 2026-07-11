@@ -256,8 +256,10 @@ export function Component() {
   const title = getOrderProductTitle(order)
   const sellerName = getOrderSellerName(order)
   const buyerName = getOrderBuyerName(order)
-  const productDescription = order.auction?.product?.description?.trim()
-  const productCondition = getOrderProductConditionLabel(order.auction?.product?.condition)
+  const productDescription = (order.product?.description ?? order.auction?.product?.description)?.trim()
+  const productCondition = getOrderProductConditionLabel(
+    order.product?.condition ?? order.auction?.product?.condition,
+  )
   const shortId = order.id.slice(0, 12).toUpperCase()
   const buyer = order.viewer_role === 'buyer'
   const seller = order.viewer_role === 'seller'

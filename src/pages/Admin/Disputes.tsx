@@ -78,6 +78,8 @@ interface ResolveBody {
   seller_amount?: number
 }
 
+type ResolutionChoice = ResolveBody['resolution']
+
 // ─── Constants ────────────────────────────────────────────────────────────────
 
 const PAGE_SIZE = 20
@@ -215,7 +217,7 @@ export function Component() {
   const [subLoading, setSubLoading] = useState(false)
 
   // resolve form
-  const [resolution, setResolution] = useState<Exclude<DisputeResolution, 'pending'>>('refund_buyer')
+  const [resolution, setResolution] = useState<ResolutionChoice | null>(null)
   const [adminNotes, setAdminNotes] = useState('')
   const [refundAmount, setRefundAmount] = useState<number | null>(null)
   const [sellerAmount, setSellerAmount] = useState<number | null>(null)
@@ -261,7 +263,7 @@ export function Component() {
     setDrawerOpen(true)
     setMessages([])
     setEvidence([])
-    setResolution('refund_buyer')
+    setResolution(null)
     setAdminNotes('')
     setRefundAmount(null)
     setSellerAmount(null)
@@ -286,6 +288,7 @@ export function Component() {
     setSelected(null)
     setMessages([])
     setEvidence([])
+    setResolution(null)
     setAdminNotes('')
     setRefundAmount(null)
     setSellerAmount(null)
@@ -293,6 +296,11 @@ export function Component() {
 
   async function handleResolve() {
     if (!selected) return
+
+    if (!resolution) {
+      message.warning('Vui lòng chọn rõ phương án phân xử')
+      return
+    }
 
     const notes = adminNotes.trim()
     if (notes.length < 50) {
@@ -507,7 +515,7 @@ export function Component() {
             <div className="resolve-options">
               <Radio.Group
                 value={resolution}
-                onChange={(e) => setResolution(e.target.value as Exclude<DisputeResolution, 'pending'>)}
+                onChange={(e) => setResolution(e.target.value as ResolutionChoice)}
               >
                 {RESOLUTION_OPTIONS.map((opt) => (
                   <Radio key={opt.value} value={opt.value}>
@@ -584,6 +592,7 @@ export function Component() {
                   danger
                   loading={resolving}
                   disabled={
+                    !resolution ||
                     adminNotes.trim().length < 50 ||
                     (resolution === 'partial_refund' &&
                       (refundAmount == null || sellerAmount == null))
@@ -718,7 +727,12 @@ export function Component() {
         title="Chi tiết khiếu nại"
         open={drawerOpen}
         onClose={closeDrawer}
-        width="min(600px, 100vw)"
+        width={600}
+        rootClassName="dispute-detail-drawer"
+        styles={{
+          wrapper: { width: 'min(600px, 100%)', maxWidth: '100%' },
+          body: { overflowX: 'hidden' },
+        }}
         placement="right"
         destroyOnHidden
       >

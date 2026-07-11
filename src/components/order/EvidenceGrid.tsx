@@ -188,20 +188,25 @@ export function EvidenceGrid({ disputeId, canUpload }: EvidenceGridProps) {
   const { message } = App.useApp()
   const [items, setItems] = useState<DisputeEvidence[]>([])
   const [loading, setLoading] = useState(true)
+  const [loadError, setLoadError] = useState(false)
   const [uploadOpen, setUploadOpen] = useState(false)
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [fileType, setFileType] = useState<EvidenceFileType>('image')
   const [description, setDescription] = useState('')
   const [uploading, setUploading] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const loadedDisputeIdRef = useRef<string | null>(null)
 
   const fetchEvidence = useCallback(async () => {
     setLoading(true)
+    setLoadError(false)
     try {
       const res = await privateGet<EvidenceListResponse>(`/disputes/${disputeId}/evidence`)
+      loadedDisputeIdRef.current = disputeId
       setItems(extractEvidence(res.data))
     } catch {
-      setItems([])
+      if (loadedDisputeIdRef.current !== disputeId) setItems([])
+      setLoadError(true)
     } finally {
       setLoading(false)
     }
@@ -287,8 +292,28 @@ export function EvidenceGrid({ disputeId, canUpload }: EvidenceGridProps) {
 
   if (loading) {
     return (
-      <div style={{ display: 'flex', justifyContent: 'center', padding: 24 }} aria-label="Đang tải bằng chứng">
-        <Spin />
+      <div
+        style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, minHeight: 88, padding: 24 }}
+        role="status"
+        aria-label="Đang tải bằng chứng"
+      >
+        <Spin size="small" />
+        <span style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: 'var(--color-muted)' }}>
+          Đang tải bằng chứng…
+        </span>
+      </div>
+    )
+  }
+
+  if (loadError && items.length === 0) {
+    return (
+      <div role="alert" style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
+        <span style={{ fontFamily: 'var(--font-mono)', fontSize: 12, color: 'var(--color-muted)' }}>
+          Không tải được bằng chứng.
+        </span>
+        <Button size="small" onClick={fetchEvidence}>
+          Thử lại
+        </Button>
       </div>
     )
   }
