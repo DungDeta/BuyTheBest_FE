@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { App, Pagination, Spin } from 'antd'
+import { ShoppingOutlined } from '@ant-design/icons'
 import { privateGet, privatePost } from '@/api/api'
 import { useCountdown } from '@/hooks/useCountdown'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
@@ -122,8 +123,12 @@ function WatchlistCard({ item, onUnwatch, unwatching }: WatchlistCardProps) {
             className="watchlist-card__thumb"
           />
         ) : (
-          <div className="watchlist-card__thumb--placeholder" aria-hidden="true">
-            IMG
+          <div
+            className="watchlist-card__thumb--placeholder"
+            aria-label="Phiên chưa có ảnh đại diện"
+            role="img"
+          >
+            <ShoppingOutlined />
           </div>
         )}
       </a>

@@ -164,10 +164,11 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.5rem;
+  font-size: 2rem;
   width: 100%;
   aspect-ratio: 4 / 3;
-  background: var(--color-skeleton, #f0f0f0);
+  color: var(--color-primary, #1677ff);
+  background: linear-gradient(135deg, #f7faff 0%, #eaf3ff 100%);
   border-radius: 4px;
 }
 
@@ -243,7 +244,8 @@
   height: 48px;
   border-radius: 4px;
   flex-shrink: 0;
-  background: var(--color-skeleton, #f0f0f0);
+  color: var(--color-primary, #1677ff);
+  background: linear-gradient(135deg, #f7faff 0%, #eaf3ff 100%);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -377,7 +379,8 @@
 .watchlist-card__thumb--placeholder {
   width: 100%;
   aspect-ratio: 4 / 3;
-  background: var(--color-skeleton, #f0f0f0);
+  color: var(--color-primary, #1677ff);
+  background: linear-gradient(135deg, #f7faff 0%, #eaf3ff 100%);
   display: flex;
   align-items: center;
   justify-content: center;

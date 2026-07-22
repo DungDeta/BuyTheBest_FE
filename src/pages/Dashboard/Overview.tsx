@@ -92,8 +92,12 @@ function EndingSoonCard({ item }: { item: WatchlistItem }) {
           className="overview-mini-card__thumb"
         />
       ) : (
-        <div className="overview-mini-card__thumb--placeholder" aria-hidden="true">
-          IMG
+        <div
+          className="overview-mini-card__thumb--placeholder"
+          aria-label="Phiên chưa có ảnh đại diện"
+          role="img"
+        >
+          <ShoppingOutlined />
         </div>
       )}
       <span className="overview-mini-card__title">{item.title}</span>
@@ -114,8 +118,12 @@ function RecentOrderItem({ order }: { order: Order }) {
       {imageUrl ? (
         <img src={imageUrl} alt={title} className="overview-order-item__thumb" />
       ) : (
-        <div className="overview-order-item__thumb--placeholder" aria-hidden="true">
-          IMG
+        <div
+          className="overview-order-item__thumb--placeholder"
+          aria-label="Đơn hàng chưa có ảnh sản phẩm"
+          role="img"
+        >
+          <ShoppingOutlined />
         </div>
       )}
       <div className="overview-order-item__info">
