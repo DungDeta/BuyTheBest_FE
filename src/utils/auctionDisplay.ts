@@ -87,7 +87,7 @@ export function getAuctionDisplayTitle(auction: AuctionDisplaySource): string {
     // titles, breadcrumbs, or owner lists.
     const demandTitle = trimText(auction.title)
     if (demandTitle && !isSyntheticAuctionTitle(demandTitle, auction.id)) {
-      return `Yêu cầu đấu giá ngược tài sản ${demandTitle}`
+      return demandTitle
     }
 
     // Compatibility fallback for legacy Reverse rows that predate demand_title.

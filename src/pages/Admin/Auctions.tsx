@@ -17,6 +17,7 @@ import dayjs from 'dayjs'
 import { privateGet, privatePost } from '@/api/api'
 import type { ErrorResponse } from '@/types/api'
 import { useDocumentTitle } from '@/hooks/useDocumentTitle'
+import { getAuctionDisplayTitle } from '@/utils/auctionDisplay'
 import './admin.css'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -26,6 +27,7 @@ type AuctionStatus = 'active' | 'scheduled' | 'ended' | 'closed_bin' | 'cancelle
 interface AuctionListItem {
   id: string
   mode: string
+  title?: string | null
   status: string
   starting_price: number
   current_price: number
@@ -73,7 +75,7 @@ const TAB_ITEMS = [
 ]
 
 function auctionTitle(auction: AuctionListItem) {
-  return auction.product?.title ?? 'Phiên không có sản phẩm'
+  return getAuctionDisplayTitle(auction)
 }
 
 function formatCurrency(value?: number) {
@@ -387,10 +389,12 @@ export function Component() {
                   <span>Người bán</span>
                   <strong>{selected.seller?.display_name ?? '--'}</strong>
                 </div>
-                <div className="auction-detail-row">
-                  <span>Sản phẩm</span>
-                  <strong>{auctionTitle(selected)}</strong>
-                </div>
+                {selected.product && (
+                  <div className="auction-detail-row">
+                    <span>Sản phẩm</span>
+                    <strong>{selected.product.title}</strong>
+                  </div>
+                )}
               </div>
             </section>
 
